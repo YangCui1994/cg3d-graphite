@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+
+# Simulation outputs (regenerable; the shipped results/ is tracked explicitly)
+results_pcs_cg3d/
+results_*.cg3d/
+frames/
+*.npz
+!data/geo_graphite_200.npz
+
+# Regenerated buffered geometry / scratch
+geo_graphite_228b14.npz
+*.log.tmp
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini

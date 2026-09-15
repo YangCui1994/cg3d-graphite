@@ -1,0 +1,66 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[gx2b_drain] geo nx=228 phi_solid=0.4847
+[gx2b_drain] dumping a frame every 20000 steps -> results_pcs_cg3d\gx2b_drain\frames
+[gx2b_drain] equil 20000 steps: S_nw=0.0190 (992s)
+[gx2b_drain] d00_0.030 10000 S_nw=0.0335 umax=0.031
+[gx2b_drain] d00_0.030 20000 S_nw=0.0394 umax=0.032
+[gx2b_drain] d00_0.030 -> quasi-steady steps=25000 S_nw=0.0393 wall=1226.8s
+[gx2b_drain] d01_0.040 10000 S_nw=0.0521 umax=0.034
+[gx2b_drain] d01_0.040 20000 S_nw=0.0618 umax=0.034
+[gx2b_drain] d01_0.040 30000 S_nw=0.0703 umax=0.033
+[gx2b_drain] d01_0.040 40000 S_nw=0.0762 umax=0.033
+[gx2b_drain] d01_0.040 50000 S_nw=0.0816 umax=0.033
+[gx2b_drain] d01_0.040 60000 S_nw=0.0878 umax=0.033
+[gx2b_drain] d01_0.040 70000 S_nw=0.0935 umax=0.034
+[gx2b_drain] d01_0.040 80000 S_nw=0.0983 umax=0.034
+[gx2b_drain] d01_0.040 -> quasi-steady steps=83500 S_nw=0.0978 wall=4236.2s
+[gx2b_drain] d02_0.055 10000 S_nw=0.1181 umax=0.033
+[gx2b_drain] d02_0.055 20000 S_nw=0.1340 umax=0.033
+[gx2b_drain] d02_0.055 30000 S_nw=0.1496 umax=0.033
+[gx2b_drain] d02_0.055 40000 S_nw=0.1640 umax=0.033
+[gx2b_drain] d02_0.055 50000 S_nw=0.1782 umax=0.033
+[gx2b_drain] d02_0.055 60000 S_nw=0.1908 umax=0.033
+[gx2b_drain] d02_0.055 70000 S_nw=0.2036 umax=0.033
+[gx2b_drain] d02_0.055 80000 S_nw=0.2168 umax=0.033
+[gx2b_drain] d02_0.055 90000 S_nw=0.2317 umax=0.033
+[gx2b_drain] d02_0.055 100000 S_nw=0.2460 umax=0.033
+[gx2b_drain] d02_0.055 110000 S_nw=0.2588 umax=0.034
+[gx2b_drain] d02_0.055 120000 S_nw=0.2701 umax=0.036
+[gx2b_drain] d02_0.055 130000 S_nw=0.2822 umax=0.037
+[gx2b_drain] d02_0.055 140000 S_nw=0.2932 umax=0.035
+[gx2b_drain] d02_0.055 150000 S_nw=0.3030 umax=0.034
+[gx2b_drain] d02_0.055 -> max-steps steps=150000 S_nw=0.2984 wall=7491.0s
+[gx2b_drain] d03_0.074 10000 S_nw=0.3283 umax=0.034
+[gx2b_drain] d03_0.074 20000 S_nw=0.3530 umax=0.034
+[gx2b_drain] d03_0.074 30000 S_nw=0.3767 umax=0.034
+[gx2b_drain] d03_0.074 40000 S_nw=0.3974 umax=0.035
+[gx2b_drain] d03_0.074 50000 S_nw=0.4175 umax=0.035
+[gx2b_drain] d03_0.074 60000 S_nw=0.4376 umax=0.037
+[gx2b_drain] d03_0.074 70000 S_nw=0.4558 umax=0.035
+[gx2b_drain] d03_0.074 80000 S_nw=0.4743 umax=0.034
+[gx2b_drain] d03_0.074 90000 S_nw=0.4920 umax=0.034
+[gx2b_drain] d03_0.074 100000 S_nw=0.5087 umax=0.034
+[gx2b_drain] d03_0.074 110000 S_nw=0.5246 umax=0.034
+[gx2b_drain] d03_0.074 120000 S_nw=0.5392 umax=0.035
+[gx2b_drain] d03_0.074 130000 S_nw=0.5533 umax=0.036
+[gx2b_drain] d03_0.074 140000 S_nw=0.5661 umax=0.037
+[gx2b_drain] d03_0.074 150000 S_nw=0.5773 umax=0.041
+[gx2b_drain] d03_0.074 -> max-steps steps=150000 S_nw=0.5721 wall=7372.9s
+[gx2b_drain] d04_0.100 10000 S_nw=0.5986 umax=0.045
+[gx2b_drain] d04_0.100 20000 S_nw=0.6123 umax=0.048
+[gx2b_drain] d04_0.100 30000 S_nw=0.6219 umax=0.056
+[gx2b_drain] d04_0.100 40000 S_nw=0.6277 umax=0.055
+[gx2b_drain] d04_0.100 -> quasi-steady steps=46500 S_nw=0.6284 wall=2274.4s
+[gx2b_drain] d05_0.135 10000 S_nw=0.6441 umax=0.067
+[gx2b_drain] d05_0.135 20000 S_nw=0.6512 umax=0.069
+[gx2b_drain] d05_0.135 30000 S_nw=0.6558 umax=0.070
+[gx2b_drain] d05_0.135 -> quasi-steady steps=31000 S_nw=0.6542 wall=1517.7s
+[gx2b_drain] d06_0.182 10000 S_nw=0.6696 umax=0.087
+[gx2b_drain] d06_0.182 -> quasi-steady steps=18000 S_nw=0.6706 wall=880.7s
+[gx2b_drain] d07_0.245 10000 S_nw=0.6798 umax=0.097
+[gx2b_drain] d07_0.245 -> quasi-steady steps=15000 S_nw=0.6796 wall=733.9s
+[gx2b_drain] d08_0.281 10000 S_nw=0.6838 umax=0.037
+[gx2b_drain] d08_0.281 -> quasi-steady steps=15000 S_nw=0.6837 wall=733.2s
+[gx2b_drain] LADDER DONE: 0.030->0.039(qu) 0.040->0.098(qu) 0.055->0.298(ma) 0.074->0.572(ma) 0.100->0.628(qu) 0.135->0.654(qu) 0.182->0.671(qu) 0.245->0.680(qu) 0.281->0.684(qu)
+[gx2b_drain] sentry {'leak_r': 0.0028112535024533737, 'leak_b': 0.004507851766043874, 'leak_m': 0.00928791445869125}

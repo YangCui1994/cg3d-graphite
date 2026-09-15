@@ -1,0 +1,18 @@
+# Simulation
+taichi>=1.0.2        # GPU backend; LBM_ARCH=cpu env var forces CPU
+numpy
+scipy
+
+# Geometry pipeline (process_electrode_BIL.py: raw tiff -> segmented npz)
+scikit-image
+tifffile
+
+# 2D result figures
+matplotlib
+Pillow
+
+# 3D rendering (viz3d.py, offscreen VTK; no ParaView needed).
+# Pinned: VTK's rendering API churns between minor versions and the figure
+# style depends on it.  See docs/VIZ_3D_STYLE.md.
+pyvista==0.49.0
+vtk==9.7.0
