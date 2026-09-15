@@ -47,6 +47,19 @@ pressure 阶梯驱动。可视化走脚本化 offscreen
 | `results/data/` | run 的 `report.json` 与控制台日志（小文件；逐帧快照与 figset 不进 git） |
 | `docs/` | 方法、结果、操作文档（双语） |
 
+### 与 LBM 2phase 目录的关系
+
+本仓库有 12 个文件与 `LBM/source_code/taichi_LBM3D/2phase/`（LBM 工作树，
+2026-09-16 起改为分类子目录布局）互为复制对：`lbm_solver_cg3d.py`、
+`run_pcs_cg3d.py`、`run_ir_cg3d.py`、`make_geo_buffer.py`、
+`audit_graphite_geo.py`、`probe_gx1_nan.py`、`process_electrode_BIL.py`、
+`viz3d.py`、`viz3d.cmd`、`graphite_figs.py`、`graphite_slices_v2.py`、
+`graphite_imb_pair.py`。内容一致，仅有两处差异：(a) 部分文件对行尾符不同
+（CRLF vs LF）；(b) 其中 6 个文件的 2phase 副本带有 2phase 布局适配
+（`sys.path` bootstrap 头、`data/` 路径前缀、父目录 `chdir`），本仓库保持
+平铺、仓库根相对路径。改共用文件时先改一边、重新 diff、再有意地移植——
+不要盲目互拷。
+
 ## 快速开始
 
 环境：Python 3.10+，建议 CUDA GPU（200³ 算例约需 4.6 GB 显存；CPU 可跑但慢

@@ -54,6 +54,21 @@ exploration-grade, not validation-grade. See the seven honest boundaries in
 | `results/data/` | Run `report.json` files and console logs (small; the full frame series and figsets stay out of git) |
 | `docs/` | Method, results, and ops documentation (bilingual) |
 
+### Relationship to the LBM 2phase tree
+
+Twelve files in this repo are copy pairs with
+`LBM/source_code/taichi_LBM3D/2phase/` (the LBM working tree, reorganized
+into category subdirectories 2026-09-16): `lbm_solver_cg3d.py`,
+`run_pcs_cg3d.py`, `run_ir_cg3d.py`, `make_geo_buffer.py`,
+`audit_graphite_geo.py`, `probe_gx1_nan.py`, `process_electrode_BIL.py`,
+`viz3d.py`, `viz3d.cmd`, `graphite_figs.py`, `graphite_slices_v2.py`,
+`graphite_imb_pair.py`. Content is identical except for (a) CRLF vs LF line
+endings in some pairs and (b) the 2phase copies of six files carrying
+2phase-layout adaptations (a `sys.path` bootstrap header, a `data/` path
+prefix, parent-directory `chdir`); this repo stays flat and
+repo-root-relative. When changing a shared file, edit one side, re-diff,
+then port deliberately — do not copy blindly.
+
 ## Quickstart
 
 Requirements: Python 3.10+, CUDA GPU recommended (a 200³ run needs
