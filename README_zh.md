@@ -54,11 +54,11 @@ pressure 阶梯驱动。可视化走脚本化 offscreen
 `run_pcs_cg3d.py`、`run_ir_cg3d.py`、`make_geo_buffer.py`、
 `audit_graphite_geo.py`、`probe_gx1_nan.py`、`process_electrode_BIL.py`、
 `viz3d.py`、`viz3d.cmd`、`graphite_figs.py`、`graphite_slices_v2.py`、
-`graphite_imb_pair.py`。内容一致，仅有两处差异：(a) 部分文件对行尾符不同
-（CRLF vs LF）；(b) 其中 6 个文件的 2phase 副本带有 2phase 布局适配
-（`sys.path` bootstrap 头、`data/` 路径前缀、父目录 `chdir`），本仓库保持
-平铺、仓库根相对路径。改共用文件时先改一边、重新 diff、再有意地移植——
-不要盲目互拷。
+`graphite_imb_pair.py`。内容一致，差异仅为一处：其中 **7 个**文件的
+2phase 副本带有 2phase 布局适配（`sys.path` bootstrap 头、`data/` 路径
+前缀、父目录 `chdir`；`run_pcs_cg3d.py` 另有行尾符差异——本仓库 CRLF，
+2phase 侧 LF），本仓库保持平铺、仓库根相对路径。改共用文件时先改一边、
+重新 diff、再有意地移植——不要盲目互拷。
 
 ## 快速开始
 

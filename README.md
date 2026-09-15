@@ -62,12 +62,12 @@ into category subdirectories 2026-09-16): `lbm_solver_cg3d.py`,
 `run_pcs_cg3d.py`, `run_ir_cg3d.py`, `make_geo_buffer.py`,
 `audit_graphite_geo.py`, `probe_gx1_nan.py`, `process_electrode_BIL.py`,
 `viz3d.py`, `viz3d.cmd`, `graphite_figs.py`, `graphite_slices_v2.py`,
-`graphite_imb_pair.py`. Content is identical except for (a) CRLF vs LF line
-endings in some pairs and (b) the 2phase copies of six files carrying
-2phase-layout adaptations (a `sys.path` bootstrap header, a `data/` path
-prefix, parent-directory `chdir`); this repo stays flat and
-repo-root-relative. When changing a shared file, edit one side, re-diff,
-then port deliberately — do not copy blindly.
+`graphite_imb_pair.py`. Content is identical except that the 2phase copies
+of seven files carry 2phase-layout adaptations (a `sys.path` bootstrap
+header, a `data/` path prefix, parent-directory `chdir`; `run_pcs_cg3d.py`
+additionally differs in line endings — CRLF in this repo, LF in 2phase);
+this repo stays flat and repo-root-relative. When changing a shared file,
+edit one side, re-diff, then port deliberately — do not copy blindly.
 
 ## Quickstart
 
