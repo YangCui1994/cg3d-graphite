@@ -28,28 +28,12 @@ import time
 
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+
+from run_common import mid_slice_png
 import numpy as np
 
 OUTROOT = 'results_pcs_cg3d'
 
-
-def mid_slice_png(psi, solid, path, title):
-    """Two mid-slices (yz at mid-x, xz at mid-y) of psi with solid
-    contour, light enough for every checkpoint."""
-    nx = psi.shape[0]
-    fig, axes = plt.subplots(1, 2, figsize=(7.5, 3.4))
-    for ax, sl, name in ((axes[0], psi[nx // 2], 'yz@mid-x'),
-                         (axes[1], psi[:, psi.shape[1] // 2], 'xz@mid-y')):
-        im = ax.imshow(sl.T, origin='lower', cmap='RdBu', vmin=-1.2,
-                       vmax=1.2, aspect='equal')
-        ax.contour(sl.T, levels=[0.0], colors='k', linewidths=0.4)
-        ax.set_title(name, fontsize=8)
-        ax.set_xticks([]), ax.set_yticks([])
-    fig.colorbar(im, ax=axes, shrink=0.8, label='psi')
-    fig.suptitle(title, fontsize=9)
-    plt.savefig(path, dpi=120)
-    plt.close()
 
 
 def main():
@@ -202,10 +186,10 @@ def main():
         row = dict(d=d, pc=d / 3.0, steps=it, reason=reason,
                    s_nw=float(np.mean(tail)), umax_last=m['umax'],
                    wall_s=round(time.time() - t0, 1))
-        mid_slice_png(s.psi_snapshot(), solid,
+        mid_slice_png(s.psi_snapshot(),
                       os.path.join(out, f'psi_{label}_{it:06d}.png'),
                       f'{label}: d={d:.3f} Pc={d/3.0:.4f} '
-                      f'S_nw={row["s_nw"]:.3f} ({reason})')
+                      f'S_nw={row["s_nw"]:.3f} ({reason})', contour=True)
         print(f'[{args.tag}] {label} -> {reason} steps={it} '
               f'S_nw={row["s_nw"]:.4f} wall={row["wall_s"]}s', flush=True)
         return row

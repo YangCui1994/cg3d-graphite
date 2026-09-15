@@ -23,24 +23,11 @@ import time
 
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+
+from run_common import mid_slice_png
 import numpy as np
 from scipy import ndimage
 
-
-def mid_slice_png(psi, path, title):
-    nx = psi.shape[0]
-    fig, axes = plt.subplots(1, 2, figsize=(7.5, 3.4))
-    for ax, sl, name in ((axes[0], psi[nx // 2], 'yz@mid-x'),
-                         (axes[1], psi[:, psi.shape[1] // 2], 'xz@mid-y')):
-        im = ax.imshow(sl.T, origin='lower', cmap='RdBu', vmin=-1.2,
-                       vmax=1.2, aspect='equal')
-        ax.set_title(name, fontsize=8)
-        ax.set_xticks([]), ax.set_yticks([])
-    fig.colorbar(im, ax=axes, shrink=0.8, label='psi')
-    fig.suptitle(title, fontsize=9)
-    plt.savefig(path, dpi=120)
-    plt.close()
 
 
 def _save_partial(args, ladder):
