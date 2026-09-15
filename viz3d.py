@@ -41,11 +41,10 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
 
-"""Thin CLI entry; the implementation lives in the viz3dlib/ package
-(split 2026-09-16, PLAN_code_cleanup_2026-09 Step 3 — zero behavior
-change; the original module docstring above is kept verbatim)."""
+# Thin CLI entry; the implementation lives in the viz3dlib/ package
+# (split 2026-09-16, PLAN_code_cleanup_2026-09 Step 3 — zero behavior
+# change; the original module docstring above is kept verbatim).
 
 from viz3dlib.anim import animate
 from viz3dlib.explore import explore

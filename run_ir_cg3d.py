@@ -23,7 +23,6 @@ import time
 
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 from run_common import mid_slice_png
 import numpy as np
