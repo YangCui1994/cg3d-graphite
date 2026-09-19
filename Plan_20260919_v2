@@ -1,0 +1,303 @@
+# Plan v2 — cg3d-graphite：先修数值可信度，再整理架构
+
+modified date: 2026-09-19
+
+来源与性质：
+
+- v1 = `Plan_20260919`（GPT-astra 对整个项目的 review 计划），本文件保留其全部任务。
+- v2 = v1 + ZCode 逐条代码核对结果（附录 A，所有 file:line 锚点已验证）+ 三类本机/本项目执行约束。
+- 执行场地：本仓库 `cg3d-graphite`。需要移植的外部资产在父工作区，位置见附录 B。
+- v2 相对 v1 的三处实质修改：
+  1. **Phase 3 测试套件必须遵守 Taichi JIT 单实例约束**（本机实测：每 solver 实例 ~5.5 min JIT，同进程第 2 个实例必 miss cache），否则 Level A "秒级" 不成立；
+  2. **验证体系复用 P 线既有资产**（Level B 容差锚定已验证数字，测试驱动从附录 B 位置移植，不重写）；
+  3. **PR 顺序调整**：纯增量 diagnostics（原 2.1–2.3）提前为 PR-1，因为数值正确性的验收（Poiseuille/Laplace）需要 measured Pc / reservoir ρ 这些仪器，且该 PR 零风险。
+
+## 总体目标
+
+把当前 `cg3d-graphite` 从"已经能跑真实石墨 imbibition/drainage 的研究代码"，整理成：
+
+> **算法定义明确 + 核心数值路径有 regression test + 边界条件可核查 + drainage/imbibition 共用统一 protocol + 后处理 topology 与 solver 一致**
+
+优先级：
+
+**P0 基线冻结 → P1 数值正确性 → P2 诊断与后处理 → P3 验证体系 → P4 模块化 → P5 重跑 benchmark → P6 文档**
+
+关键原则：
+
+> **任何会改变数值结果的修改，单独 commit。** 不要把 `Compute_C`、Guo forcing、recoloring、refactor 放进同一个 commit。
+
+---
+
+## Phase 0 — 冻结当前 baseline
+
+| 任务 | 内容 | 输出 |
+| --- | --- | --- |
+| baseline branch/tag | tag 建在当前 master HEAD（含本 plan 的提交），不覆盖原结果 | `baseline-pre-audit-2026-09` |
+| 固定环境 | 记录 Python / Taichi / CUDA driver / numpy / scipy / pyvista / vtk 实际版本；`requirements.txt` 的 `taichi>=1.0.2` 改为精确版本 | lock 记录（可并入 requirements.txt 注释或新文件） |
+| 固定已有结果 | X2 drainage、X3 imbibition 原始 report 拷贝存档，注明来源 commit | `results/baseline/` |
+| change log | 后续每个数值修改单独记录 | `docs/CHANGELOG_NUMERICS.md` |
+
+---
+
+## Phase 1 — 核心算法审查与修正
+
+这一阶段只处理 solver correctness，**暂时不做大规模模块重构**。所有"当前实现"锚点已经过核实（附录 A）。
+
+| Task | 目标 | 要做什么 | 验收 |
+| --- | --- | --- | --- |
+| 1.1 `Compute_C` bulk 判据 | 修掉 density-dependent 纯相判定 | 当前 `lbm_solver_cg3d.py:442` 用 `abs(rho_r-rho_b)>0.9`；出口 ρ=1−d/2 时纯 red 的 ρ_r−ρ_b 可能低于 0.9，纯相误判直接污染出口附近 S_nr 的解释。改成 normalized phase criterion（如 ψ=(ρ_r−ρ_b)/(ρ_r+ρ_b) 的阈值形式） | pure red/blue 在不同 ρ 下判定一致 |
+| 1.2 Guo forcing | 核对 forcing implementation | 对照 Guo MRT forcing 原论文/可靠实现，检查系数、moment transform、half-force velocity correction | Poiseuille test 通过 |
+| 1.3 MRT equilibrium | 明确当前 solver 属于哪种 formulation | 比较 upstream / Tölke–Ahrenholz 与当前 local-rho equilibrium；输出 ADR（见下） | `docs/adr/001-hydrodynamic-equilibrium.md` |
+| 1.4 surface tension operator | 核对 perturbation term | 检查 moment indices、系数、D3Q19 isotropy 与当前 M matrix 严格匹配 | Laplace test 不劣化 |
+| 1.5 recoloring | 识别实际算法 | 文档自称 Latva–Kokko（`docs/ALGORITHM.md:76`），实现是 upstream 9 对 opposite pairs（`lbm_solver_cg3d.py:549`）；查实属于 Tölke-style / Latva-Kokko / 其他 variant | 文档名称与实现一致 |
+| 1.6 wettability | 检查 solid-color 方法 | 核查 `psi_solid_f`、gradient near wall、bulk suppression 的数学一致性 | contact-angle calibration 保持稳定（θ–ψ_solid 标定曲线在附录 B 注册表） |
+
+### 1.3 ADR 要求
+
+新增 `docs/adr/001-hydrodynamic-equilibrium.md`，只回答四件事：
+
+```text
+当前实现是什么
+文献原始模型是什么
+两者差异是什么
+最终决定采用什么
+```
+
+v2 注：upstream 的四个缺陷（meq 无 ρ 因子、ψ 括号 bug、scalar ψ_solid、module-level globals）**已有推导和记录**（`docs/ALGORITHM.md` §7，源自 2026-09-11 upstream audit），ADR 引用即可，不要重开已解决的问题。真正开放的问题是 local-rho equilibrium 的 formulation 选择与命名。
+
+不在代码注释里写 "upstream bug fixed"，除非有独立 benchmark / derivation 证明；实为 model variant 的写成 "modified formulation"。
+
+---
+
+## Phase 2 — Pressure BC、收敛判据与后处理
+
+与 Pc–S / imbibition 解释最直接相关的一阶段。
+
+| Task | 修改 | 现状锚点 / 新增输出 |
+| --- | --- | --- |
+| 2.1 nominal / measured Pc 分离 | 不再只保存名义 Pc | 当前 `run_pcs_cg3d.py:186` 只存 `pc=d/3.0`；新增 `pc_nominal`, `pc_measured` |
+| 2.2 reservoir diagnostics | 测入口/出口 reservoir 平均 ρ、pressure | `rho_in_mean`, `rho_out_mean` |
+| 2.3 flow diagnostics | RMS velocity / bulk velocity / flux | `solver.reservoir_fluxes()` 已存在（f64 通量计数，`run_ir_cg3d.py:193` 已调用），在其上扩展 |
+| 2.4 convergence criterion | 从单一 `dS/dt` 扩展成多指标 | 当前 `run_pcs_cg3d.py:174-176` / `run_ir_cg3d.py:154-156`（两处是复制品）；convergence reason 详细记录 |
+| 2.5 saturation 口径统一 | continuous 与 binary 并存 | 当前 S_nr 是 binary（psi>0）口径（`run_ir_cg3d.py:179-186`）；新增 `s_nw_continuous`, `s_nw_binary` |
+| 2.6 cluster connectivity | 参数化 6/18/26 | 当前 `ndimage.label(red_dom)` 默认 6-conn（`run_ir_cg3d.py:184`） |
+| 2.7 periodic cluster merge | y/z periodic topology 与 solver 一致 | periodic CC algorithm |
+
+### quasi-steady 判据结构
+
+不要只判 `abs(dS/dt) < tol`，改成：
+
+```text
+saturation stable
+AND pressure stable
+AND net phase flux sufficiently small/stable
+AND bulk kinetic state stable
+```
+
+不要求四项绝对为零。threshold 全部放配置层，不 hard-code 在 driver 内。report 要能回答"为什么这一档退出"：
+
+```json
+"convergence": {
+    "saturation_slope": ...,
+    "pc_drift": ...,
+    "phase_flux": ...,
+    "u_rms": ...,
+    "criteria_passed": [...]
+}
+```
+
+---
+
+## Phase 3 — physics regression tests
+
+建立 `tests/`：
+
+```text
+test_equilibrium.py
+test_mass_conservation.py
+test_poiseuille.py
+test_laplace.py
+test_contact_angle.py
+test_membrane.py
+test_reservoir_pressure.py
+test_capillary_tube.py
+test_periodic_clusters.py
+```
+
+三级划分（v1 原案）：
+
+- **Level A（每次 commit 都跑，秒级～几十秒）**：uniform phase stationary、mass conservation、M/invM consistency、reservoir reaches target rho、membrane blocks correct colour、periodic connectivity。
+- **Level B（数值算法 regression，几十秒～几分钟）**：Poiseuille、Laplace pressure、contact angle、two-phase planar interface。保存允许误差而非 bitwise identical。
+- **Level C（benchmark，GPU 手动执行，不进普通 CI）**：Finney drainage、Finney imbibition、graphite reduced-size case。
+
+### v2 设计约束（必须遵守）
+
+1. **Taichi JIT 单实例**：本机实测每 solver 实例 JIT 编译 ~5.5 min，且 cache key 含实例计数器——同进程第 2 个实例必 miss。测试进程必须共享一个 session 级 `CG3DSolver` 实例（同 shape re-init 复用，参考父仓库 `drivers/run_p1_validations.py` 的批驱动写法），**禁止每个 test 函数新建实例**。否则 Level A 不可用。
+2. **Level B 容差锚定 P 线已验证数字**（见附录 B）：σ=1.012 CapA、k 对 S&A 0.98–1.04、Finney 排水膝点 C=6.38、P4 三点 S_nr 0.17–0.20。允许误差（%）写进测试配置。
+3. **优先移植而非重写**：Poiseuille / Laplace / contact angle / capillary 驱动从附录 B 位置移植，文件头注明来源与原结果。
+4. **GPU 单卡串行**：Level B/C 与长跑互斥，跑批期间不做 3D 渲染。
+
+---
+
+## Phase 4 — 再开始重构
+
+correctness 稳定之后再做。目标结构：
+
+```text
+cg3d/
+    __init__.py
+    lattice.py
+    config.py
+    solver.py
+    boundaries/    (reservoir / membrane / wall)
+    diagnostics/   (saturation / pressure / convergence / clusters)
+    protocols/     (pressure_ladder)
+    io/            (checkpoint / report)
+scripts/
+    run_drainage.py
+    run_imbibition.py
+tests/
+```
+
+重要限制（v1 原案）：
+
+> **不要为了 Python 层"优雅"把 Taichi hot kernels 拆得过碎。** collision / recoloring / streaming / macro update 仍集中在一个 `CG3DSolver`。模块化发生在 configuration / protocol / boundary / diagnostics / post-processing / I/O。
+
+v2 注：2026-09-16 cleanup 已完成 viz3d 拆包（`viz3dlib/`）与 `run_common.py` 初步去重（master b339114）；本阶段剩余主要工作是**两个 driver 的 ladder/收敛逻辑去重**（`run_pcs_cg3d.py:174` 与 `run_ir_cg3d.py:154` 是同一段代码的复制品）。终态：
+
+```python
+protocol.run_pressure_ladder(solver, schedule=[...], convergence=..., diagnostics=...)
+```
+
+> drainage / imbibition 是 protocol configuration 的差异，不是两套 simulation infrastructure。
+
+---
+
+## Phase 5 — 重新跑验证与 graphite benchmark
+
+不要一改完就直接跑 17 小时 graphite。顺序：
+
+```text
+Level A tests → Poiseuille → Laplace → contact angle → capillary tube
+→ Finney → small graphite → full graphite X2 → full graphite X3
+```
+
+建立 `docs/NUMERICAL_AUDIT_2026_09.md`，比较：
+
+| 指标 | old | new | relative change |
+| --- | --: | --: | ---: |
+| σ(CapA) | | | |
+| θ(ψsolid) | | | |
+| entry Pc | | | |
+| drainage plateau | | | |
+| S_i | | | |
+| S_nr continuous | | | |
+| S_nr binary | | | |
+| cluster count | | | |
+| largest cluster | | | |
+
+不预设"新结果应该和旧结果差不多"；变化大时靠 PR 粒度定位是哪一个 modification 导致。
+
+v2 注：几何固定（`data/geo_graphite_200.npz` 等 npz，无随机种子问题）；old 侧一律取 `results/baseline/`（Phase 0 存档）。
+
+---
+
+## Phase 6 — 最后整理文档
+
+数值版本确定后再更新 README / ALGORITHM / BC_IC_OUTPUT / RESULTS。术语修正（v1 原案）：
+
+| 现表述 | 改成 |
+| --- | --- |
+| "upstream bug" | original formulation / modified formulation（以 ADR 为准） |
+| "Latva–Kokko recoloring" | 实际 recoloring 名称（以 1.5 查证结果为准） |
+| "Pc = δ/3" | Pc_nominal / Pc_measured |
+| "S_nr" | continuous saturation / binary trapped-gas saturation |
+
+---
+
+## 给 Agent 的执行规则
+
+```text
+1.  不同时进行 numerical change 和 architecture refactor。
+
+2.  每一个可能改变 simulation result 的 modification 必须：
+    - 单独 commit
+    - 写明理论来源
+    - 添加或运行对应 regression test
+    - 记录 before/after
+
+3.  不因为当前代码能复现已有结果，就默认算法正确。
+
+4.  不因为 upstream implementation 不同，就默认 upstream 是 bug。
+
+5.  对公式存在多个合法 formulation 时：
+    - 列出 formulation A/B
+    - 说明当前代码属于哪一个
+    - 说明修改会改变哪些 benchmark
+    - 不自行混合两个 formulation
+
+6.  不修改已有 baseline results。
+
+7.  graphite full-scale run 必须在基础 validation 全部通过后才执行。
+
+8.  优先保证：physics traceability > reproducibility > modularity > style cleanup。
+
+9.  [v2] Taichi JIT：每个测试/批处理进程只创建一个 solver 实例并复用
+    （同 shape re-init）；任何脚本同样遵守。
+
+10. [v2] 单卡 RTX 5080：验证、长跑、3D 渲染串行；跑批期间不渲染。
+
+11. [v2] validation 资产优先从附录 B 位置移植（文件头注明来源与原结果），
+    不从零重写。
+```
+
+---
+
+## PR 拆分（v2 顺序）
+
+| PR | 内容 | 数值影响 |
+| --- | --- | --- |
+| **PR-1 Instruments** | 纯增量 diagnostics：pc_measured、reservoir ρ/p、flux/velocity 扩展（原 2.1–2.3） | 不改变任何数值结果 |
+| **PR-2 Numerical correctness** | `Compute_C`、Guo、equilibrium/recoloring/surface-tension review + ADR（Phase 1） | 改变数值结果，逐项单独 commit |
+| **PR-3 Post-processing correctness** | periodic clusters、connectivity、continuous/binary saturation（原 2.5–2.7 + 2.4） | 不改 solver，但改变对 X2/X3 的解读 |
+| **PR-4 Validation suite** | tests/ 三级体系（Phase 3） | — |
+| **PR-5 Architecture** | package、protocol、driver dedup（Phase 4） | **必须数值中性**；若 benchmark 变化 = 重构引入 regression，定位直接 |
+| **PR-6 Benchmark & docs** | Finney + graphite 重跑、old/new 比较、文档更新（Phase 5–6） | — |
+
+顺序调整说明：v1 把 diagnostics 排在数值正确性之后；v2 调换是因为 PR-2 的验收需要 measured Pc / reservoir ρ 这些仪器（PR-1 提供），且 PR-1 纯增量零风险。
+
+---
+
+## 附录 A — 已核实事实（ZCode 2026-09-19，锚点均已对到代码）
+
+| 陈述 | 证据 |
+| --- | --- |
+| `Compute_C` 用 `abs(rho_r-rho_b)>0.9` 判纯相 | `lbm_solver_cg3d.py:442` |
+| 入口/出口 ρ = 1±d/2（Pc=cs²·d） | `run_pcs_cg3d.py:113` |
+| 文档自称 Latva–Kokko recoloring | `docs/ALGORITHM.md:76`、`docs/ALGORITHM_zh.md:65` |
+| 实现是 upstream 9 对 opposite pairs | `lbm_solver_cg3d.py:549` |
+| 只存名义 Pc=d/3 | `run_pcs_cg3d.py:186`、图轴 `graphite_figs.py:46` |
+| 收敛 = 单一 dS/dt 判据，两 driver 各一份 | `run_pcs_cg3d.py:174-176`、`run_ir_cg3d.py:154-156` |
+| cluster 用默认 6-conn、无 periodic merge | `run_ir_cg3d.py:184` |
+| S_nr 现为 binary（psi>0）口径 | `run_ir_cg3d.py:179-186` |
+| flux 计数已存在 | `solver.reservoir_fluxes()`（`run_ir_cg3d.py:193`） |
+| driver 去重仅 mid_slice_png | `run_common.py:14` |
+| 文档含 upstream bug/defect 表述 | `docs/ALGORITHM.md` §2、§7 |
+| upstream 四缺陷已有推导记录 | `docs/ALGORITHM.md` §7（2026-09-11 audit） |
+
+## 附录 B — 外部可移植资产（父工作区本地路径，不在本公开仓库内）
+
+根目录（相对本仓库）：`../LBM/source_code/taichi_LBM3D/2phase/`
+
+- `validation/validation3d_poiseuille.py`、`validation_cg3d_laplace.py`、`validation_cg3d_contact_angle.py`、`validation3d_capillary_invasion.py`、`validation_cg3d_infra.py` — Phase 3 Level B 测试的移植源
+- `validation/calibrate_theta_psi.py` + `theta_psi_registry.json` / `theta_gads_registry.json` — θ–ψ_solid 标定曲线（1.6 验收基准）
+- `drivers/run_p1_validations.py`、`benchmark_cg3d.py` — P 线批驱动，**单 solver 实例 re-init 复用的参考实现**（执行规则 9 的范本）
+- `data/ftb131.npz` + `finney_to_solid.py` — Finney pack（Level C benchmark 几何）
+- `data/geo_graphite_228b14.npz` — 14-lu 缓冲石墨几何（若与仓库内 `make_geo_buffer.py` 产物一致则用仓库内管线）
+
+P 线参考数字（Level B 容差锚点，详见父仓库 `output_docs/3d_granular_validation_v1.md`）：
+
+- σ = 1.012 × CapA（Laplace）
+- k 对 S&A 0.98–1.04（渗透率）
+- Finney 排水膝点 C = 6.38
+- P4 三点 S_nr 饱和 0.17–0.20
