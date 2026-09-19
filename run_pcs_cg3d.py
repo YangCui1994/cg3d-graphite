@@ -29,7 +29,7 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 
-from run_common import mid_slice_png, region_stats
+from run_common import (mid_slice_png, region_stats, eval_convergence)
 import numpy as np
 
 OUTROOT = 'results_pcs_cg3d'
@@ -55,6 +55,20 @@ def main():
     ap.add_argument('--max-steps', type=int, default=150000)
     ap.add_argument('--qs-window', type=int, default=15000)
     ap.add_argument('--qs-tol', type=float, default=5e-7)
+    ap.add_argument('--qs-mode', choices=('sat', 'multi'), default='sat',
+                    help="quasi-steady exit rule (PR-3 task 2.4): 'sat' = "
+                         "legacy saturation-slope only (baseline-"
+                         "comparable); 'multi' = saturation AND pressure "
+                         "AND flux AND kinetic. The convergence record is "
+                         "always written either way.")
+    ap.add_argument('--pc-drift-tol', type=float, default=0.01,
+                    help='multi-mode: rel pc_measured (max-min) over the '
+                         'trailing window')
+    ap.add_argument('--flux-tol', type=float, default=1e-6,
+                    help='multi-mode: net colour flux rate per pore cell '
+                         'per step')
+    ap.add_argument('--u-rel-tol', type=float, default=0.05,
+                    help='multi-mode: rel u_rms (max-min) over the window')
     ap.add_argument('--every', type=int, default=500)
     ap.add_argument('--dump-every', type=int, default=20000,
                     help='also save an int8 psi frame every N steps to '
@@ -168,6 +182,8 @@ def main():
         fd = region_stats(rho_c, psi_c, v_c, dom_pore)
         fl = s.reservoir_fluxes()
         return dict(s_nw=float(red.sum() / pore_cells),
+                    s_nw_binary=float(((psi_c > 0.0) & dom_pore).sum()
+                                      / pore_cells),
                     umax=float(u_mag.max()),
                     rho_in_mean=rs_in['rho_mean'],
                     rho_out_mean=rs_out['rho_mean'],
@@ -200,8 +216,19 @@ def main():
                         and w[-1][0] - w[0][0] >= args.qs_window * 0.8):
                     slope = (w[-1][1] - w[0][1]) / (w[-1][0] - w[0][0])
                     if abs(slope) < args.qs_tol:
-                        reason = 'quasi-steady'
-                        break
+                        win = [(a2, dm) for a2, dm in samples
+                               if a2 > it - args.qs_window]
+                        conv = eval_convergence(
+                            win, pore_cells, args.qs_tol,
+                            args.pc_drift_tol, args.flux_tol,
+                            args.u_rel_tol)
+                        needed = (['saturation'] if args.qs_mode == 'sat'
+                                  else ('saturation', 'pressure', 'flux',
+                                        'kinetic'))
+                        if all(c in conv['criteria_passed']
+                               for c in needed):
+                            reason = 'quasi-steady'
+                            break
                 if it % 10000 == 0:
                     print(f'[{args.tag}] {label} {it} S_nw='
                           f'{hist[-1][1]:.4f} umax={m["umax"]:.3f}',
@@ -222,6 +249,10 @@ def main():
             flux_b_rate = (win[-1][1]['inj_b'] - win[0][1]['inj_b']) / span
         else:
             flux_r_rate = flux_b_rate = None
+        conv = eval_convergence(win, pore_cells, args.qs_tol,
+                                args.pc_drift_tol, args.flux_tol,
+                                args.u_rel_tol)
+        conv['exit'] = dict(mode=args.qs_mode, reason=reason)
         m_last = samples[-1][1] if samples else {}
         row = dict(d=d, pc_nominal=d / 3.0, pc_measured=tmean('pc_measured'),
                    rho_in_mean=tmean('rho_in_mean'),
@@ -231,6 +262,8 @@ def main():
                    flux_r_rate=flux_r_rate, flux_b_rate=flux_b_rate,
                    steps=it, reason=reason,
                    s_nw=float(np.mean(tail)),
+                   s_nw_binary=tmean('s_nw_binary'),
+                   convergence=conv,
                    umax_last=m_last.get('umax'),
                    wall_s=round(time.time() - t0, 1))
         mid_slice_png(s.psi_snapshot(),

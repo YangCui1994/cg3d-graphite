@@ -13,6 +13,29 @@ Format:
 - Regression evidence (test + before/after numbers)
 ```
 
+## 2026-09-19 PR-3 — post-processing correctness (tasks 2.4-2.7)
+
+- `run_common.py`: `label_periodic` (connectivity-parameterised CC with
+  y/z seam union-find merge; the one-layer wrap-padding approach provably
+  does NOT merge — pad copies get different labels) and
+  `eval_convergence` (four-indicator quasi-steady record).
+- Both drivers: `convergence` dict per rung (saturation_slope / pc_drift /
+  phase_flux / u_rms_rel + criteria_passed + thresholds + exit reason),
+  `--qs-mode sat|multi` (default sat = baseline-comparable exit rule;
+  record always written), `s_nw_binary` alongside continuous `s_nw`.
+- `run_ir_cg3d.py`: final cluster analysis via `label_periodic`
+  (`--conn 6|18|26`, default 6 = legacy; periodic merge always on),
+  `s_nr_continuous` + `cluster_topology` in the report.
+- Regression: tests/test_postprocessing.py (11 checks, pure numpy, ALL
+  PASS — connectivity split/merge, y and y+z seam rings, interior-only
+  sizes, each convergence criterion failing in isolation); GPU smokes:
+  run_ir multi-mode report carries the full record (exit=max-steps with
+  saturation still drifting, pressure/flux/kinetic passed), run_pcs
+  legacy sat-mode exits quasi-steady at S_nw=0.843 unchanged.
+- NOTE: periodic merge changes n_clusters/largest vs the pre-audit X3
+  numbers (splitting over-counted n); baseline archived in
+  results/baseline/, difference quantified in Phase 5.
+
 ## 2026-09-19 PR-2 task 1.2 — Guo force weights restored (commit af2b2c5)
 
 - `lbm_solver_cg3d.py` GuoF: added 1/cs² = 3 and 1/cs⁴ = 9 weights
