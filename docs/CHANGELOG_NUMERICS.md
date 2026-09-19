@@ -13,6 +13,26 @@ Format:
 - Regression evidence (test + before/after numbers)
 ```
 
+## 2026-09-19 PR-4 — physics regression test suite (Phase 3)
+
+- `tests/` three-level suite per plan: Level A (`run_level_a.py`: M/invM,
+  uniform stationary, colour-mass conservation, reservoir pinning,
+  membrane colour-blocking — ONE 32^3 instance, field resets between
+  cases), Level B (`levelb_laplace.py` + `levelb_contact_angle.py`
+  ported from the parent repo's validation drivers, RESTRUCTURED to one
+  fixed-shape instance per the JIT single-instance rule — the parent
+  created a new solver per case, ~5.5 min JIT each), plus the PR-2/PR-3
+  tests and `tests/README.md` (levels, JIT rule, reference-value table).
+- Suite run results (2026-09-19, taichi 1.7.4 / RTX 5080):
+  Level A 5/5 PASS (8 s); Laplace quick (CapA 0.06, R 14/18/22 @ n=88):
+  sigma = 0.0609 vs 1.012*CapA = 0.0607 -> 0.32% rel, R^2 = 1.00000,
+  anisotropy probe 0.15%; contact angle psi_solid=-0.68: theta_liq =
+  31.0 deg (registry 30 +- 6); Poiseuille eff = 0.9933; Compute_C
+  density-independence PASS.
+- CONCLUSION recorded: the PR-2 fixes leave the rho ~ 1 calibrations
+  (sigma, theta) intact, as derived in ADR-001 — now test-enforced.
+- No solver/driver numerics changed in this PR.
+
 ## 2026-09-19 PR-3 — post-processing correctness (tasks 2.4-2.7)
 
 - `run_common.py`: `label_periodic` (connectivity-parameterised CC with

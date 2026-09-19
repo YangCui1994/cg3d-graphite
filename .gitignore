@@ -18,3 +18,6 @@ geo_graphite_228b14.npz
 .idea/
 Thumbs.db
 Desktop.ini
+
+# Test scratch outputs
+tests_output/
