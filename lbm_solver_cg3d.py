@@ -501,11 +501,17 @@ class ColorGradientSolver3D:
     @ti.func
     def GuoF(self, i: ti.i32, j: ti.i32, k: ti.i32, s: ti.i32,
              u: ti.template()):
+        # Guo (2002) force in moment space with the full 1/cs^2 (3) and
+        # 1/cs^4 (9) weights (PR-2 fix). The original omitted both, so the
+        # momentum actually injected per step was F/3 while streaming3's
+        # half-force correction assumed F — measured eff=0.332 on this
+        # solver (2D P2 calibration: 0.330). Reservoir-driven runs are
+        # unaffected (F = 0).
         fvec = self.force_at(i, j, k)
         out = 0.0
         for l in ti.static(range(19)):
-            out += w[l] * ((e_f[l] - u).dot(fvec) +
-                   (e_f[l].dot(u)) * (e_f[l].dot(fvec))) * M[s, l]
+            out += w[l] * (3.0 * (e_f[l] - u).dot(fvec)
+                   + 9.0 * (e_f[l].dot(u)) * (e_f[l].dot(fvec))) * M[s, l]
         return out
 
     # --------------------------------------------------------
