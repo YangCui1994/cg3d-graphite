@@ -1,0 +1,230 @@
+{
+ "args": {
+  "geo": "geo_graphite_228b14.npz",
+  "capa": 0.06,
+  "psi_solid": -0.68,
+  "ds": [
+   0.03,
+   0.055,
+   0.1,
+   0.182,
+   0.281
+  ],
+  "res_thick": 8,
+  "equil_steps": 8000,
+  "min_steps": 6000,
+  "max_steps": 20000,
+  "qs_window": 8000,
+  "qs_tol": 5e-07,
+  "qs_mode": "sat",
+  "pc_drift_tol": 0.01,
+  "flux_tol": 1e-06,
+  "u_rel_tol": 0.05,
+  "every": 500,
+  "dump_every": 0,
+  "umax_cap": 0.12,
+  "pc_band": 4,
+  "tag": "pr6_new"
+ },
+ "geo": "graphite_scan119 200^3 subcrop offset(136,136,136) + 14 lu OPEN pore buffer at both x faces (membrane-decoupling fix, 2026-09-13)",
+ "sigma_lb": 0.060719999999999996,
+ "n_spheres_region": "Finney interior box",
+ "ladder": [
+  {
+   "d": 0.03,
+   "pc_nominal": 0.01,
+   "pc_measured": -0.0018721825749529464,
+   "rho_in_mean": 1.0149999856948853,
+   "rho_out_mean": 0.9850000143051147,
+   "p_in_mean": 0.3383333285649617,
+   "p_out_mean": 0.32833333810170484,
+   "u_rms": 0.0015801240645737056,
+   "u_bulk_x": 0.00012449915590825563,
+   "flux_r_rate": 2.1096390142758685,
+   "flux_b_rate": -2.327928392593066,
+   "steps": 20000,
+   "reason": "max-steps",
+   "s_nw": 0.036190563999116424,
+   "s_nw_binary": 0.0369445393927144,
+   "convergence": {
+    "criteria_passed": [],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": 5.530218283335368e-07,
+    "pc_drift": 0.5155038016744975,
+    "phase_flux": 1.1740105673550214e-06,
+    "u_rms_rel": 0.07770481084315793,
+    "exit": {
+     "mode": "sat",
+     "reason": "max-steps"
+    }
+   },
+   "umax_last": 0.0319061316549778,
+   "wall_s": 933.6
+  },
+  {
+   "d": 0.055,
+   "pc_nominal": 0.018333333333333333,
+   "pc_measured": 0.008739126668588879,
+   "rho_in_mean": 1.027500033378601,
+   "rho_out_mean": 0.9725000262260437,
+   "p_in_mean": 0.34250001112620043,
+   "p_out_mean": 0.32416667540868116,
+   "u_rms": 0.002247824723908998,
+   "u_bulk_x": 0.0003962989013818899,
+   "flux_r_rate": 7.470721634674073,
+   "flux_b_rate": -7.1323525752544406,
+   "steps": 20000,
+   "reason": "max-steps",
+   "s_nw": 0.07311331517994404,
+   "s_nw_binary": 0.07417329746581598,
+   "convergence": {
+    "criteria_passed": [],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": 1.940581202507019e-06,
+    "pc_drift": 0.040394180157310486,
+    "phase_flux": 3.8634147645370095e-06,
+    "u_rms_rel": 0.055774484616590514,
+    "exit": {
+     "mode": "sat",
+     "reason": "max-steps"
+    }
+   },
+   "umax_last": 0.031701043248176575,
+   "wall_s": 933.7
+  },
+  {
+   "d": 0.1,
+   "pc_nominal": 0.03333333333333333,
+   "pc_measured": 0.02558143310246837,
+   "rho_in_mean": 1.0499999523162842,
+   "rho_out_mean": 0.949999988079071,
+   "p_in_mean": 0.349999984105428,
+   "p_out_mean": 0.3166666626930237,
+   "u_rms": 0.0038090869390547642,
+   "u_bulk_x": 0.00117648272631862,
+   "flux_r_rate": 21.675780868530275,
+   "flux_b_rate": -21.262373077464105,
+   "steps": 20000,
+   "reason": "max-steps",
+   "s_nw": 0.17322067618370057,
+   "s_nw_binary": 0.17543836557988232,
+   "convergence": {
+    "criteria_passed": [
+     "pressure",
+     "kinetic"
+    ],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": 5.6374589602152506e-06,
+    "pc_drift": 0.006425895758465264,
+    "phase_flux": 1.1359792844449965e-05,
+    "u_rms_rel": 0.041477262670811914,
+    "exit": {
+     "mode": "sat",
+     "reason": "max-steps"
+    }
+   },
+   "umax_last": 0.033211030066013336,
+   "wall_s": 934.0
+  },
+  {
+   "d": 0.182,
+   "pc_nominal": 0.06066666666666667,
+   "pc_measured": 0.05482597361696562,
+   "rho_in_mean": 1.090999960899353,
+   "rho_out_mean": 0.9089999794960022,
+   "p_in_mean": 0.3636666536331177,
+   "p_out_mean": 0.302999993165334,
+   "u_rms": 0.006711740013417816,
+   "u_bulk_x": 0.002448001462294383,
+   "flux_r_rate": 45.47373077398936,
+   "flux_b_rate": -42.540628922224045,
+   "steps": 20000,
+   "reason": "max-steps",
+   "s_nw": 0.39810035526752474,
+   "s_nw_binary": 0.40287156638541993,
+   "convergence": {
+    "criteria_passed": [
+     "kinetic"
+    ],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": 1.2070782979329426e-05,
+    "pc_drift": 0.01006985019044982,
+    "phase_flux": 2.3285232400615636e-05,
+    "u_rms_rel": 0.011796462223393922,
+    "exit": {
+     "mode": "sat",
+     "reason": "max-steps"
+    }
+   },
+   "umax_last": 0.04704412445425987,
+   "wall_s": 955.0
+  },
+  {
+   "d": 0.281,
+   "pc_nominal": 0.09366666666666668,
+   "pc_measured": 0.02417924664356982,
+   "rho_in_mean": 1.1404999494552612,
+   "rho_out_mean": 0.859499990940094,
+   "p_in_mean": 0.3801666498184204,
+   "p_out_mean": 0.28649999698003126,
+   "u_rms": 0.005171065204629462,
+   "u_bulk_x": 0.0003416008691009486,
+   "flux_r_rate": 8.904249632994334,
+   "flux_b_rate": -4.161113750839234,
+   "steps": 20000,
+   "reason": "max-steps",
+   "s_nw": 0.6302547454833984,
+   "s_nw_binary": 0.6386652092842124,
+   "convergence": {
+    "criteria_passed": [],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": 1.744238535563151e-06,
+    "pc_drift": 0.9525801849789235,
+    "phase_flux": 3.456595308323845e-06,
+    "u_rms_rel": 0.09583272022562742,
+    "exit": {
+     "mode": "sat",
+     "reason": "max-steps"
+    }
+   },
+   "umax_last": 0.03034682758152485,
+   "wall_s": 933.9
+  }
+ ],
+ "equil_s_nw": 0.017859995365142822,
+ "sentry": {
+  "leak_r": 0.0004172714611536175,
+  "leak_b": 0.0009913130385637923,
+  "leak_m": 0.0017881493834586587
+ },
+ "inj": {
+  "inj_r": 2642540.36820966,
+  "inj_b": -2376340.7772991657,
+  "inj_m": 420704.0647254586
+ }
+}

@@ -17,7 +17,7 @@ x:  0        3            11 12  14                    214  217 218        225  
 | 边界 | 实现 | 关键参数 | 语义 |
 |---|---|---|---|
 | 固壁(x 两端各 3) | bounce-back(solid=1) | — | 无滑移 |
-| 入口 reservoir `[3,11)` | `set_reservoirs(res_in, +1, 1+δ/2)` | δ 逐档变 | 强制密度=压力源,**ψ 钉 +1(非润湿相源)**;Pc = δ/3(cs²=1/3) |
+| 入口 reservoir `[3,11)` | `set_reservoirs(res_in, +1, 1+δ/2)` | δ 逐档变 | 强制密度=压力源,**ψ 钉 +1(非润湿相源)**;Pc_nominal = δ/3(cs²=1/3);实测压差见 `pc_measured`(§3.1) |
 | 出口 reservoir | `set_reservoirs(res_out, −1, 1−δ/2)` | 同上 | ψ 钉 −1(润湿相汇) |
 | 半透膜 x=11 / x=217 | `set_membranes(mem_r, mem_b)`,ψ 条件 bounce-back 单平面 | mem_b 挡蓝(液)、mem_r 挡红(气) | 入口只进气、出口只出液 → 开放系统压力边界 |
 | y/z 方向 | periodic(`periodic_index` wrap) | — | 侧向无边界;真实立方跨面有人为连通(已知伪影) |
