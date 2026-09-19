@@ -13,7 +13,22 @@ Format:
 - Regression evidence (test + before/after numbers)
 ```
 
-## 2026-09-19 PR-6 — numerical audit doc + reduced old-vs-new benchmark
+## 2026-09-20 PR-6 — full-scale X2 rerun comparison (audit §4 filled)
+
+- `gx2c_postaudit` (full 9-rung baseline ladder, baseline protocol):
+  entry rung identical (d = 0.055); plateau S_nw 0.6706 vs baseline
+  0.6837 = **-1.93 % relative**, matching the reduced-scale estimate
+  (-1.83 %). equil S_nw identical (0.0190); sentry and exit-reason
+  pattern unchanged. Largest relative change at the d = 0.040
+  early-invasion rung (-23 % rel, -0.023 abs) — Compute_C fix
+  attribution, amplified in the invasion-knee region.
+- New-only diagnostics recorded: per-rung pc_measured, convergence
+  criteria (plateau rung passes saturation/flux/kinetic, pressure still
+  drifting >1 % — documented open diagnostic).
+- Report archived at results/data/gx2c_drain_report.json. X3 rerun
+  launched; table to be filled on completion.
+
+## 2026-09-19 PR-6 — reduced old-vs-new benchmark + audit doc
 
 - `docs/NUMERICAL_AUDIT_2026_09.md`: what-changed table (per-PR
   attribution), validation-ladder results, reduced-scale graphite
