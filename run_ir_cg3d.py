@@ -24,9 +24,9 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 
-from run_common import mid_slice_png, region_stats
+from run_common import (mid_slice_png, region_stats, eval_convergence,
+                        label_periodic)
 import numpy as np
-from scipy import ndimage
 
 
 
@@ -54,6 +54,19 @@ def main():
     ap.add_argument('--max-steps', type=int, default=150000)
     ap.add_argument('--qs-window', type=int, default=15000)
     ap.add_argument('--qs-tol', type=float, default=5e-7)
+    ap.add_argument('--qs-mode', choices=('sat', 'multi'), default='sat',
+                    help="quasi-steady exit rule (PR-3 task 2.4): 'sat' = "
+                         "legacy saturation-slope only (baseline-"
+                         "comparable); 'multi' = saturation AND pressure "
+                         "AND flux AND kinetic. The convergence record is "
+                         "always written either way.")
+    ap.add_argument('--pc-drift-tol', type=float, default=0.01)
+    ap.add_argument('--flux-tol', type=float, default=1e-6)
+    ap.add_argument('--u-rel-tol', type=float, default=0.05)
+    ap.add_argument('--conn', type=int, choices=(6, 18, 26), default=6,
+                    help='cluster connectivity for the trapped-gas CCDF '
+                         '(PR-3 task 2.6; 6 = legacy default). Periodic '
+                         'y/z merge (task 2.7) is always on.')
     ap.add_argument('--every', type=int, default=500)
     ap.add_argument('--umax-cap', type=float, default=0.12)
     ap.add_argument('--pc-band', type=int, default=4,
@@ -148,7 +161,10 @@ def main():
         band_out = region_stats(rho_c, psi_c, v_c, band_out_m)
         fd = region_stats(rho_c, psi_c, v_c, dom_pore)
         fl = s.reservoir_fluxes()
-        return dict(s_nw=float(red.sum() / pore_cells), umax=umax,
+        return dict(s_nw=float(red.sum() / pore_cells),
+                    s_nw_binary=float(((psi_c > 0.0) & dom_pore).sum()
+                                      / pore_cells),
+                    umax=umax,
                     rho_in_mean=rs_in['rho_mean'],
                     rho_out_mean=rs_out['rho_mean'],
                     p_in_mean=rs_in['p_mean'], p_out_mean=rs_out['p_mean'],
@@ -179,8 +195,19 @@ def main():
                         and w[-1][0] - w[0][0] >= args.qs_window * 0.8):
                     slope = (w[-1][1] - w[0][1]) / (w[-1][0] - w[0][0])
                     if abs(slope) < args.qs_tol:
-                        reason = 'quasi-steady'
-                        break
+                        win = [(a2, dm) for a2, dm in samples
+                               if a2 > it - args.qs_window]
+                        conv = eval_convergence(
+                            win, pore_cells, args.qs_tol,
+                            args.pc_drift_tol, args.flux_tol,
+                            args.u_rel_tol)
+                        needed = (['saturation'] if args.qs_mode == 'sat'
+                                  else ('saturation', 'pressure', 'flux',
+                                        'kinetic'))
+                        if all(c in conv['criteria_passed']
+                               for c in needed):
+                            reason = 'quasi-steady'
+                            break
                 if m['umax'] > args.umax_cap:
                     reason = 'umax-cap'
                     break
@@ -195,6 +222,10 @@ def main():
             flux_b_rate = (win[-1][1]['inj_b'] - win[0][1]['inj_b']) / span
         else:
             flux_r_rate = flux_b_rate = None
+        conv = eval_convergence(win, pore_cells, args.qs_tol,
+                                args.pc_drift_tol, args.flux_tol,
+                                args.u_rel_tol)
+        conv['exit'] = dict(mode=args.qs_mode, reason=reason)
         if args.dump_every:
             dump_frame(it, d, phase)          # rung-end frame: every rung
         print(f'[{args.tag}] {phase} d={d:.4f} -> {reason} steps={it} '
@@ -205,7 +236,9 @@ def main():
                     p_in_mean=tmean('p_in_mean'), p_out_mean=tmean('p_out_mean'),
                     u_rms=tmean('u_rms'), u_bulk_x=tmean('u_bulk_x'),
                     flux_r_rate=flux_r_rate, flux_b_rate=flux_b_rate,
-                    phase=phase, steps=it, reason=reason, s_nw=sn_end)
+                    phase=phase, steps=it, reason=reason, s_nw=sn_end,
+                    s_nw_binary=tmean('s_nw_binary'),
+                    convergence=conv)
 
     for it in range(1, args.equil_steps + 1):
         s.step()
@@ -220,19 +253,28 @@ def main():
         _save_partial(args, ladder)
 
     # ---- trapped cluster analysis on the final state ----
+    # PR-3 tasks 2.5-2.7: binary (psi > 0) vs continuous saturation, and
+    # connectivity-parameterised clusters WITH periodic y/z merging (the
+    # solver is y/z-periodic; plain ndimage.label splits spanning
+    # clusters, over-counting n and under-counting 'largest').
     psi = s.psi_snapshot()
     red_dom = (psi[dom, :, :] > 0.0) & dom_pore
-    lab, n = ndimage.label(red_dom)
-    sizes = np.sort(ndimage.sum(red_dom, lab, range(1, n + 1)))[::-1]
+    lab, sizes = label_periodic(red_dom, conn=args.conn)
+    n = int(len(sizes))
     total_red = float(red_dom.sum())
-    s_nr = total_red / pore_cells
+    s_nr = total_red / pore_cells                    # binary (legacy key)
+    red_cont = np.where(dom_pore, (psi[dom, :, :] + 1.0) / 2.0, 0.0)
+    s_nr_continuous = float(red_cont.sum() / pore_cells)
     mid_slice_png(psi, os.path.join(out, 'final.png'),
-                  f'{args.tag}: S_nr={s_nr:.3f}, clusters={n}, '
-                  f'largest={sizes[0] if n else 0:.0f}')
+                  f'{args.tag}: S_nr={s_nr:.3f} (cont {s_nr_continuous:.3f}), '
+                  f'clusters={n} (conn{args.conn}, periodic), '
+                  f'largest={sizes[0] if n else 0.0:.0f}')
     fl = s.reservoir_fluxes()
     np.savez_compressed(os.path.join(out, 'final.npz'), psi=psi,
                         solid=solid, sizes=sizes)
     summary = dict(args=vars(args), ladder=ladder, s_nr=s_nr,
+                   s_nr_continuous=s_nr_continuous,
+                   cluster_topology=dict(conn=args.conn, periodic='y/z'),
                    n_clusters=n, largest=float(sizes[0]) if n else 0.0,
                    sizes_top=[float(v) for v in sizes[:50]], inj=fl)
     with open(os.path.join(out, 'report.json'), 'w',

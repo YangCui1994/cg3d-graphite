@@ -62,6 +62,21 @@ x:  0        3            11 12  14                    214  217 218        225  
 | `u_rms` / `u_bulk_x` | 域内 pore 的 RMS 速度 / 平均 x 向速度 | flow diagnostics(quasi-steady 多指标判据的输入,PR-3) |
 | `flux_r_rate` / `flux_b_rate` | 尾窗(qs-window)内 reservoir 注入质量变化率 | net phase flux,每 lu 时间步的质量;准稳态应 → 0 |
 
+### 3.2 PR-3 后处理字段(2026-09-19 起)
+
+**双口径 saturation**(任务 2.5):梯档行新增 `s_nw_binary`(psi>0 的 pore 格占比);既有 `s_nw` 保持 continuous 口径(psi 积分)。I–R 终态 `s_nr` 保持 binary 口径(legacy),新增 `s_nr_continuous`。两口径差值 ~ 界面体积占比,是分辨率诊断。
+
+**多指标收敛**(任务 2.4):每档行新增 `convergence` dict,回答"为什么这一档退出":
+
+```json
+{"saturation_slope": ..., "pc_drift": ..., "phase_flux": ..., "u_rms_rel": ...,
+ "criteria_passed": [...], "thresholds": {...}, "exit": {"mode": "sat|multi", "reason": "..."}}
+```
+
+退出规则 `--qs-mode`:`sat`(默认,legacy——仅 saturation 斜率,与 baseline 可比)或 `multi`(saturation AND pressure AND flux AND kinetic)。**无论哪种模式,convergence 记录总是完整写入**(max-steps 退出的档也能看到哪项判据未过)。阈值全部 CLI 化:`--pc-drift-tol`(0.01)、`--flux-tol`(1e-6/pore/step)、`--u-rel-tol`(0.05)。
+
+**cluster topology**(任务 2.6/2.7):I–R 终态连通性 `--conn {6,18,26}`(默认 6=legacy);**y/z periodic merge 恒开**(solver 是 y/z 周期的,旧的非周期 labeling 会把跨缝 cluster 拆开——n_clusters 高估、largest 低估);report 记录 `cluster_topology = {conn, periodic}`。周期合并改变 X3 类结果的 n/largest 数值(baseline 存档不受影响,Phase 5 量化差异)。实现:`run_common.label_periodic`(非周期 label + 缝平面 union-find;注意单层 wrap padding 方案不可行,pad 拷贝与原格不同 label)。
+
 实现:`run_common.region_stats()`(纯 numpy,不碰 solver 状态);快照复用 `measure()` 已取的 ψ/ρ/v 数组,零额外 GPU 拷贝。
 
 帧成本参考:205×200×200 int8 ≈ 8 MB/帧(压缩后 ~3–5 MB);20k 步/帧 × 9 档 × 15 万步帽 ≈ 每 run 数百 MB,可接受。
