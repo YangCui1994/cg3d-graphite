@@ -65,23 +65,56 @@ Run 2026-09-19, both codes, same geometry file; reports archived as
 - Caveat: reduced ladder, single seed-geometry, transient rungs — the
   definitive numbers are the full-scale reruns in §4.
 
-## 4. Full-scale reruns (pending GPU time; validation gates are green)
+## 4. Full-scale X2 rerun (complete) and X3 rerun
 
-Commands (full X2b ladder, run from repo root, ~7.4 h each on the
-RTX 5080):
+X2 commands (baseline ladder, run 2026-09-19/20, `gx2c_postaudit`):
 
 ```bash
-python make_geo_buffer.py   # regenerates geo_graphite_228b14.npz if absent
 python run_pcs_cg3d.py --geo geo_graphite_228b14.npz --tag gx2c_postaudit \
     --ds 0.03 0.04 0.055 0.074 0.1 0.135 0.182 0.245 0.281 \
     --psi-solid -0.68
+```
+
+### X2 drainage: baseline (gx2b) vs post-audit (gx2c)
+
+| d | S_nw base | S_nw new | ΔS | rel | reason base | reason new | steps base | steps new |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0.030 | 0.0393 | 0.0385 | −0.0008 | −2.1 % | quasi-steady | quasi-steady | 25000 | 24000 |
+| 0.040 | 0.0978 | 0.0750 | −0.0228 | −23.3 % | quasi-steady | quasi-steady | 83500 | 48500 |
+| 0.055 | 0.2984 | 0.2671 | −0.0313 | −10.5 % | max-steps | max-steps | 150000 | 150000 |
+| 0.074 | 0.5721 | 0.5407 | −0.0314 | −5.5 % | max-steps | max-steps | 150000 | 150000 |
+| 0.100 | 0.6284 | 0.6172 | −0.0113 | −1.8 % | quasi-steady | quasi-steady | 46500 | 55500 |
+| 0.135 | 0.6542 | 0.6411 | −0.0131 | −2.0 % | quasi-steady | quasi-steady | 31000 | 28500 |
+| 0.182 | 0.6706 | 0.6565 | −0.0141 | −2.1 % | quasi-steady | quasi-steady | 18000 | 17000 |
+| 0.245 | 0.6796 | 0.6661 | −0.0135 | −2.0 % | quasi-steady | quasi-steady | 15000 | 15000 |
+| 0.281 | 0.6837 | 0.6706 | −0.0132 | −1.9 % | quasi-steady | quasi-steady | 15000 | 15000 |
+
+- **Entry rung identical (d = 0.055); plateau −1.93 % relative
+  (0.6706 vs 0.6837) — matching the reduced-scale estimate (−1.83 %).**
+- equil S_nw identical (0.0190); sentry same magnitude (leak_r 2.7e-3
+  vs 2.8e-3); exit-reason pattern identical (same rungs hit the caps).
+- Largest relative change at d = 0.040 (−23 %, −0.023 absolute): the
+  early-invasion rung, where the front sweeps along solid walls and the
+  Compute_C fix removes spurious wall currents — same attribution as
+  the reduced pair, amplified in the invasion-knee region (0.04–0.074).
+- New-only diagnostics: pc_measured runs [−0.001 → 0.023 → 0.010]
+  across the ladder (nonzero where invasion is active, small drift at
+  plateau — the last rung passes saturation/flux/kinetic but not yet
+  the 1 % pressure criterion); flux_r ≈ −0.56 mass/step at the plateau
+  rung. The band pressures mix both phases where menisci sit inside the
+  bands, so pc_measured ≠ pc_nominal by construction (§3.1); full
+  interpretation of its plateau value is left as a documented open
+  diagnostic, not a physics claim.
+
+### X3 imbibition-residual rerun (running)
+
+```bash
 python run_ir_cg3d.py --geo geo_graphite_228b14.npz --tag gx3c_postaudit \
     --ds-drain 0.03 0.055 0.074 --ds-imbibe 0.055 0.04 0.025 0.012 0.0 \
     --psi-solid -0.68
 ```
 
-Comparison targets vs `results/baseline/`: σ/θ (already verified above),
-entry Pc, drainage plateau, S_i, S_nr (continuous + binary), cluster
-count, largest cluster (expect the periodic-merge change to LOWER
-n_clusters and RAISE largest vs baseline — that is a reporting fix, not
-a physics change).
+Comparison targets vs `results/baseline/`: S_i, S_nr (continuous +
+binary), cluster count, largest cluster (expect the periodic-merge
+change to LOWER n_clusters and RAISE largest vs baseline — that is a
+reporting fix, not a physics change). Table to be filled on completion.
