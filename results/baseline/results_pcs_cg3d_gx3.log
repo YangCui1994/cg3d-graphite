@@ -1,0 +1,12 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[gx3_ir] equil done
+[gx3_ir] drain d=0.0300 -> quasi-steady steps=25000 S_nw=0.0393 (1228s)
+[gx3_ir] drain d=0.0550 -> max-steps steps=150000 S_nw=0.2723 (7366s)
+[gx3_ir] drain d=0.0740 -> max-steps steps=150000 S_nw=0.5579 (7366s)
+[gx3_ir] imbibe d=0.0550 -> quasi-steady steps=15000 S_nw=0.5667 (736s)
+[gx3_ir] imbibe d=0.0400 -> quasi-steady steps=15000 S_nw=0.5651 (737s)
+[gx3_ir] imbibe d=0.0250 -> quasi-steady steps=37000 S_nw=0.5425 (1852s)
+[gx3_ir] imbibe d=0.0120 -> max-steps steps=150000 S_nw=0.4050 (7741s)
+[gx3_ir] imbibe d=0.0000 -> max-steps steps=150000 S_nw=0.1765 (7364s)
+[gx3_ir] I-R DONE: S_i=0.558 -> S_nr=0.171, clusters=32, largest=430341

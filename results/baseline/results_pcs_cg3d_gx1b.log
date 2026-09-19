@@ -1,0 +1,18 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[gx1b_sanity] geo nx=228 phi_solid=0.4847
+[gx1b_sanity] equil 20000 steps: S_nw=0.0191 (991s)
+[gx1b_sanity] d00_0.020 10000 S_nw=0.0288 umax=0.038
+[gx1b_sanity] d00_0.020 -> quasi-steady steps=18500 S_nw=0.0303 wall=909.7s
+[gx1b_sanity] d01_0.040 10000 S_nw=0.0450 umax=0.036
+[gx1b_sanity] d01_0.040 20000 S_nw=0.0555 umax=0.034
+[gx1b_sanity] d01_0.040 30000 S_nw=0.0647 umax=0.034
+[gx1b_sanity] d01_0.040 40000 S_nw=0.0727 umax=0.033
+[gx1b_sanity] d01_0.040 -> max-steps steps=40000 S_nw=0.0691 wall=1967.6s
+[gx1b_sanity] d02_0.080 10000 S_nw=0.1171 umax=0.033
+[gx1b_sanity] d02_0.080 20000 S_nw=0.1590 umax=0.034
+[gx1b_sanity] d02_0.080 30000 S_nw=0.1980 umax=0.034
+[gx1b_sanity] d02_0.080 40000 S_nw=0.2345 umax=0.034
+[gx1b_sanity] d02_0.080 -> max-steps steps=40000 S_nw=0.2169 wall=1966.8s
+[gx1b_sanity] LADDER DONE: 0.020->0.030(qu) 0.040->0.069(ma) 0.080->0.217(ma)
+[gx1b_sanity] sentry {'leak_r': 0.00022150318715329548, 'leak_b': 0.0012979826813642756, 'leak_m': 0.0018922503625552968}
