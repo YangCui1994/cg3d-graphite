@@ -30,7 +30,9 @@ def fig_pcs(tag):
         rp = f'{RES}/{tag}/report_partial.json'
     rep = json.load(open(rp))
     lad = rep['ladder']
-    pc = [r['pc'] for r in lad]
+    # pc_nominal since PR-1 (Plan_20260919_v2 2.1); 'pc' = pre-audit
+    # reports (results/baseline/)
+    pc = [r.get('pc_nominal', r.get('pc')) for r in lad]
     snw = [r['s_nw'] for r in lad]
     fig, ax = plt.subplots(figsize=(4.8, 3.7))
     ax.plot(pc, snw, 'o-', ms=6, mfc='w', mec='k', lw=1.3)

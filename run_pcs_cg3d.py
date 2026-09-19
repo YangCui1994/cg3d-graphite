@@ -29,7 +29,7 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 
-from run_common import mid_slice_png
+from run_common import mid_slice_png, region_stats
 import numpy as np
 
 OUTROOT = 'results_pcs_cg3d'
@@ -63,6 +63,11 @@ def main():
                          'is written once as f_solid.npz.  For animations -- '
                          'see 2phase/viz3d.py animate.')
     ap.add_argument('--umax-cap', type=float, default=0.12)
+    ap.add_argument('--pc-band', type=int, default=4,
+                    help='width [lu] of the pore bands just inside each '
+                         'membrane used for pc_measured (the pressure the '
+                         'sample actually sees; reservoir rho is pinned, '
+                         'so its mean is trivially the nominal value)')
     ap.add_argument('--tag', required=True)
     args = ap.parse_args()
 
@@ -145,18 +150,39 @@ def main():
             s_nw=np.float32(red.sum() / pore_cells))
 
     def measure():
+        """PR-1 instruments (Plan_20260919_v2 2.1-2.3): per-sample
+        reservoir / band / domain-flow diagnostics on top of s_nw & umax."""
         psi = s.psi_snapshot()
-        _, v = s.macro_snapshot()
+        rho, v = s.macro_snapshot()
         red = np.where(dom_pore, (psi[dom, :, :] + 1.0) / 2.0, 0.0)
-        u_mag = np.sqrt((v[dom, :, :, 0])**2 + (v[dom, :, :, 1])**2
-                        + (v[dom, :, :, 2])**2)
+        rho_c, psi_c, v_c = rho[dom, :, :], psi[dom, :, :], v[dom, :, :, :]
+        u_mag = np.sqrt(v_c[..., 0]**2 + v_c[..., 1]**2 + v_c[..., 2]**2)
+        rs_in = region_stats(rho, psi, v, res_in.astype(bool))
+        rs_out = region_stats(rho, psi, v, res_out.astype(bool))
+        band_in_m = np.zeros_like(dom_pore)
+        band_in_m[:args.pc_band] = dom_pore[:args.pc_band]
+        band_out_m = np.zeros_like(dom_pore)
+        band_out_m[-args.pc_band:] = dom_pore[-args.pc_band:]
+        band_in = region_stats(rho_c, psi_c, v_c, band_in_m)
+        band_out = region_stats(rho_c, psi_c, v_c, band_out_m)
+        fd = region_stats(rho_c, psi_c, v_c, dom_pore)
+        fl = s.reservoir_fluxes()
         return dict(s_nw=float(red.sum() / pore_cells),
-                    umax=float(u_mag.max()))
+                    umax=float(u_mag.max()),
+                    rho_in_mean=rs_in['rho_mean'],
+                    rho_out_mean=rs_out['rho_mean'],
+                    p_in_mean=rs_in['p_mean'], p_out_mean=rs_out['p_mean'],
+                    pc_band_in=band_in['p_mean'],
+                    pc_band_out=band_out['p_mean'],
+                    pc_measured=band_in['p_mean'] - band_out['p_mean'],
+                    u_rms=fd['v_rms'], u_bulk_x=fd['v_bulk'][0],
+                    inj_r=fl['inj_r'], inj_b=fl['inj_b'], inj_m=fl['inj_m'])
 
     def run_hold(d, label):
         set_ladder(d)
         t0 = time.time()
-        hist = []
+        hist = []      # (it, s_nw): quasi-steady slope, unchanged
+        samples = []   # (it, full diagnostic dict): rung-tail means
         it = 0
         reason = 'max-steps'
         while it < args.max_steps:
@@ -167,6 +193,7 @@ def main():
             if it % args.every == 0:
                 m = measure()
                 hist.append((it, m['s_nw']))
+                samples.append((it, m))
                 w = [(i, sv) for i, sv in hist
                      if i > it - args.qs_window]
                 if (it >= args.min_steps and len(w) >= 4
@@ -183,8 +210,28 @@ def main():
                         reason = 'umax-cap'
                         break
         tail = [sv for _, sv in hist[-20:]]
-        row = dict(d=d, pc=d / 3.0, steps=it, reason=reason,
-                   s_nw=float(np.mean(tail)), umax_last=m['umax'],
+        diag = [dm for _, dm in samples[-20:]]
+        tmean = lambda k: (float(np.mean([dm[k] for dm in diag]))
+                           if diag else None)
+        # net colour flux rate over the same trailing window as the
+        # slope test (mass/step through the reservoirs)
+        win = [(i, dm) for i, dm in samples if i > it - args.qs_window]
+        if len(win) >= 2 and win[-1][0] > win[0][0]:
+            span = win[-1][0] - win[0][0]
+            flux_r_rate = (win[-1][1]['inj_r'] - win[0][1]['inj_r']) / span
+            flux_b_rate = (win[-1][1]['inj_b'] - win[0][1]['inj_b']) / span
+        else:
+            flux_r_rate = flux_b_rate = None
+        m_last = samples[-1][1] if samples else {}
+        row = dict(d=d, pc_nominal=d / 3.0, pc_measured=tmean('pc_measured'),
+                   rho_in_mean=tmean('rho_in_mean'),
+                   rho_out_mean=tmean('rho_out_mean'),
+                   p_in_mean=tmean('p_in_mean'), p_out_mean=tmean('p_out_mean'),
+                   u_rms=tmean('u_rms'), u_bulk_x=tmean('u_bulk_x'),
+                   flux_r_rate=flux_r_rate, flux_b_rate=flux_b_rate,
+                   steps=it, reason=reason,
+                   s_nw=float(np.mean(tail)),
+                   umax_last=m_last.get('umax'),
                    wall_s=round(time.time() - t0, 1))
         mid_slice_png(s.psi_snapshot(),
                       os.path.join(out, f'psi_{label}_{it:06d}.png'),

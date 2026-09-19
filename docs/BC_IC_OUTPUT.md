@@ -49,6 +49,21 @@ x:  0        3            11 12  14                    214  217 218        225  
 | 终态 | 全梯结束 | `final.npz`(ψ+solid;I–R 另含 sizes)、`report.json`(ladder+sentry+簇统计)、`final.png` | 定量分析主数据 |
 | 测量 | `--every 500` | 进内存 + 日志 | qs 判据、umax 监控 |
 
+### 3.1 梯档 report 字段(PR-1 instruments,2026-09-19 起)
+
+每档结束的 ladder 行(两 driver 同 schema;旧字段 `pc` 改名,读旧 report 用 `r.get('pc_nominal', r.get('pc'))`):
+
+| 字段 | 定义 | 说明 |
+|---|---|---|
+| `pc_nominal` | cs²·δ = δ/3 | 入口/出口 reservoir 密度差的名义 Pc(旧 `pc`) |
+| `pc_measured` | p(band_in) − p(band_out),p = ρ/3 | **样品侧实测压差**:膜内侧各 `--pc-band`(默认 4)lu 厚 pore band 的平均压力差。band 内若跨界面,则自动包含该界面的 capillary jump——这正是样品实际承受的压差,而非缺陷 |
+| `rho_in_mean` / `rho_out_mean` | reservoir 区 ρ 平均 | reservoir 每 step 被 pin,稳态下 ≈ 目标值(1±δ/2);偏离即 pinning 失效告警 |
+| `p_in_mean` / `p_out_mean` | ρ/3 | 同上,压力形式 |
+| `u_rms` / `u_bulk_x` | 域内 pore 的 RMS 速度 / 平均 x 向速度 | flow diagnostics(quasi-steady 多指标判据的输入,PR-3) |
+| `flux_r_rate` / `flux_b_rate` | 尾窗(qs-window)内 reservoir 注入质量变化率 | net phase flux,每 lu 时间步的质量;准稳态应 → 0 |
+
+实现:`run_common.region_stats()`(纯 numpy,不碰 solver 状态);快照复用 `measure()` 已取的 ψ/ρ/v 数组,零额外 GPU 拷贝。
+
 帧成本参考:205×200×200 int8 ≈ 8 MB/帧(压缩后 ~3–5 MB);20k 步/帧 × 9 档 × 15 万步帽 ≈ 每 run 数百 MB,可接受。
 
 ## 4. 数值参数速查(当前基线)
