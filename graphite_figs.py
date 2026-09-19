@@ -45,7 +45,7 @@ def fig_pcs(tag):
         ax.axvline(pc[jump[0]], color='r', ls=':', lw=1)
         ax.annotate('entry', (pc[jump[0]], 0.55), color='r', fontsize=8,
                     rotation=90, va='center', ha='right')
-    ax.set_xlabel('Pc [lu] (= delta/3)')
+    ax.set_xlabel('Pc_nominal [lu] (= delta/3)')
     ax.set_ylabel('$S_{nw}$')
     ax.set_title(f'Primary drainage, real graphite 200$^3$ ({tag})',
                  fontsize=9)
