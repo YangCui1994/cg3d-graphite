@@ -111,26 +111,39 @@ def run_equil(ns, sys_, sample=False):
 
 
 def run_hold(ns, sys_, d, label, phase=None, dump_frame=None,
-             rung_end_frame=False):
+             rung_end_frame=False, it_start=0, it_offset=0,
+             live_ckpt=None, ckpt_every=0):
     """One pressure rung.  `ns` is the driver's argparse namespace
     (fields: every, min_steps, max_steps, qs_window, qs_tol, qs_mode,
     pc_drift_tol, flux_tol, u_rel_tol, umax_cap).  `dump_frame(it)` is an
     optional per-driver frame callback (drivers keep their own frame
     naming); rung_end_frame asks for an extra call at rung exit.
-    Returns the ladder row dict."""
+
+    Resume bookkeeping (PR-7, loop logic only — kernels and the exit
+    rules are untouched): `it_start` counts the rung's steps from a
+    mid-rung checkpoint (convergence windows start empty on replay, so a
+    resumed rung runs AT LEAST as long as the uninterrupted one, never
+    shorter); `it_offset` shifts only the step numbers handed to
+    dump_frame/live_ckpt so frames keep unique global names in a
+    resumed output dir; `live_ckpt(it_global)` is called at sampling
+    points whenever `ckpt_every` (multiple of ns.every) divides the
+    global step.  Returns the ladder row dict."""
     s = sys_.s
     sys_.set_ladder(d)
     t0 = time.time()
     hist = []      # (it, s_nw): quasi-steady slope
     samples = []   # (it, full diagnostic dict): rung-tail means
-    it = 0
+    it = it_start
     reason = 'max-steps'
     while it < ns.max_steps:
         it += 1
         s.step()
         if dump_frame is not None and ns.dump_every and it % ns.dump_every == 0:
-            dump_frame(it)
+            dump_frame(it + it_offset)
         if it % ns.every == 0:
+            if (live_ckpt is not None and ckpt_every
+                    and (it + it_offset) % ckpt_every == 0):
+                live_ckpt(it + it_offset)
             m = sys_.measure()
             hist.append((it, m['s_nw']))
             samples.append((it, m))
@@ -158,7 +171,7 @@ def run_hold(ns, sys_, d, label, phase=None, dump_frame=None,
                 reason = 'umax-cap'
                 break
     if rung_end_frame and dump_frame is not None and ns.dump_every:
-        dump_frame(it)
+        dump_frame(it + it_offset)
     tail = [sv for _, sv in hist[-20:]]
     diag = [dm for _, dm in samples[-20:]]
     tmean = lambda k: (float(np.mean([dm[k] for dm in diag]))
