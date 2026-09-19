@@ -1,7 +1,10 @@
 # Simulation
-taichi>=1.0.2        # GPU backend; LBM_ARCH=cpu env var forces CPU
-numpy
-scipy
+# Baseline-freeze pin (2026-09-19, Plan_20260919_v2 Phase 0); exact versions
+# of the machine that produced results/baseline/: conda env `lbm`,
+# python 3.10.21 / numpy 2.2.6 / scipy 1.15.3, RTX 5080 driver 595.95.
+taichi==1.7.4        # GPU backend; LBM_ARCH=cpu env var forces CPU
+numpy==2.2.6
+scipy==1.15.3
 
 # Geometry pipeline (process_electrode_BIL.py: raw tiff -> segmented npz)
 scikit-image

@@ -1,0 +1,5 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[gx1_sanity] geo nx=200 phi_solid=0.5525
+[gx1_sanity] equil 20000 steps: S_nw=nan (793s)
+[gx1_sanity] d00_0.020 10000 S_nw=nan umax=nan
