@@ -439,7 +439,13 @@ class ColorGradientSolver3D:
                 ind_S = 1
                 C += 3.0 * w[s] * e_f[s] * self.psi_solid_f[ip]
 
-        if (ti.abs(self.rho_r[i] - self.rho_b[i]) > 0.9) and (ind_S == 1):
+        # Bulk suppression next to solid: normalised criterion |psi| > 0.9
+        # (PR-2 fix). The raw form abs(rho_r - rho_b) > 0.9 is density-
+        # dependent: under rho-pressure driving the outlet sits at
+        # rho = 1 - d/2 (0.89 at the d = 0.22 rung) where pure red fails
+        # the threshold and spurious wall forces reappear.
+        if (ti.abs(self.rho_r[i] - self.rho_b[i])
+                > 0.9 * (self.rho_r[i] + self.rho_b[i])) and (ind_S == 1):
             C = ti.Vector([0.0, 0.0, 0.0])
 
         return C
@@ -495,11 +501,17 @@ class ColorGradientSolver3D:
     @ti.func
     def GuoF(self, i: ti.i32, j: ti.i32, k: ti.i32, s: ti.i32,
              u: ti.template()):
+        # Guo (2002) force in moment space with the full 1/cs^2 (3) and
+        # 1/cs^4 (9) weights (PR-2 fix). The original omitted both, so the
+        # momentum actually injected per step was F/3 while streaming3's
+        # half-force correction assumed F — measured eff=0.332 on this
+        # solver (2D P2 calibration: 0.330). Reservoir-driven runs are
+        # unaffected (F = 0).
         fvec = self.force_at(i, j, k)
         out = 0.0
         for l in ti.static(range(19)):
-            out += w[l] * ((e_f[l] - u).dot(fvec) +
-                   (e_f[l].dot(u)) * (e_f[l].dot(fvec))) * M[s, l]
+            out += w[l] * (3.0 * (e_f[l] - u).dot(fvec)
+                   + 9.0 * (e_f[l].dot(u)) * (e_f[l].dot(fvec))) * M[s, l]
         return out
 
     # --------------------------------------------------------
@@ -792,6 +804,18 @@ class ColorGradientSolver3D:
                 # FIXED parenthesisation (3D upstream :612 bug NOT inherited)
                 self.psi[i, j, k] = (self.rho_r[i, j, k] - self.rho_b[i, j, k]) / (self.rho_r[i, j, k] + self.rho_b[i, j, k])
 
+    @ti.kernel
+    def color_gradient_probe(self, out: ti.types.ndarray()):
+        """Read-only diagnostic: raw Compute_C colour-gradient vectors on
+        fluid nodes (audit / wettability-diagnosis use; nothing in step()
+        calls this)."""
+        for i, j, k in self.rho:
+            if i < self.nx and j < self.ny and k < self.nz and self.solid[i, j, k] == 0:
+                C = self.Compute_C(ti.Vector([i, j, k]))
+                out[i, j, k, 0] = C[0]
+                out[i, j, k, 1] = C[1]
+                out[i, j, k, 2] = C[2]
+
     def step(self):
         """Advance one timestep."""
         self.collision()
@@ -809,6 +833,12 @@ class ColorGradientSolver3D:
 
     def psi_snapshot(self):
         return self.psi.to_numpy()
+
+    def color_gradient_snapshot(self):
+        """Host wrapper for color_gradient_probe (PR-2 instrument)."""
+        out = np.zeros((self.nx, self.ny, self.nz, 3), dtype=np.float32)
+        self.color_gradient_probe(out)
+        return out
 
     def macro_snapshot(self):
         return self.rho.to_numpy(), self.v.to_numpy()
