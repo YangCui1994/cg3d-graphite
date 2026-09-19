@@ -17,7 +17,11 @@ ONE realization.
 Geometry: interior sub-box of the Finney RCP specimen (npz from
 finney_to_solid.py) or any (solid, meta) npz.
 
-Run from 2phase/:
+PR-5 (2026-09-19): geometry/ladder/convergence live in cg3d.protocol
+(OpenSystem + run_hold) — shared verbatim with run_ir_cg3d.py; this
+driver keeps argparse, frame naming, sentry and report layout.
+
+Run from repo root:
   python run_pcs_cg3d.py --geo results_p3_geo/finney_r25_n150.npz \
       --tag p3a_tune --ds 0.036 0.048 0.062 0.080 0.104 0.134 0.174 0.22
 """
@@ -29,11 +33,12 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 
-from run_common import (mid_slice_png, region_stats, eval_convergence)
 import numpy as np
 
-OUTROOT = 'results_pcs_cg3d'
+from run_common import mid_slice_png
+from cg3d import OpenSystem, run_hold, run_equil
 
+OUTROOT = 'results_pcs_cg3d'
 
 
 def main():
@@ -85,218 +90,69 @@ def main():
     ap.add_argument('--tag', required=True)
     args = ap.parse_args()
 
-    from lbm_solver_cg3d import ColorGradientSolver3D
-
     out = os.path.join(OUTROOT, args.tag)
     os.makedirs(out, exist_ok=True)
 
-    dat = np.load(args.geo)
-    solid_full = dat['solid'].astype(np.int8)
-    nx, ny, nz = solid_full.shape
-    geo_meta = str(dat['meta'][0]) if 'meta' in dat else '{}'
-    pore_full = solid_full == 0
-    print(f'[{args.tag}] geo nx={nx} phi_solid={solid_full.mean():.4f}',
-          flush=True)
-
-    # --- layout: wall | red res | mem_b | domain | mem_r | blue res | wall
-    wt = 3
-    rt = args.res_thick
-    x_imem_in = wt + rt                    # inlet membrane plane
-    x_imem_out = nx - wt - rt              # outlet membrane plane
-    solid = solid_full.copy()
-    solid[:wt, :, :] = 1
-    solid[nx - wt:, :, :] = 1
-    dom = slice(x_imem_in + 1, x_imem_out)
-    dom_pore = pore_full[dom, :, :]
-
-    psi0 = np.where(solid == 0, -1.0, 0.0).astype(np.float32)
-    psi0[wt:x_imem_in + 1, :, :] = np.where(
-        pore_full[wt:x_imem_in + 1, :, :], 1.0, 0.0).astype(np.float32)
-    psi0[x_imem_in, :, :] = np.where(
-        pore_full[x_imem_in, :, :], 1.0, 0.0).astype(np.float32)
-    # outlet membrane stays blue-pre-wet
-    mem_r = np.zeros_like(solid)
-    mem_b = np.zeros_like(solid)
-    mem_b[x_imem_in, :, :] = 1             # inlet: blocks blue, red enters
-    mem_r[x_imem_out, :, :] = 1            # outlet: blocks red, blue leaves
-    res_in = np.zeros_like(solid)
-    res_in[wt:x_imem_in, :, :] = 1
-    res_out = np.zeros_like(solid)
-    res_out[x_imem_out + 1:nx - wt, :, :] = 1
-
-    s = ColorGradientSolver3D(nx, ny, nz, CapA=args.capa)
-    s.set_psi_solid(args.psi_solid)
-    s.set_membranes(mem_r, mem_b)
-
-    def set_ladder(d):
-        """rho_in = 1+d/2, rho_out = 1-d/2 -> Pc = cs^2 d."""
-        s.set_reservoirs(res_in, 1.0, 1.0 + d / 2.0)
-        s.set_reservoirs(res_out, -1.0, 1.0 - d / 2.0)
-
-    set_ladder(0.0)
-    s.init(psi0, solid)
+    sys_ = OpenSystem(args.geo, args.capa, args.psi_solid,
+                      res_thick=args.res_thick, pc_band=args.pc_band)
+    s = sys_.s
+    print(f'[{args.tag}] geo {sys_.shape[0]}x{sys_.shape[1]}x{sys_.shape[2]} '
+          f'pore_cells={int(sys_.pore_cells)}', flush=True)
     m0 = dict(tot=s.total_mass(), r=s.color_masses()[0],
               b=s.color_masses()[1])
-
-    pore_cells = float(dom_pore.sum())
 
     dump_dir = os.path.join(out, 'frames')
     if args.dump_every:
         os.makedirs(dump_dir, exist_ok=True)
         np.savez_compressed(os.path.join(dump_dir, 'f_solid.npz'),
-                            solid=solid[dom, :, :].astype(np.int8))
+                            solid=sys_.solid[sys_.dom, :, :].astype(np.int8))
         print(f'[{args.tag}] dumping a frame every {args.dump_every} steps '
               f'-> {dump_dir}', flush=True)
 
-    def dump_frame(it, d):
+    def make_dump_frame(d):
         """int8-quantised psi, cropped to the pore domain.
 
         2026-09-15 user rule: output must never be head/tail-only, so
         --dump-every now defaults ON (20000).  Frames carry the rung delta
         in the name — a bare step counter let later rungs overwrite earlier
         rungs' frames (gx2_drain kept only d03's)."""
-        psi = s.psi_snapshot()[dom, :, :]
-        red = np.where(dom_pore, (psi + 1.0) / 2.0, 0.0)
-        q = np.clip(np.rint(psi * 100.0), -127, 127).astype(np.int8)
-        np.savez_compressed(
-            os.path.join(dump_dir, f'd{d:.4f}_{it:07d}.npz'),
-            psi_q=q, it=it, d=d,
-            s_nw=np.float32(red.sum() / pore_cells))
-
-    def measure():
-        """PR-1 instruments (Plan_20260919_v2 2.1-2.3): per-sample
-        reservoir / band / domain-flow diagnostics on top of s_nw & umax."""
-        psi = s.psi_snapshot()
-        rho, v = s.macro_snapshot()
-        red = np.where(dom_pore, (psi[dom, :, :] + 1.0) / 2.0, 0.0)
-        rho_c, psi_c, v_c = rho[dom, :, :], psi[dom, :, :], v[dom, :, :, :]
-        u_mag = np.sqrt(v_c[..., 0]**2 + v_c[..., 1]**2 + v_c[..., 2]**2)
-        rs_in = region_stats(rho, psi, v, res_in.astype(bool))
-        rs_out = region_stats(rho, psi, v, res_out.astype(bool))
-        band_in_m = np.zeros_like(dom_pore)
-        band_in_m[:args.pc_band] = dom_pore[:args.pc_band]
-        band_out_m = np.zeros_like(dom_pore)
-        band_out_m[-args.pc_band:] = dom_pore[-args.pc_band:]
-        band_in = region_stats(rho_c, psi_c, v_c, band_in_m)
-        band_out = region_stats(rho_c, psi_c, v_c, band_out_m)
-        fd = region_stats(rho_c, psi_c, v_c, dom_pore)
-        fl = s.reservoir_fluxes()
-        return dict(s_nw=float(red.sum() / pore_cells),
-                    s_nw_binary=float(((psi_c > 0.0) & dom_pore).sum()
-                                      / pore_cells),
-                    umax=float(u_mag.max()),
-                    rho_in_mean=rs_in['rho_mean'],
-                    rho_out_mean=rs_out['rho_mean'],
-                    p_in_mean=rs_in['p_mean'], p_out_mean=rs_out['p_mean'],
-                    pc_band_in=band_in['p_mean'],
-                    pc_band_out=band_out['p_mean'],
-                    pc_measured=band_in['p_mean'] - band_out['p_mean'],
-                    u_rms=fd['v_rms'], u_bulk_x=fd['v_bulk'][0],
-                    inj_r=fl['inj_r'], inj_b=fl['inj_b'], inj_m=fl['inj_m'])
-
-    def run_hold(d, label):
-        set_ladder(d)
-        t0 = time.time()
-        hist = []      # (it, s_nw): quasi-steady slope, unchanged
-        samples = []   # (it, full diagnostic dict): rung-tail means
-        it = 0
-        reason = 'max-steps'
-        while it < args.max_steps:
-            it += 1
-            s.step()
-            if args.dump_every and it % args.dump_every == 0:
-                dump_frame(it, d)
-            if it % args.every == 0:
-                m = measure()
-                hist.append((it, m['s_nw']))
-                samples.append((it, m))
-                w = [(i, sv) for i, sv in hist
-                     if i > it - args.qs_window]
-                if (it >= args.min_steps and len(w) >= 4
-                        and w[-1][0] - w[0][0] >= args.qs_window * 0.8):
-                    slope = (w[-1][1] - w[0][1]) / (w[-1][0] - w[0][0])
-                    if abs(slope) < args.qs_tol:
-                        win = [(a2, dm) for a2, dm in samples
-                               if a2 > it - args.qs_window]
-                        conv = eval_convergence(
-                            win, pore_cells, args.qs_tol,
-                            args.pc_drift_tol, args.flux_tol,
-                            args.u_rel_tol)
-                        needed = (['saturation'] if args.qs_mode == 'sat'
-                                  else ('saturation', 'pressure', 'flux',
-                                        'kinetic'))
-                        if all(c in conv['criteria_passed']
-                               for c in needed):
-                            reason = 'quasi-steady'
-                            break
-                if it % 10000 == 0:
-                    print(f'[{args.tag}] {label} {it} S_nw='
-                          f'{hist[-1][1]:.4f} umax={m["umax"]:.3f}',
-                          flush=True)
-                    if m['umax'] > args.umax_cap:
-                        reason = 'umax-cap'
-                        break
-        tail = [sv for _, sv in hist[-20:]]
-        diag = [dm for _, dm in samples[-20:]]
-        tmean = lambda k: (float(np.mean([dm[k] for dm in diag]))
-                           if diag else None)
-        # net colour flux rate over the same trailing window as the
-        # slope test (mass/step through the reservoirs)
-        win = [(i, dm) for i, dm in samples if i > it - args.qs_window]
-        if len(win) >= 2 and win[-1][0] > win[0][0]:
-            span = win[-1][0] - win[0][0]
-            flux_r_rate = (win[-1][1]['inj_r'] - win[0][1]['inj_r']) / span
-            flux_b_rate = (win[-1][1]['inj_b'] - win[0][1]['inj_b']) / span
-        else:
-            flux_r_rate = flux_b_rate = None
-        conv = eval_convergence(win, pore_cells, args.qs_tol,
-                                args.pc_drift_tol, args.flux_tol,
-                                args.u_rel_tol)
-        conv['exit'] = dict(mode=args.qs_mode, reason=reason)
-        m_last = samples[-1][1] if samples else {}
-        row = dict(d=d, pc_nominal=d / 3.0, pc_measured=tmean('pc_measured'),
-                   rho_in_mean=tmean('rho_in_mean'),
-                   rho_out_mean=tmean('rho_out_mean'),
-                   p_in_mean=tmean('p_in_mean'), p_out_mean=tmean('p_out_mean'),
-                   u_rms=tmean('u_rms'), u_bulk_x=tmean('u_bulk_x'),
-                   flux_r_rate=flux_r_rate, flux_b_rate=flux_b_rate,
-                   steps=it, reason=reason,
-                   s_nw=float(np.mean(tail)),
-                   s_nw_binary=tmean('s_nw_binary'),
-                   convergence=conv,
-                   umax_last=m_last.get('umax'),
-                   wall_s=round(time.time() - t0, 1))
-        mid_slice_png(s.psi_snapshot(),
-                      os.path.join(out, f'psi_{label}_{it:06d}.png'),
-                      f'{label}: d={d:.3f} Pc={d/3.0:.4f} '
-                      f'S_nw={row["s_nw"]:.3f} ({reason})', contour=True)
-        print(f'[{args.tag}] {label} -> {reason} steps={it} '
-              f'S_nw={row["s_nw"]:.4f} wall={row["wall_s"]}s', flush=True)
-        return row
+        def _dump(it):
+            psi = s.psi_snapshot()[sys_.dom, :, :]
+            red = np.where(sys_.dom_pore, (psi + 1.0) / 2.0, 0.0)
+            q = np.clip(np.rint(psi * 100.0), -127, 127).astype(np.int8)
+            np.savez_compressed(
+                os.path.join(dump_dir, f'd{d:.4f}_{it:07d}.npz'),
+                psi_q=q, it=it, d=d,
+                s_nw=np.float32(red.sum() / sys_.pore_cells))
+        return _dump
 
     # ---- equil at d=0, then ladder ----
     t0 = time.time()
-    hist = []
-    for it in range(1, args.equil_steps + 1):
-        s.step()
-        if it % args.every == 0:
-            hist.append((it, measure()['s_nw']))
+    equil_s = run_equil(args, sys_, sample=True)
     print(f'[{args.tag}] equil {args.equil_steps} steps: S_nw='
-          f'{hist[-1][1]:.4f} ({time.time()-t0:.0f}s)', flush=True)
+          f'{equil_s:.4f} ({time.time()-t0:.0f}s)', flush=True)
 
     ladder = []
     for k, d in enumerate(args.ds):
-        ladder.append(run_hold(d, f'd{k:02d}_{d:.3f}'))
+        row = run_hold(args, sys_, d, f'd{k:02d}_{d:.3f}',
+                       dump_frame=make_dump_frame(d))
+        ladder.append(row)
         with open(os.path.join(out, 'report_partial.json'), 'w',
                   encoding='utf-8') as f:      # survives an interrupted run
             json.dump(dict(args=vars(args),
                            note='incremental checkpoint', ladder=ladder),
                       f, indent=1, ensure_ascii=False)
+        mid_slice_png(s.psi_snapshot(),
+                      os.path.join(out, f'psi_d{k:02d}_{d:.3f}_'
+                                  f'{row["steps"]:06d}.png'),
+                      f'd{k:02d}_{d:.3f}: d={d:.3f} Pc={d/3.0:.4f} '
+                      f'S_nw={row["s_nw"]:.3f} ({row["reason"]})',
+                      contour=True)
 
     # ---- save ----
     fin = s.psi_snapshot()
     np.savez_compressed(os.path.join(out, 'final.npz'), psi=fin,
-                        solid=solid, ds=np.array(args.ds))
+                        solid=sys_.solid, ds=np.array(args.ds))
     fl = s.reservoir_fluxes()
     m1 = dict(tot=s.total_mass(), r=s.color_masses()[0],
               b=s.color_masses()[1])
@@ -304,10 +160,10 @@ def main():
                   leak_b=abs((m1['b'] - m0['b']) - fl['inj_b']) / m0['tot'],
                   leak_m=abs((m1['tot'] - m0['tot']) - fl['inj_m'])
                   / m0['tot'])
-    summary = dict(args=vars(args), geo=geo_meta,
+    summary = dict(args=vars(args), geo=sys_.geo_meta,
                    sigma_lb=1.012 * args.capa,
                    n_spheres_region='Finney interior box', ladder=ladder,
-                   equil_s_nw=hist[-1][1], sentry=sentry,
+                   equil_s_nw=equil_s, sentry=sentry,
                    inj=fl)
     with open(os.path.join(out, 'report.json'), 'w',
               encoding='utf-8') as f:
