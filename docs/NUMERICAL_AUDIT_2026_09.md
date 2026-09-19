@@ -38,19 +38,32 @@ Setup: `geo_graphite_228b14.npz`, ψ_solid = −0.68, CapA = 0.06,
 reduced 5-rung ladder ds = {0.03, 0.055, 0.10, 0.182, 0.281}
 (entry→plateau subset of X2b), equil 8k, rung caps 6k/20k, qs-window 8k.
 Old = baseline tag in a git worktree; new = master (post PR-5).
-Launched 2026-09-19; results table to be filled from
-`results_pcs_cg3d/pr6_{old,new}/report.json`.
+Run 2026-09-19, both codes, same geometry file; reports archived as
+`results/data/pr6_{old,new}_drain_report.json`.
 
-| Metric | old | new | rel. change | Note |
-| --- | --: | --: | ---: | --- |
-| S_nw per rung (0.03 → 0.281) | pending | pending | | |
-| entry rung | pending | pending | | |
-| plateau S_nw | pending | pending | | |
-| exit reasons | pending | pending | | |
+| d | S_nw old | S_nw new | ΔS_nw | reason old | reason new |
+| --- | --- | --- | --- | --- | --- |
+| 0.030 | 0.0365 | 0.0362 | −0.0003 | max-steps | max-steps |
+| 0.055 | 0.0756 | 0.0731 | −0.0025 | max-steps | max-steps |
+| 0.100 | 0.1818 | 0.1732 | −0.0085 | max-steps | max-steps |
+| 0.182 | 0.4141 | 0.3981 | −0.0160 | max-steps | max-steps |
+| 0.281 | 0.6420 | 0.6303 | −0.0118 | max-steps | max-steps |
 
-Interpretation guide: differences concentrated at d ≥ 0.18 (ρ_out ≤
-0.91) point at the Compute_C fix; differences anywhere else would be
-unexpected (Guo inert, post-processing reported separately).
+- entry rung identical (d = 0.100 in both); plateau (last rung)
+  −1.83 % relative; sentry leaks equal to 2 digits (leak_r 4.2e-4 both).
+- All rungs hit the step cap in BOTH codes (reduced ladder, still
+  draining at cap: flux_r ≈ 8.9 mass/step at the top rung) — the
+  comparison is between equal-length transients, not quasi-steady ends.
+- Attribution: differences are negligible at ρ ≈ 1 (d ≤ 0.055, outlet
+  ρ ≥ 0.97) and grow systematically with d — exactly the footprint of
+  the Compute_C fix (pr2.1), the only modification that acts where
+  ρ ≠ 1. Direction: the corrected suppression removes spurious wall
+  currents that had slightly aided red invasion. Guo fix is inert
+  (F = 0); post-processing fields are new-only (pc_measured 0.0242 at
+  the top rung reflects the mid-invasion pressure state, meaningful
+  only at quasi-steady).
+- Caveat: reduced ladder, single seed-geometry, transient rungs — the
+  definitive numbers are the full-scale reruns in §4.
 
 ## 4. Full-scale reruns (pending GPU time; validation gates are green)
 

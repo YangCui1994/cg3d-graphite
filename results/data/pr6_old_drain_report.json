@@ -1,0 +1,85 @@
+{
+ "args": {
+  "geo": "geo_graphite_228b14.npz",
+  "capa": 0.06,
+  "psi_solid": -0.68,
+  "ds": [
+   0.03,
+   0.055,
+   0.1,
+   0.182,
+   0.281
+  ],
+  "res_thick": 8,
+  "equil_steps": 8000,
+  "min_steps": 6000,
+  "max_steps": 20000,
+  "qs_window": 8000,
+  "qs_tol": 5e-07,
+  "every": 500,
+  "dump_every": 0,
+  "umax_cap": 0.12,
+  "tag": "pr6_old"
+ },
+ "geo": "graphite_scan119 200^3 subcrop offset(136,136,136) + 14 lu OPEN pore buffer at both x faces (membrane-decoupling fix, 2026-09-13)",
+ "sigma_lb": 0.060719999999999996,
+ "n_spheres_region": "Finney interior box",
+ "ladder": [
+  {
+   "d": 0.03,
+   "pc": 0.01,
+   "steps": 20000,
+   "reason": "max-steps",
+   "s_nw": 0.036506812833249566,
+   "umax_last": 0.031745538115501404,
+   "wall_s": 922.0
+  },
+  {
+   "d": 0.055,
+   "pc": 0.018333333333333333,
+   "steps": 20000,
+   "reason": "max-steps",
+   "s_nw": 0.07560137584805489,
+   "umax_last": 0.03252213075757027,
+   "wall_s": 909.2
+  },
+  {
+   "d": 0.1,
+   "pc": 0.03333333333333333,
+   "steps": 20000,
+   "reason": "max-steps",
+   "s_nw": 0.1817528285086155,
+   "umax_last": 0.03383152186870575,
+   "wall_s": 905.0
+  },
+  {
+   "d": 0.182,
+   "pc": 0.06066666666666667,
+   "steps": 20000,
+   "reason": "max-steps",
+   "s_nw": 0.41405103653669356,
+   "umax_last": 0.04879036918282509,
+   "wall_s": 905.1
+  },
+  {
+   "d": 0.281,
+   "pc": 0.09366666666666668,
+   "steps": 20000,
+   "reason": "max-steps",
+   "s_nw": 0.6420294493436813,
+   "umax_last": 0.09823717921972275,
+   "wall_s": 905.0
+  }
+ ],
+ "equil_s_nw": 0.017861947417259216,
+ "sentry": {
+  "leak_r": 0.00042389995668640565,
+  "leak_b": 0.0009836157762184944,
+  "leak_m": 0.0017887989409148802
+ },
+ "inj": {
+  "inj_r": 2697497.1384488344,
+  "inj_b": -2414768.5794517994,
+  "inj_m": 453915.1339864135
+ }
+}

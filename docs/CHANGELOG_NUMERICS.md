@@ -13,6 +13,25 @@ Format:
 - Regression evidence (test + before/after numbers)
 ```
 
+## 2026-09-19 PR-6 — numerical audit doc + reduced old-vs-new benchmark
+
+- `docs/NUMERICAL_AUDIT_2026_09.md`: what-changed table (per-PR
+  attribution), validation-ladder results, reduced-scale graphite
+  old-vs-new comparison, exact full-scale rerun commands (baseline
+  ladders verified from results/baseline args).
+- Reduced pair (same `geo_graphite_228b14.npz`, same 5-rung ladder,
+  20k step caps): old = baseline tag (git worktree), new = master.
+  S_nw(d): differences negligible at d <= 0.055 (rho ~ 1), growing to
+  -1.6e-2 absolute / -1.8% relative (plateau rung) at high d — the
+  footprint of the Compute_C fix (pr2.1), direction consistent with
+  removing spurious wall currents that aided invasion. Entry rung and
+  exit reasons identical; sentry equal to 2 digits. Reports archived:
+  `results/data/pr6_{old,new}_drain_report.json`.
+- Terminology sweep: `Pc = delta/3` -> Pc_nominal (BC_IC_OUTPUT,
+  figure axis); recoloring/upstream wording already fixed with ADR-001.
+- Full-scale X2/X3 post-audit reruns: commands in the audit doc §4,
+  pending GPU time (~7.4 h each).
+
 ## 2026-09-19 PR-4 — physics regression test suite (Phase 3)
 
 - `tests/` three-level suite per plan: Level A (`run_level_a.py`: M/invM,
