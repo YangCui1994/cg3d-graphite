@@ -62,9 +62,11 @@ Relaxation 布局（S）：conserved moment 0,3,5,7 不弛豫；stress 族
 unit 下的表面张力：σ = 1.012·CapA（13 液滴 Laplace 拟合，R² = 1.0000）——
 与 pseudopotential（Shan–Chen）模型不同，σ 是直接输入而非涌现输出。
 
-碰撞后，**Latva–Kokko recoloring** 在界面处重新分离两色：f_r/f_b 按局部
-颜色梯度方向沿各 lattice 方向重新分配，并通过方向对
-kk = 1,3,5,7,9,11,13,15,17 施加 anti-anisotropy 修正。界面因此保持在
+碰撞后，**Latva–Kokko 型 pairwise recoloring** 在界面处重新分离两色：
+f_r/f_b 按局部颜色梯度方向沿各 lattice 方向重新分配。结构与
+Latva–Kokko & Rothman (2005) 一致（pairwise、对 e_i 反对称、β = 1），
+但振幅取**link 对上 g_r/g_b 四个值的 min**，而非 β·ρ_Rρ_B/ρ²·f^eq
+形式（ADR-001 §3.4）；方向对 kk = 1,3,5,7,9,11,13,15,17。界面因此保持在
 ~2.2 lu 宽、各向异性 <0.1 %——这是在欠分辨真实几何上相对 diffuse-interface
 模型的决定性优势。
 
@@ -86,7 +88,7 @@ mixed-wet。标定的 contact-angle registry（平板液滴，液侧角）：
 
 本 repo 所有石墨 run 用 ψ_solid = −0.68（θ ≈ 30°）。
 
-## 7. 上游来源与四个已修复缺陷
+## 7. 上游来源、已修复缺陷与 2026-09 audit
 
 数值表（moment matrix M、bounce-back 映射、张力注入模式、recoloring 对、
 relaxation 布局）取自上游模块
@@ -99,6 +101,16 @@ relaxation 布局）取自上游模块
 3. ψ_solid 只支持标量（已修复：逐节点场）；
 4. 模块级网格全局变量、无 infrastructure（已修复：class-based，含
    race-free 双色 membrane 与 f64 flux 计数 reservoir）。
+
+2026-09-19 数值 audit（ADR-001）在继承的 force/gradient 代码里另发现并
+修复两个 density-driving 缺陷：
+
+5. moment-space forcing 漏掉 Guo (2002) 权重 1/cs² = 3 与 1/cs⁴ = 9——
+   实际每步注入动量只有 F/3，而 half-force 速度修正按 F 写（实测
+   eff = 0.332，修复后 1.0；仅影响力驱动 run，X2/X3 的 F = 0 不受影响）；
+6. Compute_C 的 bulk 抑制阈值 `|ρ_r − ρ_b| > 0.9` 依赖密度——已归一化为
+   `|ψ| > 0.9`（ρ ≈ 1 时行为不变；raw 形式在 ρ_out = 0.89、即 reservoir
+   驱动 d = 0.22 档位处失效）。
 
 ## 8. 开放系统压力边界
 

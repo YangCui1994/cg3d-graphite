@@ -73,10 +73,13 @@ lattice units: σ = 1.012·CapA (13-droplet Laplace fit, R² = 1.0000), so
 unlike pseudopotential (Shan–Chen) models σ is a direct input, not an
 emergent output.
 
-After collision, the **Latva–Kokko recoloring** step re-segregates the
-colours at the interface: f_r/f_b are redistributed along each lattice
-direction according to the local colour gradient direction, with the
-anti-anisotropy correction applied through direction pairs
+After collision, the **Latva–Kokko-type pairwise recoloring** step
+re-segregates the colours at the interface: f_r/f_b are redistributed
+along each lattice direction according to the local colour gradient
+direction. Structure follows Latva–Kokko & Rothman (2005) — pairwise,
+antisymmetric in e_i, β = 1 — with a **min-of-equilibria amplitude**
+(min over the link pair's g_r/g_b values) instead of the
+β·ρ_Rρ_B/ρ²·f^eq form (ADR-001 §3.4), applied through direction pairs
 kk = 1,3,5,7,9,11,13,15,17. This keeps the interface at ~2.2 lu wide with
 <0.1 % anisotropy, which is the decisive advantage over diffuse-interface
 models on under-resolved real geometries.
@@ -103,7 +106,7 @@ liquid-side angle):
 
 All graphite runs here use ψ_solid = −0.68 (θ ≈ 30°).
 
-## 7. Upstream lineage and the four fixed defects
+## 7. Upstream lineage, fixed defects and the 2026-09 audit
 
 Numerical tables (moment matrix M, bounce-back map, tension-injection
 pattern, recoloring pairs, relaxation layout) come from the upstream module
@@ -117,6 +120,17 @@ upstream defects are **not** inherited:
 3. scalar-only ψ_solid (fixed: per-node field);
 4. module-level grid globals with no infrastructure (fixed: class-based,
    with race-free per-colour membranes and f64 flux-counting reservoirs).
+
+The 2026-09-19 numerical audit (ADR-001) found and fixed two further
+density-driving defects in the inherited force/gradient code:
+
+5. Guo (2002) force weights 1/cs² = 3 and 1/cs⁴ = 9 omitted in the
+   moment-space forcing — momentum injected was F/3 while the half-force
+   velocity correction assumed F (measured eff = 0.332 vs 1.0 after the
+   fix; force-driven runs only, X2/X3 unaffected with F = 0);
+6. density-dependent bulk-suppression threshold `|ρ_r − ρ_b| > 0.9` in
+   Compute_C — normalised to `|ψ| > 0.9` (identical at ρ ≈ 1; the raw form
+   failed at ρ_out = 0.89, the d = 0.22 rung of reservoir-driven ladders).
 
 ## 8. Open-system pressure boundaries
 
