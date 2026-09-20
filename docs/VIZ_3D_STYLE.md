@@ -294,3 +294,11 @@ viz3d.cmd explore --series results_pcs_cg3d/anim_drain_n200/frames
   （gx3 像素扫描：右半暗像素 157 vs 左 4133）；**③终版：盒外前下方（y0−4.5%dy、z0−4.5%dz），
   尾端内收 1.5%dx，outlet 标签锚尾端**——像素（左 1141/右 4013）与视觉双验通过。核对手段：
   底条带暗像素左右半计数 + CDN 视觉核验。
+- 2026-09-20 新增（IC/BC 图，`graphite_ic_bc_figs.py`）：drainage t=0（psi0 纯 numpy
+  复刻 protocol.py:41-43）与 imbibition 起始态（= gx3c drain 终态帧）的全域 cutaway——
+  y 切半 keep='hi'（iso 相机在 −y 侧，hi 半的切面朝向相机；x 全程保留以示 inlet→outlet）、
+  气 opaque nw / 液 glass / ghost 0.12；新元素：绿色半透明 membrane 平面（#009E73，30%）+
+  reservoir ρ/ψ 标签 + wall/periodic 注记（英文，vtk 无 CJK）。组合图右侧配 x-z mid-y 切片
+  分带标注条（matplotlib，CJK 可用；宽带竖排、窄带括线横排，标签画在 axes 内 y>200 区，
+  勿再放轴外——首版贴标题）。产物 results/figures/fig_gx_ic_bc*.png，副本在父工作区
+  output_docs/figures_graphite/。zai-vision 超时回退用 4_5v analyze_image（CDN URL）。
