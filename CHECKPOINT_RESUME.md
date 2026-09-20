@@ -93,6 +93,25 @@ python run_ir_cg3d.py --geo ... --tag my_imbibe_branch \
 - Regression: `tests/run_level_a.py` ALL PASS (solver untouched apart
   from enabling Taichi `offline_cache` for the cpu branch).
 
+## GPU validation (2026-09-20, arch=cuda, after the PR-6 full-scale
+## rerun pair completed)
+
+Same suite, `LBM_ARCH=gpu` — ALL PASS:
+
+- **A**: restored 100-step continuation vs uninterrupted run: every
+  field `|A-B| <= 4.2e-07`, again BELOW the GPU run-to-run atomics
+  jitter (f 4.8e-07, psi 1.8e-05).  Roundtrip bitwise-exact.
+- **B cross-process, rung-end**: final psi max|d| = 7.2e-07; rung-1
+  `s_nw` row identical (0.0).
+- **B2 cross-process, mid-rung** (`live.npz`): final psi
+  max|d| = 7.2e-07.
+- **C cross-driver branch** (ir `--resume-plan new` from a pcs
+  checkpoint): plan `[drain, imbibe, imbibe]` ran, `s_nr` produced.
+
+GPU/CPU conclusions agree: resume reproduces the uninterrupted
+trajectory to the reproducibility limit of the arch (f32 atomics
+ordering in streaming1), with no arch-specific behaviour.
+
 ## Limitations / notes
 
 - Cross-ARCH resume (checkpoint written on cpu, restored on cuda, or
