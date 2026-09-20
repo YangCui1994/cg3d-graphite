@@ -106,7 +106,7 @@ python run_pcs_cg3d.py --geo geo_graphite_228b14.npz --tag gx2c_postaudit \
   interpretation of its plateau value is left as a documented open
   diagnostic, not a physics claim.
 
-### X3 imbibition-residual rerun (running)
+### X3 imbibition-residual rerun (complete)
 
 ```bash
 python run_ir_cg3d.py --geo geo_graphite_228b14.npz --tag gx3c_postaudit \
@@ -114,7 +114,49 @@ python run_ir_cg3d.py --geo geo_graphite_228b14.npz --tag gx3c_postaudit \
     --psi-solid -0.68
 ```
 
-Comparison targets vs `results/baseline/`: S_i, S_nr (continuous +
-binary), cluster count, largest cluster (expect the periodic-merge
-change to LOWER n_clusters and RAISE largest vs baseline — that is a
-reporting fix, not a physics change). Table to be filled on completion.
+Ladder (drain then imbibe; exit-reason pattern identical in both runs,
+same rungs at the caps):
+
+| d | phase | S_nw base | S_nw new | steps base | steps new |
+| --- | --- | --- | --- | --- | --- |
+| 0.030 | drain | 0.0393 | 0.0385 | 25000 | 24000 |
+| 0.055 | drain | 0.2723 | 0.2520 | 150000 | 150000 |
+| 0.074 | drain | 0.5579 | 0.5320 | 150000 | 150000 |
+| 0.055 | imbibe | 0.5667 | 0.5404 | 15000 | 15000 |
+| 0.040 | imbibe | 0.5651 | 0.5386 | 15000 | 15000 |
+| 0.025 | imbibe | 0.5425 | 0.5020 | 37000 | 58500 |
+| 0.012 | imbibe | 0.4050 | 0.3568 | 150000 | 150000 |
+| 0.000 | imbibe | 0.1765 | 0.1330 | 150000 | 150000 |
+
+Headline metrics:
+
+| Metric | baseline (gx3) | post-audit (gx3c) | change |
+| --- | --- | --- | --- |
+| S_i (drain end) | 0.5579 | 0.5320 | −4.6 % rel |
+| **S_nr (binary, legacy key)** | **0.1708** | **0.1289** | **−24.5 % rel** |
+| S_nr continuous (new) | — | 0.1281 | ≈ binary (interface volume negligible) |
+| n_clusters | 32 | 38 (conn 6 + periodic) | see decomposition |
+| largest cluster | 430341 | 309314 | −28 % cells, share 66.7 % → 63.5 % |
+
+**Cluster-change decomposition** (reporting vs physics; the old final
+field is no longer on disk, so the reporting effect is isolated on the
+NEW field): legacy labeling on gx3c gives n = 45 / largest 309302;
+label_periodic (y/z merge) gives n = 38 / largest 309314. So the
+periodic-merge REPORTING effect is n −7 / largest +12 cells (small, in
+the predicted direction), while the dominant change is PHYSICS: the
+trapped-gas volume itself shrank 25 %, with the largest-cluster share of
+trapped gas nearly unchanged (66.7 % → 63.5 %) — the cluster-size
+distribution shape is preserved, the whole population shifts down.
+
+**Attribution and reading.** The Compute_C fix is the only modification
+acting in this regime (Guo inert, F = 0). During imbibition the wetting
+phase must displace gas along solid walls — exactly where the old,
+density-dependent suppression failed on the low-ρ side, ghost wall
+forces pinned gas and inflated the residual. Consistent story across
+scales: X2 plateau −1.9 %, X3 S_i −4.6 % (invasion-knee amplification),
+X3 S_nr −24.5 % (trapped-gas endpoints are the most wall-sensitive
+observable). **The graphite trapped-gas headline number moves from
+S_nr ≈ 0.17 to S_nr ≈ 0.13**; both are reported with their code versions
+(baseline archived). The last imbibe rung exits at the step cap with the
+saturation criterion still drifting in BOTH runs (record now states this
+explicitly via `convergence`).
