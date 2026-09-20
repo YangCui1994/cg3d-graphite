@@ -61,7 +61,7 @@ import numpy as np
 import taichi as ti
 
 if os.environ.get('LBM_ARCH', 'gpu') == 'cpu':
-    ti.init(arch=ti.cpu)
+    ti.init(arch=ti.cpu, offline_cache=True)
 else:
     ti.init(arch=ti.gpu, offline_cache=True)
 
