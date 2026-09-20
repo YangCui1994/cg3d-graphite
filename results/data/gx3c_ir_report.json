@@ -1,0 +1,410 @@
+{
+ "args": {
+  "geo": "geo_graphite_228b14.npz",
+  "capa": 0.06,
+  "psi_solid": -0.68,
+  "ds_drain": [
+   0.03,
+   0.055,
+   0.074
+  ],
+  "ds_imbibe": [
+   0.055,
+   0.04,
+   0.025,
+   0.012,
+   0.0
+  ],
+  "res_thick": 8,
+  "equil_steps": 20000,
+  "min_steps": 15000,
+  "max_steps": 150000,
+  "qs_window": 15000,
+  "qs_tol": 5e-07,
+  "qs_mode": "sat",
+  "pc_drift_tol": 0.01,
+  "flux_tol": 1e-06,
+  "u_rel_tol": 0.05,
+  "conn": 6,
+  "every": 500,
+  "umax_cap": 0.12,
+  "dump_every": 20000,
+  "pc_band": 4,
+  "tag": "gx3c_postaudit"
+ },
+ "ladder": [
+  {
+   "d": 0.03,
+   "pc_nominal": 0.01,
+   "pc_measured": -0.0013761086294113239,
+   "rho_in_mean": 1.0149999856948853,
+   "rho_out_mean": 0.9850000143051147,
+   "p_in_mean": 0.3383333285649617,
+   "p_out_mean": 0.32833333810170484,
+   "u_rms": 0.0016493660443314385,
+   "u_bulk_x": 7.742342925295819e-05,
+   "flux_r_rate": 1.906156790223615,
+   "flux_b_rate": -2.1731170257494368,
+   "steps": 24000,
+   "reason": "quasi-steady",
+   "s_nw": 0.03850618358701467,
+   "s_nw_binary": 0.0392374166498229,
+   "convergence": {
+    "criteria_passed": [
+     "saturation"
+    ],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": 4.99975835454875e-07,
+    "pc_drift": 0.9762526473051331,
+    "phase_flux": 1.079219790481135e-06,
+    "u_rms_rel": 0.13133929818248666,
+    "exit": {
+     "mode": "sat",
+     "reason": "quasi-steady"
+    }
+   },
+   "umax_last": 0.031635183840990067,
+   "wall_s": 1119.6,
+   "phase": "drain"
+  },
+  {
+   "d": 0.055,
+   "pc_nominal": 0.018333333333333333,
+   "pc_measured": 0.01041259317121999,
+   "rho_in_mean": 1.027500033378601,
+   "rho_out_mean": 0.9725000262260437,
+   "p_in_mean": 0.34250001112620043,
+   "p_out_mean": 0.32416667540868116,
+   "u_rms": 0.0035189246300209092,
+   "u_bulk_x": 0.00021620708520670066,
+   "flux_r_rate": 4.305524403259672,
+   "flux_b_rate": -4.356375504588259,
+   "steps": 150000,
+   "reason": "max-steps",
+   "s_nw": 0.25195057913661,
+   "s_nw_binary": 0.2548829631761801,
+   "convergence": {
+    "criteria_passed": [
+     "pressure",
+     "kinetic"
+    ],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": 1.1381034193367794e-06,
+    "pc_drift": 0.005759529662523314,
+    "phase_flux": 2.2916073363627234e-06,
+    "u_rms_rel": 0.028540026428392366,
+    "exit": {
+     "mode": "sat",
+     "reason": "max-steps"
+    }
+   },
+   "umax_last": 0.034235719591379166,
+   "wall_s": 6998.6,
+   "phase": "drain"
+  },
+  {
+   "d": 0.074,
+   "pc_nominal": 0.024666666666666667,
+   "pc_measured": 0.018985790514292153,
+   "rho_in_mean": 1.0369999408721924,
+   "rho_out_mean": 0.9629999995231628,
+   "p_in_mean": 0.34566664695739746,
+   "p_out_mean": 0.3209999998410542,
+   "u_rms": 0.005178052945743401,
+   "u_bulk_x": 0.00024110130305338894,
+   "flux_r_rate": 4.879601277219838,
+   "flux_b_rate": -4.852936794437211,
+   "steps": 150000,
+   "reason": "max-steps",
+   "s_nw": 0.5319798648357391,
+   "s_nw_binary": 0.5386947079185446,
+   "convergence": {
+    "criteria_passed": [
+     "pressure",
+     "kinetic"
+    ],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": 1.3138877934422987e-06,
+    "pc_drift": 0.006471956279935384,
+    "phase_flux": 2.574857234985076e-06,
+    "u_rms_rel": 0.016802094198792486,
+    "exit": {
+     "mode": "sat",
+     "reason": "max-steps"
+    }
+   },
+   "umax_last": 0.03569407016038895,
+   "wall_s": 6998.6,
+   "phase": "drain"
+  },
+  {
+   "d": 0.055,
+   "pc_nominal": 0.018333333333333333,
+   "pc_measured": 0.013094337247909002,
+   "rho_in_mean": 1.027500033378601,
+   "rho_out_mean": 0.9725000262260437,
+   "p_in_mean": 0.34250001112620043,
+   "p_out_mean": 0.32416667540868116,
+   "u_rms": 0.005150184650094282,
+   "u_bulk_x": 6.342656678403661e-05,
+   "flux_r_rate": 0.9980320846376748,
+   "flux_b_rate": -1.3447655697485497,
+   "steps": 15000,
+   "reason": "quasi-steady",
+   "s_nw": 0.5403865247964859,
+   "s_nw_binary": 0.5474412249631995,
+   "convergence": {
+    "criteria_passed": [
+     "saturation",
+     "pressure",
+     "flux",
+     "kinetic"
+    ],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": 3.267567733238483e-07,
+    "pc_drift": 0.00917417589643576,
+    "phase_flux": 6.198146306840362e-07,
+    "u_rms_rel": 0.005307202391695789,
+    "exit": {
+     "mode": "sat",
+     "reason": "quasi-steady"
+    }
+   },
+   "umax_last": 0.03560258448123932,
+   "wall_s": 702.0,
+   "phase": "imbibe"
+  },
+  {
+   "d": 0.04,
+   "pc_nominal": 0.013333333333333334,
+   "pc_measured": 0.008235068453890795,
+   "rho_in_mean": 1.0199999809265137,
+   "rho_out_mean": 0.9800000190734863,
+   "p_in_mean": 0.33999999364217115,
+   "p_out_mean": 0.32666667302449537,
+   "u_rms": 0.005118307639645063,
+   "u_bulk_x": -5.3177889249316424e-05,
+   "flux_r_rate": -1.1874623151236567,
+   "flux_b_rate": 0.8250482075995412,
+   "steps": 15000,
+   "reason": "quasi-steady",
+   "s_nw": 0.5386149823665619,
+   "s_nw_binary": 0.545676293892116,
+   "convergence": {
+    "criteria_passed": [
+     "saturation",
+     "pressure",
+     "flux",
+     "kinetic"
+    ],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": -2.5880336761474607e-07,
+    "pc_drift": 0.004728789645344974,
+    "phase_flux": 5.324332914769842e-07,
+    "u_rms_rel": 0.008227680671503888,
+    "exit": {
+     "mode": "sat",
+     "reason": "quasi-steady"
+    }
+   },
+   "umax_last": 0.03516770899295807,
+   "wall_s": 700.0,
+   "phase": "imbibe"
+  },
+  {
+   "d": 0.025,
+   "pc_nominal": 0.008333333333333333,
+   "pc_measured": 0.0028746763603001158,
+   "rho_in_mean": 1.0125000476837158,
+   "rho_out_mean": 0.987500011920929,
+   "p_in_mean": 0.337500015894572,
+   "p_out_mean": 0.3291666706403096,
+   "u_rms": 0.004927601642185257,
+   "u_bulk_x": -0.00010983031208024504,
+   "flux_r_rate": -1.9062873546912753,
+   "flux_b_rate": 1.872421547084019,
+   "steps": 58500,
+   "reason": "quasi-steady",
+   "s_nw": 0.5019654497504235,
+   "s_nw_binary": 0.5083446874414657,
+   "convergence": {
+    "criteria_passed": [
+     "saturation",
+     "flux",
+     "kinetic"
+    ],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": -4.99858938414475e-07,
+    "pc_drift": 0.025854494981073027,
+    "phase_flux": 9.99701812929263e-07,
+    "u_rms_rel": 0.007735291461442147,
+    "exit": {
+     "mode": "sat",
+     "reason": "quasi-steady"
+    }
+   },
+   "umax_last": 0.03482194244861603,
+   "wall_s": 2729.5,
+   "phase": "imbibe"
+  },
+  {
+   "d": 0.012,
+   "pc_nominal": 0.004,
+   "pc_measured": -0.0028186192538220355,
+   "rho_in_mean": 1.00600004196167,
+   "rho_out_mean": 0.9940000176429749,
+   "p_in_mean": 0.33533334732055664,
+   "p_out_mean": 0.33133333921432495,
+   "u_rms": 0.00420324768356613,
+   "u_bulk_x": -0.00017444036248429214,
+   "flux_r_rate": -3.213339452883293,
+   "flux_b_rate": 3.0615297916182156,
+   "steps": 150000,
+   "reason": "max-steps",
+   "s_nw": 0.3567610204219818,
+   "s_nw_binary": 0.36046799384946865,
+   "convergence": {
+    "criteria_passed": [
+     "kinetic"
+    ],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": -8.354269225021888e-07,
+    "pc_drift": 0.0373990405953505,
+    "phase_flux": 1.6600903437348892e-06,
+    "u_rms_rel": 0.016739771401523766,
+    "exit": {
+     "mode": "sat",
+     "reason": "max-steps"
+    }
+   },
+   "umax_last": 0.0383312962949276,
+   "wall_s": 6998.7,
+   "phase": "imbibe"
+  },
+  {
+   "d": 0.0,
+   "pc_nominal": 0.0,
+   "pc_measured": -0.01152133221949506,
+   "rho_in_mean": 1.0,
+   "rho_out_mean": 1.0,
+   "p_in_mean": 0.33333333333333326,
+   "p_out_mean": 0.33333333333333326,
+   "u_rms": 0.002792636907264297,
+   "u_bulk_x": -0.00022380026950714793,
+   "flux_r_rate": -4.1515805986708605,
+   "flux_b_rate": 4.243717527858142,
+   "steps": 150000,
+   "reason": "max-steps",
+   "s_nw": 0.13297929838299752,
+   "s_nw_binary": 0.13373135765678726,
+   "convergence": {
+    "criteria_passed": [],
+    "thresholds": {
+     "saturation_slope": 5e-07,
+     "pc_drift": 0.01,
+     "phase_flux": 1e-06,
+     "u_rms_rel": 0.05
+    },
+    "saturation_slope": -1.103511144374979e-06,
+    "pc_drift": 0.14803403475000576,
+    "phase_flux": 2.2210747044392937e-06,
+    "u_rms_rel": 0.06332979164770002,
+    "exit": {
+     "mode": "sat",
+     "reason": "max-steps"
+    }
+   },
+   "umax_last": 0.03827428072690964,
+   "wall_s": 6997.5,
+   "phase": "imbibe"
+  }
+ ],
+ "s_nr": 0.12887649093770207,
+ "s_nr_continuous": 0.12814722955226898,
+ "cluster_topology": {
+  "conn": 6,
+  "periodic": "y/z"
+ },
+ "n_clusters": 38,
+ "largest": 309314.0,
+ "sizes_top": [
+  309314.0,
+  101849.0,
+  38027.0,
+  15810.0,
+  11326.0,
+  7199.0,
+  832.0,
+  782.0,
+  330.0,
+  285.0,
+  254.0,
+  210.0,
+  164.0,
+  157.0,
+  120.0,
+  95.0,
+  90.0,
+  53.0,
+  32.0,
+  31.0,
+  21.0,
+  20.0,
+  20.0,
+  19.0,
+  19.0,
+  19.0,
+  15.0,
+  9.0,
+  7.0,
+  5.0,
+  5.0,
+  4.0,
+  4.0,
+  1.0,
+  1.0,
+  1.0,
+  1.0,
+  1.0
+ ],
+ "inj": {
+  "inj_r": 469226.0476921201,
+  "inj_b": -517534.9891052842,
+  "inj_m": -83948.89025914669
+ }
+}

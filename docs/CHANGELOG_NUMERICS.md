@@ -13,6 +13,25 @@ Format:
 - Regression evidence (test + before/after numbers)
 ```
 
+## 2026-09-20 PR-6 — full-scale X3 rerun comparison (audit §4 complete)
+
+- `gx3c_postaudit` (baseline ladder/protocol): S_i 0.5320 vs 0.5579
+  (−4.6 % rel); **S_nr 0.1289 vs 0.1708 (−24.5 % rel — the headline
+  change of the audit)**; S_nr continuous 0.1281 ≈ binary. Exit-reason
+  pattern identical; last imbibe rung at the step cap in both runs.
+- Cluster decomposition (isolated on the new field): periodic-merge
+  reporting effect = n −7 / largest +12 cells (small, predicted
+  direction); dominant change is physics — trapped volume −25 % with
+  largest-cluster share nearly unchanged (66.7 % → 63.5 %): the
+  cluster-size distribution shifts down uniformly.
+- Reading: Compute_C fix (only modification active here); trapped-gas
+  endpoints are the most wall-sensitive observable — ghost wall forces
+  on the failed-suppression (low-ρ) side had been pinning residual gas.
+  Graphite headline: S_nr ≈ 0.17 (pre-audit) → ≈ 0.13 (post-audit),
+  both archived with code versions.
+- Report archived at results/data/gx3c_ir_report.json. Audit §4 tables
+  now complete; campaign (Phase 0 + PR-1..6) closed.
+
 ## 2026-09-20 PR-6 — full-scale X2 rerun comparison (audit §4 filled)
 
 - `gx2c_postaudit` (full 9-rung baseline ladder, baseline protocol):
