@@ -1,6 +1,6 @@
 # Plan v2 — cg3d-graphite：先修数值可信度，再整理架构
 
-modified date: 2026-09-19
+modified date: 2026-09-20（v3 修订）
 
 来源与性质：
 
@@ -11,6 +11,7 @@ modified date: 2026-09-19
   1. **Phase 3 测试套件必须遵守 Taichi JIT 单实例约束**（本机实测：每 solver 实例 ~5.5 min JIT，同进程第 2 个实例必 miss cache），否则 Level A "秒级" 不成立；
   2. **验证体系复用 P 线既有资产**（Level B 容差锚定已验证数字，测试驱动从附录 B 位置移植，不重写）；
   3. **PR 顺序调整**：纯增量 diagnostics（原 2.1–2.3）提前为 PR-1，因为数值正确性的验收（Poiseuille/Laplace）需要 measured Pc / reservoir ρ 这些仪器，且该 PR 零风险。
+- v3（2026-09-20）= v2 + **Phase 7（post-audit cleanup）**，来源 `Comments_20260920`（GPT-astra post-audit review，远程 bcff2b2，已 merge 留档）。核心决定：7.3 convergence 研究走 **PR-7 checkpoint/resume 路线**（用户 2026-09-20 拍板）；前置事实（X2c/X3c 无 ckpt，需一次 trunk 重跑）与 GPU 预算见 Phase 7。
 
 ## 总体目标
 
@@ -215,6 +216,52 @@ v2 注：几何固定（`data/geo_graphite_200.npz` 等 npz，无随机种子问
 
 ---
 
+## Phase 7 — post-audit cleanup（v3 新增，2026-09-20）
+
+来源：`Comments_20260920`（GPT-astra 对 master vs `phase0/baseline-freeze` 的 post-audit review）。其结论：数值主链已完成（PR-1..PR-6 + X2/X3 full-scale rerun），`Compute_C` normalized 判据与 Guo forcing 修复确认有效；X2/X3 数字变化（X2 平台 −1.9%、d=0.04 入侵前缘 −23%、X3 S_i 0.558→0.532、S_nr 0.171→0.129）已记录于 `docs/NUMERICAL_AUDIT_2026_09.md`，不重开。剩余 3 个实质问题 + 工程清理即本阶段。
+
+### 7.0 前置事实（ZCode 2026-09-20 逐条核实）
+
+convergence 研究走 PR-7 checkpoint/resume 路线（用户拍板），机制成立但有一个关键前提：
+
+| 事实 | 证据 |
+| --- | --- |
+| **X2c/X3c full-scale run 没有任何 ckpt 文件**——无法直接续跑 | 两 run 产于 PR-7 合并前的 `pr6/x2-fullscale`/`pr6/x3-fullscale` 分支；`results_pcs_cg3d/{gx2c,gx3c}_postaudit/` 均无 `ckpt/` 目录；frames/final.npz 只存 ψ，非可恢复 solver 状态 |
+| X3 末档 d=0 以 max-steps 退出、四项判据全不过 | `results_pcs_cg3d/gx3c_postaudit/report.json` ladder 末行 `criteria_passed=[]`；**S_nr=0.129 是步数帽值（S_nr@150k, d=0），非平衡值** |
+| `--resume-plan new` 可从 rung-end ckpt 分支新计划：跳 equil、flux 计数清零、`--max-steps` 可改、帧用全局步号不冲突 | `CHECKPOINT_RESUME.md`（CPU/GPU 双 arch 验证，含跨 driver 分支用例 C） |
+| master 数值路径与 pr6 分支一致（PR-7 loop-only 不碰 kernel；PR-5 umax 检查点变化从未触发） | `cg3d/protocol.py` 模块 docstring；7.3b 复现核对做实证 |
+
+结论：checkpoint 路线的**前置成本 = 用当前 master 重跑一次 X3 I-R trunk**（~9.5 GPU·h，ckpt 全程自动开启）；此后所有延长/分支都是廉价 resume（150k 步 ≈ 1.9 GPU·h）。
+
+### 7.1 periodic cluster 角部 bug（→ PR-8）
+
+`run_common.label_periodic` 在 y/z 双周期角部漏掉 conn=18/26 的对角连接（Comments §6 新报告的 bug；conn=6 的 X3 现结果不受影响）。修复 + 新增 `tests/test_periodic_yz_corner_diagonal.py`：构造跨 y=z=0 角的 18/26-连通簇断言被合并。验收：新测试过，**conn=6 结果逐位不变**。
+
+### 7.2 capillary-tube regression + Finney post-audit rerun（→ PR-9）
+
+Phase 3 清单里的 `test_capillary_tube.py` 一直未实现。从父仓库移植 capillary 入侵验证（附录 B：`validation3d_capillary_invasion.py`），补齐 σ+θ+压力 BC 的闭环 Level B 测试；通过后用当前 master 重跑 Finney drainage/imbibition（Level C）对比 `results/baseline/` 存档——`Compute_C`/Guo 修复（eff 0.33→0.99）之后旧 Finney 数字不可再引用。
+
+### 7.3 convergence 科学口径（checkpoint 驱动，GPU 预算 ~15–17 h，跑前用户确认）
+
+- **a) 桌面分析（零 GPU，先行）**：整理 X2c/X3c/pr6_new 各档 convergence 判据余量（例：X3 末档 pc_drift 0.148 vs tol 0.01、phase_flux 2.2e-6 vs 1e-6、u_rms_rel 0.063 vs 0.05、slope −1.1e-6 vs 5e-7）；澄清 d=0 时 pc_measured≈−0.0115 的语义（band 含毛细跳跃的口径，`BC_IC_OUTPUT.md` §3.1），写 `docs/CONVERGENCE.md`。**不默认切 multi**（Comments 原话）。
+- **b) trunk 重跑（前置投资）**：当前 master 重跑 X3 I-R（`geo_graphite_228b14.npz`、ψ_solid=−0.68、`--qs-mode sat` 保持与 X3c 可比；ckpt ~1.2 GB/档 × 9 档磁盘）。验收：ladder 各档 S_nw 与 X3c 重合到浮点原子序抖动级。
+- **c) 分支臂（checkpoint 兑现）**：从 b) 的 imbibe d=0.012 rung-end ckpt 以 `--resume-plan new` 分出两臂——① `--ds-imbibe 0.0 --max-steps 500000`（sat 延长臂）→ **converged S_nr**，量化与 0.129 的差值；② multi 对照臂（阈值取 a) 校准值），同一初始态对比退出行为。据此决定 production 默认是否切 multi。
+
+### 7.4 minor cleanup（→ PR-10，逐项小 commit）
+
+1. `psi_solid` 默认 −0.75 与 graphite 基线 −0.68 矛盾：graphite driver 默认改 −0.68 或强制显式传入；
+2. 删 report 的 stale `n_spheres_region: "Finney interior box"` 字段；
+3. `ALGORITHM_zh.md` §8：Pc=δ/3 → Pc_nominal=δ/3，并定义 pc_measured（sample-side band pressure difference）；
+4. requirements 补 pin：scikit-image / tifffile / matplotlib / Pillow。
+
+### 7.5 明确延后（挂账，不阻挡 physics 工作）
+
+`ti.init()` import-time 执行；`measure()` GPU→CPU 全场拷贝（可做 device reduction）；solver 拆包（保持 monolithic，等需要加 collision model / boundary type 时再拆）。
+
+**Comments §10 的关门条件：在把 S_nr≈0.129、cluster 数量、Pc–S 曲线作为正式定量结果使用之前，7.2 与 7.3 必须先闭环。**
+
+---
+
 ## 给 Agent 的执行规则
 
 ```text
@@ -263,6 +310,10 @@ v2 注：几何固定（`data/geo_graphite_200.npz` 等 npz，无随机种子问
 | **PR-4 Validation suite** | tests/ 三级体系（Phase 3） | — |
 | **PR-5 Architecture** | package、protocol、driver dedup（Phase 4） | **必须数值中性**；若 benchmark 变化 = 重构引入 regression，定位直接 |
 | **PR-6 Benchmark & docs** | Finney + graphite 重跑、old/new 比较、文档更新（Phase 5–6） | — |
+| **PR-8 Post-processing corner fix** | 7.1 periodic 角部 merge 修复 + 单测（v3） | 不改 solver；conn=6 逐位不变 |
+| **PR-9 Validation closure** | 7.2 capillary-tube regression + Finney post-audit rerun（v3） | — |
+| **PR-10 Minor cleanup** | 7.4 psi_solid 默认、stale 字段、Pc 术语、requirements pin（v3） | 不改数值结果 |
+| *(非 PR)* convergence campaign | 7.3 a/b/c：桌面分析 + trunk 重跑 + checkpoint 分支臂（v3） | 产出 `docs/CONVERGENCE.md`；GPU 预算跑前确认 |
 
 顺序调整说明：v1 把 diagnostics 排在数值正确性之后；v2 调换是因为 PR-2 的验收需要 measured Pc / reservoir ρ 这些仪器（PR-1 提供），且 PR-1 纯增量零风险。
 
@@ -284,6 +335,17 @@ v2 注：几何固定（`data/geo_graphite_200.npz` 等 npz，无随机种子问
 | driver 去重仅 mid_slice_png | `run_common.py:14` |
 | 文档含 upstream bug/defect 表述 | `docs/ALGORITHM.md` §2、§7 |
 | upstream 四缺陷已有推导记录 | `docs/ALGORITHM.md` §7（2026-09-11 audit） |
+
+### 附录 A.1 — v3 新增（ZCode 2026-09-20，Comments_20260920 核实）
+
+| 陈述 | 证据 |
+| --- | --- |
+| X2c/X3c full-scale run 无任何 ckpt（PR-7 前 branch 产物，不可 resume） | `results_pcs_cg3d/{gx2c,gx3c}_postaudit/` 无 `ckpt/`；reflog：pr6/x3-fullscale merge（1789883545）早于 pr7 merge（1789884961） |
+| X3 末档 d=0：max-steps 退出、criteria_passed=[] → S_nr=0.129 是步数帽值 | `results_pcs_cg3d/gx3c_postaudit/report.json` ladder 末行 |
+| multi-convergence 已实现但未被使用（两 full-scale run 均 `--qs-mode sat`） | 同上 report `args.qs_mode`；convergence 记录每档仍完整写入 |
+| resume 分支/延长语义与验证状态 | `CHECKPOINT_RESUME.md`：`--resume-plan new` 跳 equil、计数清零、`--max-steps` 可改；跨 driver 用例 C 双 arch 通过 |
+| periodic 角部漏 conn=18/26 对角连接 | `Comments_20260920` §6（GPT-astra 报告；具体代码行待 PR-8 修复时定位） |
+| X3c ladder wall-time 合计 ≈ 34.2k s（≈9.5 GPU·h），150k 步 ≈ 1.9 h | `gx3c_postaudit/report.json` 各档 `wall_s` 求和 |
 
 ## 附录 B — 外部可移植资产（父工作区本地路径，不在本公开仓库内）
 
