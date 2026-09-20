@@ -1,0 +1,680 @@
+我把当前 `master` 和你之前冻结的 `phase0/baseline-freeze` 做了对照。当前 `master` 是 `17ee61b6`，相比 baseline 前进了 20 个 commits，`pr1` 到 `pr6` 以及 X2/X3 full-scale rerun 都已经合并进去。
+
+结论是：
+
+> **核心数值问题和主要实验工作流优化已经完成；但如果严格按我们上一版 Plan 来验收，还不能算 100% close。**
+>
+> 我会把当前状态看成：**数值主线基本完成，剩下的是 3 个需要处理的实质问题 + 一批工程收尾。**
+
+## 1. 按原 Plan 验收
+
+| Phase                                 | 状态        | 我的判断                                              |
+| ------------------------------------- | --------- | ------------------------------------------------- |
+| Phase 0 baseline freeze               | ✅ 完成      | 做得完整                                              |
+| Phase 1 numerical correctness         | ✅ 基本完成    | 两个明确 bug 已修，ADR 已建立                               |
+| Phase 2 diagnostics / post-processing | ⚠️ 大部分完成  | diagnostics 完成，但 convergence 和 periodic CC 还有问题   |
+| Phase 3 validation suite              | ⚠️ 部分完成   | Level A/B 建起来了，但计划里的验证链还缺几项                       |
+| Phase 4 architecture                  | ⚠️ 部分完成   | driver 去重成功，但 solver/package 还没有真正完成模块化           |
+| Phase 5 benchmark                     | ⚠️ 大部分完成  | X2/X3 已重跑，但 Finney 没看到 post-audit rerun，X3 终点仍未收敛 |
+| Phase 6 docs                          | ✅/⚠️ 基本完成 | 主文档更新了，还有少数旧字段/口径残留                               |
+
+---
+
+# 2. 核心数值修改：这部分是真的完成了
+
+这一块我没有发现“agent 只写了说明但没改代码”的情况。
+
+### `Compute_C` 已正确改成归一化判据
+
+现在是：
+
+```python
+abs(rho_r - rho_b) > 0.9 * (rho_r + rho_b)
+```
+
+等价于：
+
+$$
+|\psi|>0.9
+$$
+
+这正是之前指出的问题。
+
+而且新增了 `test_compute_c_bulk.py`，专门覆盖 `rho=0.89` 这种旧实现会失败的情况。
+
+这一项可以关闭。
+
+---
+
+### Guo forcing 已修
+
+现在代码已经恢复：
+
+```python
+3.0 * (e - u).dot(F)
++ 9.0 * (e.dot(u)) * (e.dot(F))
+```
+
+Poiseuille regression 给出的结果：
+
+```text
+before:
+eff ≈ 0.332
+L2  ≈ 0.67
+
+after:
+eff ≈ 0.993
+L2  ≈ 0.0075
+```
+
+这实际上是很好的验证。
+
+这一项也可以关闭。
+
+---
+
+### equilibrium / surface tension / recoloring / wettability 有 ADR
+
+`docs/adr/001-hydrodynamic-equilibrium.md` 已经把这些争议从“代码注释里的个人判断”变成了正式的设计决策记录。
+
+这比单纯修改 README 好很多。
+
+尤其 recoloring 已经从绝对的：
+
+```text
+Latva-Kokko recoloring
+```
+
+改成：
+
+```text
+Latva-Kokko-type pairwise recoloring
+(min-of-equilibria amplitude)
+```
+
+比原来的表述准确。
+
+所以 **Phase 1 基本可以认为完成**。
+
+---
+
+# 3. 新结果证明这个 audit 是有意义的
+
+这一点很重要。
+
+你重新跑了完整 X2/X3，而结果并没有强行要求“新旧差不多”。
+
+### X2
+
+plateau：
+
+$$
+0.6837 \rightarrow 0.6706
+$$
+
+约：
+
+$$
+-1.9\%
+$$
+
+但侵入前沿的 `d=0.04`：
+
+$$
+0.0978 \rightarrow 0.0750
+$$
+
+变化约：
+
+$$
+-23\%
+$$
+
+这与 `Compute_C` 修正主要作用于 solid wall 附近是一致的。
+
+---
+
+### X3
+
+变化更明显：
+
+$$
+S_i:
+0.558 \rightarrow 0.532
+$$
+
+而 residual binary saturation：
+
+$$
+S_{nr}:
+0.171 \rightarrow 0.129
+$$
+
+约下降：
+
+$$
+24.5\%
+$$
+
+这一结果反过来也说明：
+
+> 原来的 wall-gradient bug 对 trapped gas endpoint 比对 drainage plateau 更敏感。
+
+所以从“这次优化有没有真正改善模型可信度”这个角度，这部分是成功的。
+
+---
+
+# 4. 但 X3 的 `S_nr = 0.129` 现在还不能视为最终 equilibrium 值
+
+这是当前我认为最需要保留的 caveat。
+
+你现在已经把 multi-convergence diagnostics 记录进 report 了，这是好的。
+
+但是 full-scale X3 最后一档：
+
+```text
+d = 0
+steps = 150000
+reason = max-steps
+```
+
+而且：
+
+```text
+criteria_passed = []
+```
+
+具体：
+
+```text
+saturation_slope ≈ -1.10e-6
+threshold         = 5e-7
+
+pc_drift ≈ 0.148
+threshold = 0.01
+
+phase_flux ≈ 2.22e-6
+threshold  = 1e-6
+
+u_rms_rel ≈ 0.063
+threshold = 0.05
+```
+
+也就是说：
+
+> **不是“四项里差一项”，而是四项一个都没过。**
+
+因此现在更准确的定义应该是：
+
+$$
+S_{nr}(150k,\ d=0)\approx0.129
+$$
+
+或者：
+
+> current step-cap residual saturation
+
+而不是 equilibrium residual saturation。
+
+这和旧版一样存在，只是现在 diagnostics 已经把它暴露出来了。
+
+---
+
+# 5. Multi-convergence 实现了，但实际上还没有真正投入使用
+
+这是 Phase 2 最大的未完成项。
+
+现在有：
+
+```bash
+--qs-mode sat
+--qs-mode multi
+```
+
+但是默认仍然是：
+
+```text
+qs_mode = sat
+```
+
+而 X2c/X3c full-scale 也是按 `sat` 跑的。
+
+所以现在实际发生的是：
+
+```text
+multi metrics:
+✅ 被计算
+✅ 被记录
+❌ 没有决定 simulation exit
+```
+
+这对 old/new baseline comparison 是合理的，因为必须保持退出逻辑一致。
+
+但下一阶段如果是正式研究结果，我会再加一个任务：
+
+> **校准 multi-mode threshold，然后跑一次 dedicated convergence study。**
+
+当前不能直接把 default 改成 `multi`，因为现在 `pc_measured` 自身还有解释问题。
+
+例如 X3 `d=0` 时：
+
+```text
+pc_nominal = 0
+pc_measured ≈ -0.0115
+```
+
+所以这里的 `pc_measured` 实际测到的是 sample band 中包含 meniscus / capillary field 的局部压力差，并不简单等于 imposed Pc。
+
+代码本身没错，但：
+
+> `pc_measured` 的物理含义还没有完成验证。
+
+因此现在把它直接作为 hard convergence criterion 还偏早。
+
+---
+
+# 6. 我发现一个新的 periodic cluster bug
+
+这是这轮审查里最明确的新问题。
+
+你现在的：
+
+```python
+label_periodic(mask, conn=6/18/26, periodic_axes=(1, 2))
+```
+
+对 **conn=6** 是没问题的。
+
+也就是你当前 X3 用：
+
+```json
+"conn": 6
+```
+
+所以：
+
+> **当前 `n_clusters=38` 和 largest cluster 不受这个问题影响。**
+
+但是对 `conn=18` 和 `conn=26`：
+
+### y/z 双周期角点的 diagonal connection 会漏掉
+
+例如：
+
+```text
+(x, y=0,    z=0)
+(x, y=Ny-1, z=Nz-1)
+```
+
+在 y/z 都 periodic 时：
+
+* 对 18-connectivity，它们应当是邻居；
+* 对 26-connectivity，它们也应当是邻居。
+
+当前算法分别处理 y seam 和 z seam，但没有处理：
+
+```text
+y + z 同时跨 seam
+```
+
+这种 compound periodic offset。
+
+我按你现在的函数逻辑复现了这个 case：
+
+```text
+conn=6  -> 2 clusters   # 正确，本来就不应 diagonal merge
+conn=18 -> 2 clusters   # 错，应为 1
+conn=26 -> 2 clusters   # 错，应为 1
+```
+
+所以这里建议补一个：
+
+```python
+test_periodic_yz_corner_diagonal()
+```
+
+然后让 periodic union 支持多 periodic axes 同时 wrap。
+
+这是一个明确的小修复。
+
+---
+
+# 7. Validation suite 建起来了，但还没达到原 Plan 的完整程度
+
+目前有：
+
+```text
+Level A
+- M/invM
+- uniform phase
+- mass conservation
+- reservoir
+- membrane
+
+Level B
+- Compute_C
+- Poiseuille
+- Laplace
+- contact angle
+
+postprocessing
+- connectivity
+- periodic CC
+- convergence
+```
+
+这已经是很大的提升。
+
+但原计划还包括几个目前没有看到独立 regression 的：
+
+### 缺 1：capillary tube
+
+这是我比较建议补的。
+
+因为现在：
+
+```text
+Laplace test
+```
+
+验证 surface tension，
+
+```text
+contact angle
+```
+
+验证 wettability，
+
+但是缺一个把：
+
+```text
+surface tension
++
+contact angle
++
+pressure BC
++
+interface motion
+```
+
+串起来的简单解析 case。
+
+一个 cylinder / slit capillary pressure test 正好是这条桥。
+
+---
+
+### 缺 2：post-audit Finney benchmark
+
+我没有在当前 repo 中找到新的：
+
+```text
+Finney post-audit rerun
+```
+
+你现在文档仍引用旧母项目的：
+
+```text
+Finney drainage knee C = 6.38
+S_nr = 0.16–0.20
+```
+
+但 `Compute_C` 修复会作用于 porous solid wall，因此 Finney 理论上也可能变化。
+
+既然 X3 graphite 的 `S_nr` 变化了 25%，那么：
+
+> **不能继续默认旧 Finney trapped-gas benchmark 自动继承有效。**
+
+我建议至少重跑一组：
+
+```text
+Finney drainage
+Finney imbibition
+```
+
+不一定需要重新做完整参数扫描。
+
+---
+
+# 8. Architecture：去重成功，但模块化只做了一半
+
+这一块 agent 的处理其实比较克制，我赞同它没有为了“模块化”把 Taichi kernel 拆烂。
+
+现在新增：
+
+```text
+cg3d/
+    diagnostics.py
+    protocol.py
+```
+
+然后：
+
+```text
+run_pcs_cg3d.py
+run_ir_cg3d.py
+```
+
+都使用：
+
+```python
+OpenSystem
+run_equil
+run_hold
+```
+
+这解决了最严重的 duplication。
+
+### 这一部分可以认为达标
+
+特别是：
+
+> drainage / imbibition 已经变成 pressure schedule 的差异，而不是两套基础设施。
+
+这是之前 Plan 最核心的架构目标。
+
+---
+
+但是原来计划中的其他问题仍然存在。
+
+### `ti.init()` 仍然在 import time 执行
+
+现在还是：
+
+```python
+import taichi as ti
+
+if LBM_ARCH == ...
+    ti.init(...)
+```
+
+所以：
+
+```python
+import lbm_solver_cg3d
+```
+
+仍然会初始化整个 Taichi runtime。
+
+这会继续影响：
+
+* notebook；
+* CPU/GPU test switching；
+* precision configuration；
+* 多 solver/test harness；
+* 作为 library 被其他项目 import。
+
+这个原计划中的优化没有做。
+
+---
+
+### solver 仍是 root-level 40k 单文件
+
+现在并没有真正形成：
+
+```text
+cg3d/solver.py
+cg3d/lattice.py
+cg3d/config.py
+...
+```
+
+不过这个我不认为现在必须继续拆。
+
+我更倾向于：
+
+> **先保持 solver monolithic，等下一次需要增加 collision model / boundary type 时再拆。**
+
+所以这是“计划没完全执行”，但不算当前 defect。
+
+---
+
+### GPU→CPU measurement 仍然比较重
+
+`OpenSystem.measure()` 每 500 steps 做：
+
+```python
+psi.to_numpy()
+rho.to_numpy()
+v.to_numpy()
+```
+
+也就是整个 228×200×200 三维场都 GPU→CPU。
+
+而你实际只需要：
+
+```text
+S
+umax
+u_rms
+rho mean
+pressure mean
+```
+
+从性能角度，这仍然可以做 Taichi device reduction。
+
+这也是上一版 Plan 提过但没有落实的项。
+
+现在 simulation 每 rung 本来就很长，500-step 才一次，所以暂时不一定是瓶颈；但如果以后：
+
+```text
+every = 50
+```
+
+或者更大网格，就会明显。
+
+---
+
+# 9. 还有几个小的工程残留
+
+这些都不影响当前主结论，但应该顺手收掉。
+
+### ① `psi_solid` 默认仍然是 -0.75
+
+driver：
+
+```python
+default=-0.75
+```
+
+而文档明确写：
+
+```text
+graphite baseline = -0.68
+θ ≈ 30°
+```
+
+你的 full-scale 命令显式传了 `-0.68`，所以结果没问题。
+
+但未来有人直接：
+
+```bash
+python run_pcs_cg3d.py ...
+```
+
+就会默默跑成 21° 左右的另一套 wettability。
+
+最好二选一：
+
+* graphite-specific driver 默认 `-0.68`；
+* 或者不设默认值，强制用户输入。
+
+---
+
+### ② Graphite report 还残留：
+
+```json
+"n_spheres_region": "Finney interior box"
+```
+
+X2c 的 report 里仍有这个字段。
+
+这是明确的 metadata 残留，应该删掉。
+
+---
+
+### ③ 文档里的 Pc 语言还没完全统一
+
+`ALGORITHM_zh.md` Section 8 仍然直接写：
+
+$$
+P_c=\delta/3
+$$
+
+更准确应该写：
+
+$$
+P_{c,\mathrm{nominal}}=\delta/3
+$$
+
+然后单独定义：
+
+```text
+pc_measured
+```
+
+以及它现在是 sample-side band pressure difference，而不是 imposed reservoir pressure difference。
+
+---
+
+### ④ requirements 只 pin 了一部分
+
+现在：
+
+```text
+taichi
+numpy
+scipy
+pyvista
+vtk
+```
+
+pin 了版本。
+
+但：
+
+```text
+scikit-image
+tifffile
+matplotlib
+Pillow
+```
+
+没 pin。
+
+如果目的只是 numerical solver reproducibility，影响不大；如果要复现整套 geometry/viz pipeline，最好也锁。
+
+---
+
+# 10. 所以现在我会这样定义剩余工作
+
+目前没必要再做一轮“大重构”。
+
+只需要开一个小的 **post-audit cleanup**：
+
+1. **修 `conn=18/26` 多轴 periodic corner merge**，补 unit test。
+2. **补一个 capillary-tube regression**；再跑一次 post-audit Finney drainage/imbibition，确认旧 validation band 是否仍成立。
+3. **处理 convergence 的科学口径**：先不要默认切到 `multi`；先研究 `pc_measured` 的定义和 threshold，再决定正式 production run 的退出条件。
+4. 顺手清掉 `psi_solid` default、`n_spheres_region`、Pc terminology、环境 pinning。
+5. `ti.init()`、device reduction、进一步 package 拆分可以放到下一轮工程优化，不需要阻挡当前 physics work。
+
+如果按“是否可以继续基于这个 repo 开展石墨注液机理研究”来问，我认为**可以**；但如果下一步要开始把 `S_nr≈0.129`、cluster 数量、Pc–S 曲线作为正式定量结果使用，前面第 **2 和第 3 项**最好先闭环。
