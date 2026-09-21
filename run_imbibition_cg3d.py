@@ -23,6 +23,20 @@ Baseline drive: --delta 0 (default) -> equal reservoir densities
 --delta != 0 would be pressure-assisted imbibition (FUTURE WORK, not
 validated by this task).
 
+Gas reporting (CG3D-IMB-001-R1, review finding 2): the final report
+carries NEUTRAL gas-saturation metrics only (gas_saturation_dom /
+gas_saturation_real, binary psi>0 basis, plus a continuous variant).
+Remaining gas in this OPEN system is NOT necessarily trapped: some may
+still be connected to the gas outlet.  Outlet-connectivity-based
+trapped-gas analysis is NOT IMPLEMENTED (deferred to a later task);
+this driver deliberately reports no trapped/residual/S_nr quantity and
+no gas-cluster statistics.
+
+Real-domain bounds (review finding 1): taken from the explicit
+--real-bounds pair, else from the geometry npz's structured real_x
+field (written by make_geo_buffer.py); never inferred from solid
+occupency.  Direct imbibition fails fast when neither is available.
+
 --prewet-layers is REQUIRED on purpose: the physically preferred value
 is unresolved (provisional numerical example: 4 lu).  Do not treat any
 particular value as physically validated.
@@ -49,7 +63,7 @@ matplotlib.use('Agg')
 
 import numpy as np
 
-from run_common import mid_slice_png, label_periodic
+from run_common import mid_slice_png
 from cg3d import OpenSystem, run_hold, checkpoint
 
 
@@ -72,11 +86,19 @@ def main():
                          'drivers default to -0.75 (Finney line)')
     ap.add_argument('--prewet-layers', type=int, required=True,
                     help='N real-structure pore layers pre-wetted liquid '
-                         'adjacent to the liquid-contact side.  REQUIRED '
-                         'because the physically preferred value is '
-                         'UNRESOLVED — any value used (e.g. 4) is a '
+                         'adjacent to the liquid-contact side, counted '
+                         'from the EXPLICIT real-domain entrance.  '
+                         'REQUIRED because the physically preferred value '
+                         'is UNRESOLVED — any value used (e.g. 4) is a '
                          'provisional numerical baseline, not a validated '
                          'physical parameter.')
+    ap.add_argument('--real-bounds', type=int, nargs=2, metavar=('LO', 'HI'),
+                    default=None,
+                    help='explicit real-domain x bounds [LO, HI).  '
+                         'Defaults to the geometry npz structured real_x '
+                         'field (make_geo_buffer.py).  Never inferred '
+                         'from solid occupancy; direct imbibition fails '
+                         'fast when neither source is available.')
     ap.add_argument('--delta', type=float, default=0.0,
                     help='reservoir density difference d (Pc = cs^2 d). '
                          'The validated direct-imbibition baseline is '
@@ -92,9 +114,6 @@ def main():
     ap.add_argument('--pc-drift-tol', type=float, default=0.01)
     ap.add_argument('--flux-tol', type=float, default=1e-6)
     ap.add_argument('--u-rel-tol', type=float, default=0.05)
-    ap.add_argument('--conn', type=int, choices=(6, 18, 26), default=6,
-                    help='cluster connectivity for the residual-gas CCDF '
-                         '(periodic y/z merge always on)')
     ap.add_argument('--every', type=int, default=500)
     ap.add_argument('--umax-cap', type=float, default=0.12)
     ap.add_argument('--dump-every', type=int, default=20000,
@@ -119,7 +138,8 @@ def main():
     sys_ = OpenSystem(args.geo, args.capa, args.psi_solid,
                       res_thick=args.res_thick, pc_band=args.pc_band,
                       orientation='imbibition',
-                      prewet_layers=args.prewet_layers)
+                      prewet_layers=args.prewet_layers,
+                      real_bounds=args.real_bounds)
     s = sys_.s
     xr = sys_.x_real
     print(f'[{args.tag}] geo {sys_.shape[0]}x{sys_.shape[1]}x'
@@ -185,37 +205,46 @@ def main():
              plan_full=[['imbibe', float(args.delta)]],
              plan_remaining=[]))
 
-    # ---- residual (trapped) gas at the end of direct imbibition ----
+    # ---- final gas saturation (NEUTRAL metrics; review finding 2) ----
+    # Remaining gas in this open system is NOT necessarily trapped: some
+    # may still be connected to the gas outlet.  Outlet-connectivity
+    # trapped-gas analysis is NOT implemented (deferred); no trapped /
+    # residual / S_nr quantity is reported by this driver.
     psi = s.psi_snapshot()
-    red_dom = (psi[sys_.dom, :, :] > 0.0) & sys_.dom_pore
-    lab, sizes = label_periodic(red_dom, conn=args.conn)
-    n = int(len(sizes))
-    s_nr = float(red_dom.sum()) / sys_.pore_cells        # dom-wide (legacy def)
-    red_real = (psi[xr, :, :] > 0.0) & sys_.real_pore
-    s_nr_real = float(red_real.sum()) / float(sys_.real_pore.sum())
-    red_cont = np.where(sys_.dom_pore,
-                        (psi[sys_.dom, :, :] + 1.0) / 2.0, 0.0)
-    s_nr_continuous = float(red_cont.sum() / sys_.pore_cells)
+    gas_dom = (psi[sys_.dom, :, :] > 0.0) & sys_.dom_pore
+    gas_saturation_dom = float(gas_dom.sum()) / sys_.pore_cells
+    gas_real = (psi[xr, :, :] > 0.0) & sys_.real_pore
+    gas_saturation_real = float(gas_real.sum()) / float(
+        sys_.real_pore.sum())
+    gas_cont_real = np.where(sys_.real_pore,
+                             (psi[xr, :, :] + 1.0) / 2.0, 0.0)
+    gas_saturation_real_continuous = float(
+        gas_cont_real.sum() / sys_.real_pore.sum())
     mid_slice_png(psi, os.path.join(out, 'final.png'),
-                  f'{args.tag}: S_nr={s_nr:.3f} (real-only {s_nr_real:.3f}, '
-                  f'cont {s_nr_continuous:.3f}), clusters={n} '
-                  f'(conn{args.conn}, periodic), '
-                  f'largest={sizes[0] if n else 0.0:.0f}')
+                  f'{args.tag}: gas_sat_real={gas_saturation_real:.3f} '
+                  f'(dom {gas_saturation_dom:.3f}, cont '
+                  f'{gas_saturation_real_continuous:.3f}) — remaining '
+                  f'gas, NOT trapped-gas analysis')
     fl = s.reservoir_fluxes()
     np.savez_compressed(os.path.join(out, 'final.npz'), psi=psi,
-                        solid=sys_.solid, sizes=sizes)
-    summary = dict(args=vars(args), ladder=ladder, s_nr=s_nr,
-                   s_nr_real=s_nr_real, s_nr_continuous=s_nr_continuous,
-                   cluster_topology=dict(conn=args.conn, periodic='y/z'),
-                   n_clusters=n, largest=float(sizes[0]) if n else 0.0,
-                   sizes_top=[float(v) for v in sizes[:50]], inj=fl,
-                   real_dom=[xr.start, xr.stop])
+                        solid=sys_.solid)
+    summary = dict(args=vars(args), ladder=ladder,
+                   gas_saturation_dom=gas_saturation_dom,
+                   gas_saturation_real=gas_saturation_real,
+                   gas_saturation_real_continuous=(
+                       gas_saturation_real_continuous),
+                   trapped_gas_analysis='NOT_IMPLEMENTED (outlet-'
+                   'connectivity analysis deferred; remaining gas in this '
+                   'open system may still be outlet-connected)',
+                   real_bounds=[xr.start, xr.stop],
+                   prewet_layers=args.prewet_layers, inj=fl)
     with open(os.path.join(out, 'report.json'), 'w',
               encoding='utf-8') as f:
         json.dump(summary, f, indent=1, ensure_ascii=False)
     print(f'[{args.tag}] DIRECT IMBIBITION DONE: '
-          f'S_nr={s_nr:.3f} (real-only {s_nr_real:.3f}), clusters={n}, '
-          f'largest={sizes[0] if n else 0.0:.0f}', flush=True)
+          f'gas_saturation_real={gas_saturation_real:.3f} '
+          f'(dom {gas_saturation_dom:.3f}); remaining gas, trapped-gas '
+          f'analysis NOT implemented', flush=True)
     del s
 
 

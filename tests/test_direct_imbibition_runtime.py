@@ -6,11 +6,14 @@ CPU arch (LBM_ARCH=cpu), ONE solver instance total (JIT rule): case
 order re-initialises the same instance via set_* + init.
 
 Parts:
-  A  OpenSystem(orientation='imbibition') end-to-end construction:
-     V4 — constructor pins the reservoirs at delta=0: left psi=-1
-     rho=1.0, right psi=+1 rho=1.0 (equal nominal densities); solver
-     psi after init == build_layout psi0; membrane masks land on the
-     solver as placed by build_layout.
+  A0 imbibition without explicit real bounds (npz has no real_x, no
+     real_bounds kwarg) fails FAST — before any solver construction.
+  A  OpenSystem(orientation='imbibition') end-to-end construction on a
+     geo npz carrying structured real_x=[16,32): V4 — constructor pins
+     the reservoirs at delta=0: left psi=-1 rho=1.0, right psi=+1
+     rho=1.0 (equal nominal densities); solver psi after init ==
+     build_layout psi0; membrane masks land on the solver as placed by
+     build_layout; real-domain bounds come from real_x.
   B  Optional smoke (task §6.E): 60 steps from the fresh direct-
      imbibition IC — no NaN / structural blow-up.  NOT physical
      validation.
@@ -47,21 +50,38 @@ def check(name, cond, detail=''):
 
 
 def make_synth_geo(nx=48, ny=24, nz=24):
-    """Same synthetic buffered geometry as the layout test."""
+    """Same synthetic buffered geometry as the layout test: DECLARED
+    real domain [16,32) (real_x); pillar array starts at x=18 (the real
+    region begins with all-pore planes)."""
     solid = np.zeros((nx, ny, nz), dtype=np.int8)
     y, z = np.meshgrid(np.arange(ny), np.arange(nz), indexing='ij')
-    solid[16:32, (y % 6 < 2) & (z % 6 < 2)] = 1
+    solid[18:32, (y % 6 < 2) & (z % 6 < 2)] = 1
     return solid
 
 
 os.makedirs('tests_output', exist_ok=True)
-geo_path = os.path.join('tests_output', 'imb_synth_geo_48.npz')
 solid_in = make_synth_geo()
+geo_path = os.path.join('tests_output', 'imb_synth_geo_48.npz')
 np.savez(geo_path, solid=solid_in,
+         real_x=np.array([16, 32]),
          meta=np.array(['synthetic buffered pillar geo for CG3D-IMB-001 '
-                        'tests: real structure x=[16,32)']))
+                        'tests: real domain x=[16,32), pillars from x=18']))
+geo_no_rb = os.path.join('tests_output', 'imb_synth_geo_48_norx.npz')
+np.savez(geo_no_rb, solid=solid_in,
+         meta=np.array(['same geo without real_x (error-path probe)']))
 
 X_IN, X_OUT = 11, 37
+
+# ---- A0: fast failure without explicit bounds (pre-solver) ------------
+try:
+    OpenSystem(geo_no_rb, capa=0.06, psi_solid=-0.68,
+               orientation='imbibition', prewet_layers=4)
+    check('A0 imbibition without real bounds fails before solver '
+          'construction', False, 'no ValueError')
+except ValueError as e:
+    check('A0 imbibition without real bounds fails before solver '
+          'construction',
+          'real_bounds' in str(e) and 'real_x' in str(e))
 
 # ---- A: construction end-to-end --------------------------------------
 sys_ = OpenSystem(geo_path, capa=0.06, psi_solid=-0.68,
@@ -79,13 +99,19 @@ check('A2 V4 right reservoir pins psi=+1 (gas) at rho=1.0 (EQUAL '
 check('A3 V4 no other reservoir cells', float((s.res_mask.to_numpy()
       .astype(bool)).sum()) == float(rin.sum() + rout.sum()))
 
-lay = build_layout(solid_in, orientation='imbibition', prewet_layers=4)
+lay = build_layout(solid_in, orientation='imbibition', prewet_layers=4,
+                   real_bounds=(16, 32))
 check('A4 solver psi after init == build_layout psi0 (IC fidelity)',
       np.array_equal(s.psi_snapshot(), lay['psi0']))
 check('A5 membranes on solver: mem_r only at x=11, mem_b only at x=37',
       np.array_equal(np.unique(np.nonzero(s.mem_r.to_numpy())[0]), [X_IN])
       and np.array_equal(np.unique(np.nonzero(s.mem_b.to_numpy())[0]),
                          [X_OUT]))
+check('A7 real-domain bounds from npz real_x: x_real=[16,32) (explicit, '
+      'not solid-derived; pillars only start at x=18)',
+      sys_.x_real == slice(16, 32)
+      and int(sys_.real_pore.sum()) == int(
+          (solid_in[16:32] == 0).sum()))
 
 # ---- B: 60-step smoke from the fresh direct-imbibition IC -------------
 ok_smoke, psi_min, psi_max = True, 0.0, 0.0

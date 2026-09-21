@@ -14,6 +14,12 @@ layout/initial-condition constructor shared by both orientations;
 OpenSystem(orientation='imbibition', prewet_layers=N) swaps the phase
 roles of the two reservoir/membrane sides while keeping the drainage
 path (and both existing drivers) byte-equivalent in behaviour.
+
+CG3D-IMB-001-R1 (review finding 1): real-domain x bounds are EXPLICIT
+(resolve_real_bounds: real_bounds kwarg > structured npz real_x field >
+None).  They are never inferred from solid occupancy — a real electrode
+crop may begin with all-pore planes — and drainage no longer requires
+solid voxels between the membranes at all.
 """
 import time
 
@@ -22,37 +28,70 @@ import numpy as np
 from .diagnostics import region_stats, eval_convergence
 
 
+def resolve_real_bounds(npz_dat, real_bounds=None):
+    """Real-domain x bounds [lo, hi) resolution (CG3D-IMB-001-R1, review
+    finding 1): EXPLICIT information only, never inferred from solid
+    occupancy (a real electrode crop may begin with all-pore planes, so
+    'first plane containing solid' is not the real-geometry entrance).
+
+    Priority:
+      1. explicit real_bounds argument (protocol interface);
+      2. structured npz field ``real_x = [lo, hi]`` (written by
+         make_geo_buffer.py; buffered geometries generated before this
+         field existed do not carry it);
+      3. None — drainage does not need real bounds at all.
+
+    Returns (lo, hi) or None.  Callers that REQUIRE bounds (direct
+    imbibition) must treat None as an error.
+    """
+    if real_bounds is not None:
+        lo, hi = int(real_bounds[0]), int(real_bounds[1])
+    elif 'real_x' in npz_dat:
+        rx = np.asarray(npz_dat['real_x']).astype(int).ravel()
+        if rx.size != 2:
+            raise ValueError(
+                f"npz field 'real_x' must hold [lo, hi]; got {rx.tolist()}")
+        lo, hi = int(rx[0]), int(rx[1])
+    else:
+        return None
+    if not lo < hi:
+        raise ValueError(f'real bounds must satisfy lo < hi; got [{lo},{hi})')
+    return lo, hi
+
+
 def build_layout(solid_full, orientation='drainage', prewet_layers=None,
-                 wall_t=3, res_thick=8):
+                 wall_t=3, res_thick=8, real_bounds=None):
     """Pure-NumPy open-system layout + initial phase field (CG3D-IMB-001).
 
     Slab along x: [wall wt | reservoir rt | membrane plane | open-pore
     buffers + real structure | membrane plane | reservoir rt | wall wt];
     y/z periodic.  Every x index derives from wall_t / res_thick and the
-    geometry's own solid field — no hard-coded positions.
+    EXPLICIT real-domain bounds — no hard-coded positions, no inference
+    from solid occupancy.
 
     orientation='drainage' (legacy; verbatim extraction of the original
     OpenSystem.__init__ layout statements): pores start liquid-full
     (psi=-1); the inlet reservoir slab [wt, x_in+1) — including the inlet
     membrane plane — is pre-seeded gas (psi=+1); mem_b sits at x_in
     (blocks blue -> red/gas enters), mem_r at x_out (blocks red ->
-    blue/liquid leaves).
+    blue/liquid leaves).  real_bounds is OPTIONAL here (diagnostics
+    only); an all-open synthetic geometry remains valid.
 
-    orientation='imbibition' (direct imbibition; requires prewet_layers
-    N in [1, real-structure width]): the LEFT side is the liquid
-    contact — inlet reservoir, inlet membrane plane, left open buffer
-    and the first N real-structure pore layers start liquid (psi=-1);
-    all pore cells from x_real_lo+N to the right wall start gas
-    (psi=+1), including the right buffer, outlet membrane plane and
-    outlet reservoir; mem_r sits at x_in (blocks red -> liquid enters),
-    mem_b at x_out (blocks blue -> gas leaves).  The real-structure x
-    extent [x_real_lo, x_real_hi) is located from the solid field
-    (first/last membrane-interior slab containing solid — the
-    make_geo_buffer pads are pure open pore), so the buffer geometry is
-    consumed exactly as generated.
+    orientation='imbibition' (direct imbibition; REQUIRES prewet_layers
+    N in [1, real width] AND real_bounds, explicit — see
+    resolve_real_bounds): the LEFT side is the liquid contact — inlet
+    reservoir, inlet membrane plane, left open buffer and the first N
+    real-structure pore layers (counted from the explicit real-domain
+    entrance) start liquid (psi=-1); all pore cells from
+    real_lo+N to the right wall start gas (psi=+1), including the right
+    buffer, outlet membrane plane and outlet reservoir; mem_r sits at
+    x_in (blocks red -> liquid enters), mem_b at x_out (blocks blue ->
+    gas leaves).  The open-pore buffers are consumed exactly as
+    generated (their geometry is untouched).
 
     Returns dict(solid, pore_full, psi0, mem_r, mem_b, res_in, res_out,
-    dom, dom_pore, pore_cells, x_real_lo, x_real_hi, shape).
+    dom, dom_pore, pore_cells, x_real_lo, x_real_hi (None when no
+    explicit bounds), shape).
     """
     solid_full = np.asarray(solid_full)
     nx = solid_full.shape[0]
@@ -65,15 +104,15 @@ def build_layout(solid_full, orientation='drainage', prewet_layers=None,
     dom = slice(x_in + 1, x_out)
     dom_pore = pore_full[dom, :, :]
 
-    has_solid = solid[dom, :, :].any(axis=(1, 2))
-    if not has_solid.any():
-        raise ValueError(
-            'no solid between the membranes; cannot locate the real '
-            'structure (a pure open-pore slab is not a valid direct-'
-            'imbibition geometry)')
-    off = x_in + 1
-    x_real_lo = off + int(np.argmax(has_solid))
-    x_real_hi = off + len(has_solid) - int(np.argmax(has_solid[::-1]))
+    if real_bounds is not None:
+        x_real_lo, x_real_hi = int(real_bounds[0]), int(real_bounds[1])
+        if not (dom.start < x_real_lo and x_real_lo < x_real_hi
+                and x_real_hi <= dom.stop):
+            raise ValueError(
+                f'real bounds [{x_real_lo},{x_real_hi}) must lie inside '
+                f'the membrane-interior domain {dom}')
+    else:
+        x_real_lo = x_real_hi = None
 
     mem_r = np.zeros_like(solid)
     mem_b = np.zeros_like(solid)
@@ -90,6 +129,14 @@ def build_layout(solid_full, orientation='drainage', prewet_layers=None,
         mem_b[x_in, :, :] = 1             # inlet: blocks blue, red enters
         mem_r[x_out, :, :] = 1            # outlet: blocks red, blue leaves
     elif orientation == 'imbibition':
+        if x_real_lo is None:
+            raise ValueError(
+                'direct imbibition requires EXPLICIT real-domain bounds '
+                '(solid-occupancy inference is not authoritative: real '
+                'electrode crops may begin with all-pore planes). Pass '
+                'real_bounds=(lo, hi) or use a buffered geometry npz '
+                'with the structured real_x=[lo,hi] field (written by '
+                'make_geo_buffer.py).')
         n_real = x_real_hi - x_real_lo
         if prewet_layers is None:
             raise ValueError('direct imbibition requires prewet_layers')
@@ -99,8 +146,9 @@ def build_layout(solid_full, orientation='drainage', prewet_layers=None,
                 f'width [1, {n_real}] (real domain x=[{x_real_lo},'
                 f'{x_real_hi}))')
         # bulk pore space starts gas; the liquid contact side (reservoir,
-        # membrane plane, open buffer, first N real pore layers) is liquid;
-        # the walled solid map decides pore-ness so walls stay psi=0
+        # membrane plane, open buffer, first N real pore layers counted
+        # from the EXPLICIT real entrance) is liquid; the walled solid
+        # map decides pore-ness so walls stay psi=0
         psi0 = np.where(solid == 0, 1.0, 0.0).astype(np.float32)
         x_liq = x_real_lo + prewet_layers
         psi0[:x_liq, :, :] = np.where(
@@ -133,27 +181,35 @@ class OpenSystem:
     .agent/decisions/DIRECT_IMBIBITION_BASELINE.md): res_in pins psi=-1
     (liquid source) behind mem_r (passes blue); res_out pins psi=+1
     (gas sink) behind mem_b (passes red); the initial phase field comes
-    from build_layout('imbibition', prewet_layers=N).  Only d=0 (equal
-    reservoir densities, spontaneous/capillary-driven imbibition) is a
-    validated baseline; d>0 would be pressure-assisted imbibition
-    (future work, not validated)."""
+    from build_layout('imbibition', prewet_layers=N).  This orientation
+    REQUIRES explicit real-domain x bounds (real_bounds kwarg or the
+    npz's structured real_x field) — they are never inferred from solid
+    occupancy.  Only d=0 (equal reservoir densities, spontaneous/
+    capillary-driven imbibition) is a validated baseline; d>0 would be
+    pressure-assisted imbibition (future work, not validated)."""
 
     def __init__(self, geo_path, capa, psi_solid, res_thick=8, pc_band=4,
-                 wall_t=3, orientation='drainage', prewet_layers=None):
+                 wall_t=3, orientation='drainage', prewet_layers=None,
+                 real_bounds=None):
         from lbm_solver_cg3d import ColorGradientSolver3D
         dat = np.load(geo_path)
         self.geo_meta = str(dat['meta'][0]) if 'meta' in dat else '{}'
+        real_bounds = resolve_real_bounds(dat, real_bounds)
         lay = build_layout(dat['solid'].astype(np.int8),
                            orientation=orientation,
                            prewet_layers=prewet_layers, wall_t=wall_t,
-                           res_thick=res_thick)
+                           res_thick=res_thick, real_bounds=real_bounds)
         self.orientation = orientation
         self.prewet_layers = prewet_layers
         self.dom = lay['dom']
         self.dom_pore = lay['dom_pore']
         self.pore_cells = lay['pore_cells']
-        self.x_real = slice(lay['x_real_lo'], lay['x_real_hi'])
-        self.real_pore = lay['pore_full'][self.x_real, :, :]
+        if lay['x_real_lo'] is None:
+            self.x_real = None
+            self.real_pore = None
+        else:
+            self.x_real = slice(lay['x_real_lo'], lay['x_real_hi'])
+            self.real_pore = lay['pore_full'][self.x_real, :, :]
         self.res_in = lay['res_in']
         self.res_out = lay['res_out']
         self.solid = lay['solid']

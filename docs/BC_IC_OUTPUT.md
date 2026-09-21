@@ -112,9 +112,12 @@ x:  0    3        11   12  14         14+N              214  217  218       225 
 ```
 
 - **膜方向互换**:入口 x=11 放 **mem_r**(挡红/气→液进),出口 x=217 放 **mem_b**(挡蓝/液→气出);drainage 口径(§1)恰相反。
-- **IC**:左液 reservoir+膜面+左 buffer+真实结构前 `--prewet-layers N` 层孔隙=液(ψ=−1),其余真实孔隙/右 buffer/右膜面/右 reservoir=气(ψ=+1);固相 ψ=0 不变。真实结构 x 范围由 solid 场推导([14,214)),不硬编码。
+- **真实域边界(R1 返工,2026-09-21)**:显式来源,优先级 `--real-bounds LO HI` > 几何 npz 结构化字段 `real_x=[lo,hi)`(make_geo_buffer.py 写入,生产几何=[14,214))。**绝不从 solid 占据推导**(真实电极切片可能以全孔隙平面开头);两处都没有 → 快速报错指引。drainage 不需要该边界(npz 无 real_x 也照常,全开放合成几何亦有效)。
+- **IC**:左液 reservoir+膜面+左 buffer+真实结构前 `--prewet-layers N` 层孔隙(自显式真实域入口数起)=液(ψ=−1),其余真实孔隙/右 buffer/右膜面/右 reservoir=气(ψ=+1);固相 ψ=0 不变。
 - **驱动**:`--delta`(默认 0)→ 两 reservoir 名义密度相等(1.0/1.0),纯自发/毛吸驱动;`--delta≠0` 为压力辅助吸渗(未验证的未来工作)。δ>0 = 液侧高压。
 - **无平衡步**:δ=0 下毛吸从第 1 步就起作用,跑 equil 等于提前跑实验;IC 本身即交付物(`psi_ic.npz` + `ic.png` 每次必写)。
-- **协议复用**:单 rung 走 `run_hold`(d=--delta),收敛判据/帧/报告 schema 与 §3.1/§3.2 相同;输出根目录 `results_imb_cg3d/<tag>`;终态 report 额外含 `s_nr_real`(真实结构区 binary 口径)与 `real_dom`。终态 checkpoint 与 rolling live ckpt 支持,`--resume` 尚未接入(已知缺口)。
+- **协议复用**:单 rung 走 `run_hold`(d=--delta),收敛判据/帧/报告 schema 与 §3.1/§3.2 相同;输出根目录 `results_imb_cg3d/<tag>`。终态 checkpoint 与 rolling live ckpt 支持,`--resume` 尚未接入(已知缺口)。
+- **终态 gas 口径(R2 返工)**:开放系统中剩余气≠困气(可能仍连着气出口)。终态 report 只报中性量:`gas_saturation_dom`(binary ψ>0,全域含 buffer)、`gas_saturation_real`(binary,真实域)、`gas_saturation_real_continuous`;`report['trapped_gas_analysis']='NOT_IMPLEMENTED...'` 显式声明**出口连通性困气分析未实现**(留待后续任务);不做 gas 集群统计。
 - **参数**:`--prewet-layers` **必填**(最优值未定,4 lu 仅为临时数值样例,勿当物理验证值);`--psi-solid` 默认 −0.68(电极口径;两 drainage 驱动默认 −0.75/Finney 线)。
-- 验证证据(布局/膜方向/回归/零偏置 + 60 步 smoke):`tests/test_direct_imbibition_{layout,runtime}.py`。
+- **IC QA 图**(无求解器,NumPy+matplotlib,复用同一 `build_layout`):`python -m cg3d.ic_figs --geo geo_graphite_228b14.npz --prewet 2 6 --out <dir>` → x 方向逐平面相分数 profile + 中央 x-z 切片 + 双值对比图;证据图在 `.agent/evidence/CG3D-IMB-001/figures/`。
+- 验证证据(布局/膜方向/回归/零偏置 + smoke + R1/R2 返工项):`tests/test_direct_imbibition_{layout,runtime}.py` + `.agent/evidence/CG3D-IMB-001/validation_summary.md`。
