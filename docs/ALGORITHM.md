@@ -161,6 +161,17 @@ system is truly open: gas enters at the inlet, liquid leaves at the outlet
 (drainage), and the reverse on imbibition — no closed-system saturation
 artefacts.
 
+The layout above is the **drainage orientation** (default of
+`cg3d.protocol.OpenSystem` and of both ladder drivers). The direct-
+imbibition mode (CG3D-IMB-001, `run_imbibition_cg3d.py`) reuses the same
+slab with the phase roles of the two sides swapped — liquid reservoir
+behind a red-blocking membrane on the left, gas reservoir behind a
+blue-blocking membrane on the right, and an initial condition of
+pre-wetted liquid layers at the liquid-contact face with the remaining
+real pore space gas — driven at delta = 0 (spontaneous/capillary).
+See `docs/BC_IC_OUTPUT.md` §7 and
+`.agent/decisions/DIRECT_IMBIBITION_BASELINE.md`.
+
 ## 9. Timestep order and run protocol
 
 Kernel order per step (identical to the 2D canonical):

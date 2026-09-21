@@ -4,6 +4,7 @@ __pycache__/
 
 # Simulation outputs (regenerable; the shipped results/ is tracked explicitly)
 results_pcs_cg3d/
+results_imb_cg3d/
 results_*.cg3d/
 frames/
 *.npz

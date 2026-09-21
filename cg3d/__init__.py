@@ -7,8 +7,9 @@ against fragmenting them; a file move is deferred until after the
 numerical-audit reruns so PR-6 compares against a frozen code layout).
 """
 from .diagnostics import (region_stats, eval_convergence, label_periodic)
-from .protocol import OpenSystem, run_hold, run_equil
+from .protocol import OpenSystem, build_layout, run_hold, run_equil
 from . import checkpoint
 
 __all__ = ['region_stats', 'eval_convergence', 'label_periodic',
-           'OpenSystem', 'run_hold', 'run_equil', 'checkpoint']
+           'OpenSystem', 'build_layout', 'run_hold', 'run_equil',
+           'checkpoint']

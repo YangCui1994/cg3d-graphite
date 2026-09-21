@@ -7,6 +7,7 @@
 | A | structural sanity, seconds each | before every commit | `run_level_a.py` |
 | B | numerical algorithm regression, minutes | after any solver change, before merges | `levelb_laplace.py`, `levelb_contact_angle.py`, `test_poiseuille_cg3d.py`, `test_compute_c_bulk.py` |
 | numpy | post-processing / docs logic, no solver | any time | `test_postprocessing.py` |
+| IMB | direct-imbibition layout (numpy) + runtime (one CPU solver instance) | after any `cg3d/protocol.py` layout change | `test_direct_imbibition_layout.py`, `test_direct_imbibition_runtime.py` |
 | C | full benchmarks (Finney / graphite) | GPU, manual, not CI | parent-repo drivers + `run_pcs_cg3d.py` / `run_ir_cg3d.py` |
 
 ## Run
@@ -18,6 +19,8 @@ python tests/test_compute_c_bulk.py    # PR-2 1.1 regression
 python tests/test_poiseuille_cg3d.py   # PR-2 1.2 regression (eff ~ 1.0)
 python tests/levelb_laplace.py         # sigma vs 1.012*CapA, <3%, R2>=0.999
 python tests/levelb_contact_angle.py   # theta(psi_solid=-0.68) ~ 30 +-6 deg
+python tests/test_direct_imbibition_layout.py    # CG3D-IMB-001 IC/membrane layout (numpy)
+python tests/test_direct_imbibition_runtime.py   # CG3D-IMB-001 construction/V4/smoke/membrane behaviour
 ```
 
 All exit non-zero on failure. Scratch outputs land in `tests_output/`

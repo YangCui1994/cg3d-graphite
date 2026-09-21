@@ -1,6 +1,6 @@
 # CG3D 两相驱动的边界/初始条件/输出设置参考(v1,2026-09-15)
 
-适用:`2phase/run_pcs_cg3d.py`(排水阶梯)、`2phase/run_ir_cg3d.py`(排水+吸渗 I–R),求解器 `lbm_solver_cg3d.py`。
+适用:`2phase/run_pcs_cg3d.py`(排水阶梯)、`2phase/run_ir_cg3d.py`(排水+吸渗 I–R)、`run_imbibition_cg3d.py`(直接吸渗,§7,2026-09-21 起),求解器 `lbm_solver_cg3d.py`。
 用途:**开新仿真前照此文件调整参数**,不必翻驱动源码。所有行号指向 2026-09-15 版本。
 规则来源:2026-09-15 用户指令"输出选择,不要只输出头尾"已落成驱动默认行为(见 §3)。
 
@@ -98,3 +98,23 @@ CapA=0.06(σ=0.0606,3D 系数 1.012);ν_l=ν_g=0.1;qs-tol 5e-7 / 15k 窗 / min-s
 
 - 档内**中途状态 npz 自动存档**(非 int8 帧、可断点续跑)未实现——现有帧+partial report 已满足"不丢结果",真断点续跑留待需要时。
 - `--dump-every` 改默认值的决定记录于两驱动 docstring(2026-09-15 用户规则)。
+
+## 7. 直接吸渗 direct imbibition(`run_imbibition_cg3d.py`,CG3D-IMB-001,2026-09-21)
+
+独立新场景:气饱和电极从一侧接触电解液的自发吸渗。**与 I–R 完全独立**(无排水 checkpoint、不继承残余液);两既有驱动与其 drainage 口径不受影响(回归见 `tests/test_direct_imbibition_layout.py` L4/L5 与 `tests/test_checkpoint_resume.py`)。
+
+布局(与 §1 相同的 buffer 几何,左右相角色对调):
+
+```
+x:  0    3        11   12  14         14+N              214  217  218       225  228
+    |wall| 液res   |M_r |buf| 预润N层   剩余真实孔隙(气)    |buf| M_b | 气res   |wall|
+              ψ=−1  只过液  液    液|气界面(初始)   气        气   只过气  ψ=+1
+```
+
+- **膜方向互换**:入口 x=11 放 **mem_r**(挡红/气→液进),出口 x=217 放 **mem_b**(挡蓝/液→气出);drainage 口径(§1)恰相反。
+- **IC**:左液 reservoir+膜面+左 buffer+真实结构前 `--prewet-layers N` 层孔隙=液(ψ=−1),其余真实孔隙/右 buffer/右膜面/右 reservoir=气(ψ=+1);固相 ψ=0 不变。真实结构 x 范围由 solid 场推导([14,214)),不硬编码。
+- **驱动**:`--delta`(默认 0)→ 两 reservoir 名义密度相等(1.0/1.0),纯自发/毛吸驱动;`--delta≠0` 为压力辅助吸渗(未验证的未来工作)。δ>0 = 液侧高压。
+- **无平衡步**:δ=0 下毛吸从第 1 步就起作用,跑 equil 等于提前跑实验;IC 本身即交付物(`psi_ic.npz` + `ic.png` 每次必写)。
+- **协议复用**:单 rung 走 `run_hold`(d=--delta),收敛判据/帧/报告 schema 与 §3.1/§3.2 相同;输出根目录 `results_imb_cg3d/<tag>`;终态 report 额外含 `s_nr_real`(真实结构区 binary 口径)与 `real_dom`。终态 checkpoint 与 rolling live ckpt 支持,`--resume` 尚未接入(已知缺口)。
+- **参数**:`--prewet-layers` **必填**(最优值未定,4 lu 仅为临时数值样例,勿当物理验证值);`--psi-solid` 默认 −0.68(电极口径;两 drainage 驱动默认 −0.75/Finney 线)。
+- 验证证据(布局/膜方向/回归/零偏置 + 60 步 smoke):`tests/test_direct_imbibition_{layout,runtime}.py`。

@@ -8,6 +8,12 @@ order.  One deliberate unification: the umax guard is checked at EVERY
 sampling point (the drainage driver used to check it only at
 10000-step print points); umax-cap never fired in any baseline run, so
 no trajectory changes.
+
+CG3D-IMB-001 (direct imbibition): build_layout() is the pure-NumPy
+layout/initial-condition constructor shared by both orientations;
+OpenSystem(orientation='imbibition', prewet_layers=N) swaps the phase
+roles of the two reservoir/membrane sides while keeping the drainage
+path (and both existing drivers) byte-equivalent in behaviour.
 """
 import time
 
@@ -16,54 +22,160 @@ import numpy as np
 from .diagnostics import region_stats, eval_convergence
 
 
-class OpenSystem:
-    """wall | res_in | mem_b (passes red) | DOMAIN | mem_r (passes blue)
-    | res_out | wall slab; y/z periodic.  Density-prescribed reservoirs
-    drive Pc = cs^2 * d."""
+def build_layout(solid_full, orientation='drainage', prewet_layers=None,
+                 wall_t=3, res_thick=8):
+    """Pure-NumPy open-system layout + initial phase field (CG3D-IMB-001).
 
-    def __init__(self, geo_path, capa, psi_solid, res_thick=8, pc_band=4,
-                 wall_t=3):
-        from lbm_solver_cg3d import ColorGradientSolver3D
-        dat = np.load(geo_path)
-        self.geo_meta = str(dat['meta'][0]) if 'meta' in dat else '{}'
-        solid_full = dat['solid'].astype(np.int8)
-        nx, ny, nz = solid_full.shape
-        pore_full = solid_full == 0
-        wt, rt = wall_t, res_thick
-        x_in, x_out = wt + rt, nx - wt - rt
-        solid = solid_full.copy()
-        solid[:wt, :, :] = 1
-        solid[nx - wt:, :, :] = 1
-        self.dom = slice(x_in + 1, x_out)
-        self.dom_pore = pore_full[self.dom, :, :]
-        self.pore_cells = float(self.dom_pore.sum())
+    Slab along x: [wall wt | reservoir rt | membrane plane | open-pore
+    buffers + real structure | membrane plane | reservoir rt | wall wt];
+    y/z periodic.  Every x index derives from wall_t / res_thick and the
+    geometry's own solid field — no hard-coded positions.
 
+    orientation='drainage' (legacy; verbatim extraction of the original
+    OpenSystem.__init__ layout statements): pores start liquid-full
+    (psi=-1); the inlet reservoir slab [wt, x_in+1) — including the inlet
+    membrane plane — is pre-seeded gas (psi=+1); mem_b sits at x_in
+    (blocks blue -> red/gas enters), mem_r at x_out (blocks red ->
+    blue/liquid leaves).
+
+    orientation='imbibition' (direct imbibition; requires prewet_layers
+    N in [1, real-structure width]): the LEFT side is the liquid
+    contact — inlet reservoir, inlet membrane plane, left open buffer
+    and the first N real-structure pore layers start liquid (psi=-1);
+    all pore cells from x_real_lo+N to the right wall start gas
+    (psi=+1), including the right buffer, outlet membrane plane and
+    outlet reservoir; mem_r sits at x_in (blocks red -> liquid enters),
+    mem_b at x_out (blocks blue -> gas leaves).  The real-structure x
+    extent [x_real_lo, x_real_hi) is located from the solid field
+    (first/last membrane-interior slab containing solid — the
+    make_geo_buffer pads are pure open pore), so the buffer geometry is
+    consumed exactly as generated.
+
+    Returns dict(solid, pore_full, psi0, mem_r, mem_b, res_in, res_out,
+    dom, dom_pore, pore_cells, x_real_lo, x_real_hi, shape).
+    """
+    solid_full = np.asarray(solid_full)
+    nx = solid_full.shape[0]
+    wt, rt = wall_t, res_thick
+    x_in, x_out = wt + rt, nx - wt - rt
+    solid = solid_full.copy()
+    solid[:wt, :, :] = 1
+    solid[nx - wt:, :, :] = 1
+    pore_full = solid_full == 0
+    dom = slice(x_in + 1, x_out)
+    dom_pore = pore_full[dom, :, :]
+
+    has_solid = solid[dom, :, :].any(axis=(1, 2))
+    if not has_solid.any():
+        raise ValueError(
+            'no solid between the membranes; cannot locate the real '
+            'structure (a pure open-pore slab is not a valid direct-'
+            'imbibition geometry)')
+    off = x_in + 1
+    x_real_lo = off + int(np.argmax(has_solid))
+    x_real_hi = off + len(has_solid) - int(np.argmax(has_solid[::-1]))
+
+    mem_r = np.zeros_like(solid)
+    mem_b = np.zeros_like(solid)
+    res_in = np.zeros_like(solid)
+    res_in[wt:x_in, :, :] = 1
+    res_out = np.zeros_like(solid)
+    res_out[x_out + 1:nx - wt, :, :] = 1
+
+    if orientation == 'drainage':
         psi0 = np.where(solid == 0, -1.0, 0.0).astype(np.float32)
         psi0[wt:x_in + 1, :, :] = np.where(
             pore_full[wt:x_in + 1, :, :], 1.0, 0.0).astype(np.float32)
         # outlet membrane stays blue-pre-wet
-        mem_r = np.zeros_like(solid)
-        mem_b = np.zeros_like(solid)
         mem_b[x_in, :, :] = 1             # inlet: blocks blue, red enters
         mem_r[x_out, :, :] = 1            # outlet: blocks red, blue leaves
-        self.res_in = np.zeros_like(solid)
-        self.res_in[wt:x_in, :, :] = 1
-        self.res_out = np.zeros_like(solid)
-        self.res_out[x_out + 1:nx - wt, :, :] = 1
+    elif orientation == 'imbibition':
+        n_real = x_real_hi - x_real_lo
+        if prewet_layers is None:
+            raise ValueError('direct imbibition requires prewet_layers')
+        if not 1 <= prewet_layers <= n_real:
+            raise ValueError(
+                f'prewet_layers={prewet_layers} outside the real-structure '
+                f'width [1, {n_real}] (real domain x=[{x_real_lo},'
+                f'{x_real_hi}))')
+        # bulk pore space starts gas; the liquid contact side (reservoir,
+        # membrane plane, open buffer, first N real pore layers) is liquid;
+        # the walled solid map decides pore-ness so walls stay psi=0
+        psi0 = np.where(solid == 0, 1.0, 0.0).astype(np.float32)
+        x_liq = x_real_lo + prewet_layers
+        psi0[:x_liq, :, :] = np.where(
+            solid[:x_liq, :, :] == 0, -1.0, 0.0).astype(np.float32)
+        mem_r[x_in, :, :] = 1             # inlet: blocks red, liquid enters
+        mem_b[x_out, :, :] = 1            # outlet: blocks blue, gas leaves
+    else:
+        raise ValueError(f'unknown orientation {orientation!r}')
 
+    return dict(solid=solid, pore_full=pore_full, psi0=psi0,
+                mem_r=mem_r, mem_b=mem_b, res_in=res_in, res_out=res_out,
+                dom=dom, dom_pore=dom_pore,
+                pore_cells=float(dom_pore.sum()),
+                x_real_lo=x_real_lo, x_real_hi=x_real_hi,
+                shape=solid.shape)
+
+
+class OpenSystem:
+    """wall | res_in | membrane | DOMAIN (open-pore buffers + real
+    structure between the two membrane planes) | membrane | res_out
+    | wall slab; y/z periodic.  Density-prescribed reservoirs drive
+    Pc = cs^2 * d.
+
+    orientation='drainage' (default; the run_pcs_cg3d.py / run_ir_cg3d.py
+    configuration): res_in pins psi=+1 (gas source, rho=1+d/2) behind
+    mem_b (passes red); res_out pins psi=-1 (liquid sink, rho=1-d/2)
+    behind mem_r (passes blue).
+
+    orientation='imbibition' (direct imbibition, CG3D-IMB-001; see
+    .agent/decisions/DIRECT_IMBIBITION_BASELINE.md): res_in pins psi=-1
+    (liquid source) behind mem_r (passes blue); res_out pins psi=+1
+    (gas sink) behind mem_b (passes red); the initial phase field comes
+    from build_layout('imbibition', prewet_layers=N).  Only d=0 (equal
+    reservoir densities, spontaneous/capillary-driven imbibition) is a
+    validated baseline; d>0 would be pressure-assisted imbibition
+    (future work, not validated)."""
+
+    def __init__(self, geo_path, capa, psi_solid, res_thick=8, pc_band=4,
+                 wall_t=3, orientation='drainage', prewet_layers=None):
+        from lbm_solver_cg3d import ColorGradientSolver3D
+        dat = np.load(geo_path)
+        self.geo_meta = str(dat['meta'][0]) if 'meta' in dat else '{}'
+        lay = build_layout(dat['solid'].astype(np.int8),
+                           orientation=orientation,
+                           prewet_layers=prewet_layers, wall_t=wall_t,
+                           res_thick=res_thick)
+        self.orientation = orientation
+        self.prewet_layers = prewet_layers
+        self.dom = lay['dom']
+        self.dom_pore = lay['dom_pore']
+        self.pore_cells = lay['pore_cells']
+        self.x_real = slice(lay['x_real_lo'], lay['x_real_hi'])
+        self.real_pore = lay['pore_full'][self.x_real, :, :]
+        self.res_in = lay['res_in']
+        self.res_out = lay['res_out']
+        self.solid = lay['solid']
+        self.shape = lay['shape']
+
+        nx, ny, nz = self.shape
         self.s = ColorGradientSolver3D(nx, ny, nz, CapA=capa)
         self.s.set_psi_solid(psi_solid)
-        self.s.set_membranes(mem_r, mem_b)
+        self.s.set_membranes(lay['mem_r'], lay['mem_b'])
         self.set_ladder(0.0)
-        self.s.init(psi0, solid)
+        self.s.init(lay['psi0'], self.solid)
         self.pc_band = pc_band
-        self.solid = solid
-        self.shape = (nx, ny, nz)
 
     def set_ladder(self, d):
-        """rho_in = 1+d/2, rho_out = 1-d/2 -> Pc = cs^2 d."""
-        self.s.set_reservoirs(self.res_in, 1.0, 1.0 + d / 2.0)
-        self.s.set_reservoirs(self.res_out, -1.0, 1.0 - d / 2.0)
+        """rho_in = 1+d/2, rho_out = 1-d/2 -> Pc = cs^2 d (both
+        orientations).  Drainage: res_in is the gas side.  Direct
+        imbibition: res_in is the liquid side, so d>0 would assist
+        imbibition (unvalidated future use)."""
+        psi_in, psi_out = ((1.0, -1.0) if self.orientation == 'drainage'
+                           else (-1.0, 1.0))
+        self.s.set_reservoirs(self.res_in, psi_in, 1.0 + d / 2.0)
+        self.s.set_reservoirs(self.res_out, psi_out, 1.0 - d / 2.0)
 
     def measure(self):
         """PR-1 instruments (2.1-2.3): reservoir / band / domain-flow
