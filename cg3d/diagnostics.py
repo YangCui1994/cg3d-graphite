@@ -10,34 +10,49 @@ _CONN_STRUCT = {6: ndimage.generate_binary_structure(3, 1),
                 26: ndimage.generate_binary_structure(3, 3)}
 
 
-def _seam_offsets(struct, ax):
-    """Structural offsets with a +1 step along `ax` (each cross-seam
-    neighbour direction, counted once)."""
+def _wrapped_offsets(struct, periodic_axes):
+    """Structure offsets that can reach across a periodic seam.
+
+    An offset qualifies when it is non-zero on at least one periodic axis:
+    offsets whose non-zero components all sit on non-periodic axes are already
+    resolved by the plain non-periodic labelling and need no wrap.
+    """
+    per = set(int(a) for a in periodic_axes)
     offs = []
-    for ox in (-1, 0, 1):
-        for oy in (-1, 0, 1):
-            for oz in (-1, 0, 1):
-                off = (ox, oy, oz)
-                if off[ax] == 1 and struct[ox + 1, oy + 1, oz + 1]:
-                    offs.append(off)
+    for cell in np.argwhere(np.asarray(struct)):
+        off = tuple(int(v) - 1 for v in cell)
+        if any(off[a] for a in per):
+            offs.append(off)
     return offs
 
 
 def label_periodic(mask, conn=6, periodic_axes=(1, 2)):
     """Connected components with wrap-around merging (PR-3, tasks
-    2.6/2.7).  The solver is y/z-periodic, so a phase cluster touching
-    both ends of a periodic axis is ONE cluster; plain ndimage.label
-    splits it.  Implementation: label non-periodically, then union-find
-    merge label pairs that are neighbours across each periodic seam
-    (plane 0 vs plane -1, offsets with a +1 step along the seam axis).
-    NOTE: padding with one wrapped layer does NOT work — the pad copy
-    and the original cell get different labels.  Returns
-    (labels, sizes_sorted_desc); sizes count interior cells only."""
+    2.6/2.7; torus topology fixed in CG3D-PERIODIC-CONN-002).  The solver
+    is y/z-periodic, so a phase cluster touching both ends of a periodic
+    axis is ONE cluster; plain ndimage.label splits it.
+
+    Implementation: label non-periodically with the requested connectivity
+    structure, then union-find merge the label pairs that are neighbours
+    through EVERY wrapped offset of that structure.  A neighbour may cross
+    one, two or three seams at once, which is what the connectivity means:
+    a face crossing one seam, an edge wrapping two axes simultaneously, a
+    corner wrapping all three.  Wrapping is applied only on the axes listed
+    in `periodic_axes`, so a relation that would have to wrap a
+    non-periodic axis is never merged.
+
+    `periodic_axes` is any subset of (0, 1, 2); the default (y, z) matches
+    the production solver.  NOTE: padding with one wrapped layer does NOT
+    work — the pad copy and the original cell get different labels.
+    Returns (labels, sizes_sorted_desc); sizes count interior cells only.
+    """
     m = np.asarray(mask, dtype=bool)
     S = _CONN_STRUCT[conn]
     lab, n = ndimage.label(m, structure=S)
     if n == 0:
         return lab, np.array([], dtype=np.int64)
+    dims = m.shape
+    per = tuple(sorted({int(a) for a in periodic_axes}))
     parent = list(range(n + 1))
 
     def find(a):
@@ -46,32 +61,36 @@ def label_periodic(mask, conn=6, periodic_axes=(1, 2)):
             a = parent[a]
         return a
 
-    dims = m.shape
-    for ax in periodic_axes:
-        d1, d2 = [d for d in range(3) if d != ax]
-        plo = [slice(None)] * 3
-        plo[ax] = 0
-        phi = [slice(None)] * 3
-        phi[ax] = -1
-        lo_l, hi_l = lab[tuple(plo)], lab[tuple(phi)]
-        lo_m, hi_m = m[tuple(plo)], m[tuple(phi)]
-        for off in _seam_offsets(S, ax):
-            o1, o2 = off[d1], off[d2]
-            # neighbour B = A - off on the in-plane axes, +1 across seam
-            sA1 = slice(max(0, o1), dims[d1] + min(0, o1))
-            sB1 = slice(max(0, -o1), dims[d1] + min(0, -o1))
-            sA2 = slice(max(0, o2), dims[d2] + min(0, o2))
-            sB2 = slice(max(0, -o2), dims[d2] + min(0, -o2))
-            a = lo_l[sA1, sA2]
-            am = lo_m[sA1, sA2]
-            b = hi_l[sB1, sB2]
-            bm = hi_m[sB1, sB2]
-            both = am & bm & (a > 0) & (b > 0)
-            if both.any():
-                for x, y in zip(a[both].tolist(), b[both].tolist()):
-                    rx, ry = find(x), find(y)
-                    if rx != ry:
-                        parent[max(rx, ry)] = min(rx, ry)
+    for off in _wrapped_offsets(S, per):
+        # Neighbour pair (A, B = A + off).  On a non-periodic axis the step
+        # merely narrows both sides; on a periodic axis B is the rolled view,
+        # so the wrap comes for free and several axes can wrap at once.
+        slA = [slice(None)] * 3
+        slB = [slice(None)] * 3
+        for a in range(3):
+            o = off[a]
+            if o == 0 or a in per:
+                continue
+            if o > 0:
+                slA[a], slB[a] = slice(0, dims[a] - 1), slice(1, dims[a])
+            else:
+                slA[a], slB[a] = slice(1, dims[a]), slice(0, dims[a] - 1)
+        a_lab = lab[tuple(slA)]
+        b_lab = lab[tuple(slB)]
+        for a in range(3):
+            if off[a] and a in per:
+                b_lab = np.roll(b_lab, -off[a], axis=a)
+        both = (a_lab > 0) & (b_lab > 0)
+        if not both.any():
+            continue
+        # one entry per distinct label pair, not per voxel pair
+        keys = np.unique(a_lab[both].astype(np.int64) * (n + 1)
+                         + b_lab[both].astype(np.int64))
+        for key in keys.tolist():
+            x, y = divmod(key, n + 1)
+            rx, ry = find(x), find(y)
+            if rx != ry:
+                parent[max(rx, ry)] = min(rx, ry)
 
     roots = np.array([find(i) for i in range(n + 1)])
     _, inv = np.unique(roots[1:], return_inverse=True)
