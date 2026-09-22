@@ -63,6 +63,53 @@ def test_sizes_count_interior_only():
     check('size counts interior cells once', len(sp) == 1 and sp[0] == 3)
 
 
+def _n_sizes(mask, conn, axes):
+    _, sizes = label_periodic(mask, conn=conn, periodic_axes=axes)
+    return len(sizes), [int(v) for v in sizes]
+
+
+def test_periodic_wrapped_neighbours():
+    """Torus topology (CG3D-PERIODIC-CONN-002): a neighbour relation that has
+    to wrap TWO periodic seams at once (edge) or all THREE (corner) is a
+    neighbour of that connectivity level — and a relation that would need a
+    non-periodic axis must never merge.  Full matrix lives in
+    tests/test_periodic_connectivity.py."""
+    # y+z wrapped edge: (2,0,0) vs (2,5,5) differs by (0,-1,-1) through the
+    # y and the z seam at the same time.
+    m = np.zeros((4, 6, 6), bool)
+    m[2, 0, 0] = True
+    m[2, 5, 5] = True
+    n6, s6 = _n_sizes(m, 6, (1, 2))
+    n18, s18 = _n_sizes(m, 18, (1, 2))
+    check('y+z wrapped edge split for conn=6', n6 == 2 and s6 == [1, 1])
+    check('y+z wrapped edge merges for conn=18', n18 == 1 and s18 == [2])
+    # x+y+z wrapped corner: (0,0,0) vs (4,4,4) differs by (-1,-1,-1).
+    m = np.zeros((5, 5, 5), bool)
+    m[0, 0, 0] = True
+    m[4, 4, 4] = True
+    n18c, _ = _n_sizes(m, 18, (0, 1, 2))
+    n26c, s26c = _n_sizes(m, 26, (0, 1, 2))
+    check('x+y+z wrapped corner split for conn=18', n18c == 2)
+    check('x+y+z wrapped corner merges for conn=26', n26c == 1 and s26c == [2])
+    # No false merge when one of the two axes the pair needs is non-periodic.
+    m = np.zeros((6, 6, 4), bool)
+    m[0, 0, 1] = True
+    m[5, 5, 1] = True           # wrapped displacement (-1,-1,0)
+    n_xy, s_xy = _n_sizes(m, 18, (0, 1))
+    n_noy, _ = _n_sizes(m, 18, (1, 2))      # x not periodic
+    n_nox, _ = _n_sizes(m, 18, (0, 2))      # y not periodic
+    check('x+y wrapped edge merges for conn=18', n_xy == 1 and s_xy == [2])
+    check('wrapped edge pair stays split with x non-periodic', n_noy == 2)
+    check('wrapped edge pair stays split with y non-periodic', n_nox == 2)
+    # Sizes stay exact across a wrapped merge (wrapped trio + isolated cell).
+    m = np.zeros((4, 6, 6), bool)
+    for c in ((2, 0, 0), (2, 5, 5), (2, 5, 4), (0, 2, 2)):
+        m[c] = True
+    n, s = _n_sizes(m, 18, (1, 2))
+    check('sizes exact after wrapped merge', n == 2 and s == [3, 1]
+          and sum(s) == int(m.sum()))
+
+
 def test_eval_convergence():
     pore = 1000.0
     def mk(it0, s, pc, inj, u):
@@ -106,6 +153,7 @@ def main():
     test_periodic_y()
     test_periodic_zy()
     test_sizes_count_interior_only()
+    test_periodic_wrapped_neighbours()
     test_eval_convergence()
     if FAIL:
         print(f'FAIL: {FAIL}')
