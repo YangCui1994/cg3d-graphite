@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import hashlib
 import json
 import os
 import re
@@ -21,7 +22,7 @@ import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Iterable
 
 
@@ -42,10 +43,44 @@ TERMINAL_OR_WAITING_STATUSES = {
 }
 ALL_STATUSES = TERMINAL_OR_WAITING_STATUSES | {READY}
 TASK_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$")
+PUBLISHED_EVIDENCE_DIR = "published_evidence"
+PUBLISHED_EVIDENCE_MAX_FILES = 20
+PUBLISHED_EVIDENCE_MAX_FILE_BYTES = 1024 * 1024
+PUBLISHED_EVIDENCE_MAX_TOTAL_BYTES = 5 * 1024 * 1024
+PUBLISHED_EVIDENCE_EXTENSIONS = {
+    ".txt",
+    ".log",
+    ".json",
+    ".csv",
+    ".md",
+    ".patch",
+    ".diff",
+}
 
 
 class ControllerError(RuntimeError):
     """A deterministic controller or repository precondition failed."""
+
+
+class EvidencePublicationError(ControllerError):
+    """Executor-published evidence did not satisfy the bounded protocol."""
+
+
+@dataclass(frozen=True)
+class PublishedEvidenceFile:
+    relative_path: str
+    source_path: Path
+    size_bytes: int
+    sha256: str
+
+
+@dataclass(frozen=True)
+class PublishedEvidenceBundle:
+    root: Path
+    manifest_path: Path
+    manifest_size_bytes: int
+    manifest_sha256: str
+    files: tuple[PublishedEvidenceFile, ...]
 
 
 @dataclass(frozen=True)
@@ -180,6 +215,158 @@ def path_is_allowed(path: str, allowed_paths: tuple[str, ...]) -> bool:
         if normalized == prefix or normalized.startswith(prefix + "/"):
             return True
     return False
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _is_link_like(path: Path) -> bool:
+    if path.is_symlink():
+        return True
+    is_junction = getattr(path, "is_junction", None)
+    return bool(is_junction and is_junction())
+
+
+def _canonical_evidence_path(value: object) -> tuple[str, PurePosixPath]:
+    if not isinstance(value, str) or not value.strip():
+        raise EvidencePublicationError("manifest entry path must be a non-empty string")
+    raw = value.strip()
+    windows_path = PureWindowsPath(raw)
+    normalized = raw.replace("\\", "/")
+    posix_path = PurePosixPath(normalized)
+    if posix_path.is_absolute() or windows_path.is_absolute() or windows_path.drive:
+        raise EvidencePublicationError(f"absolute evidence path is not allowed: {raw!r}")
+    if ".." in posix_path.parts:
+        raise EvidencePublicationError(f"evidence path traversal is not allowed: {raw!r}")
+    canonical = posix_path.as_posix()
+    if canonical in {".", "", "manifest.json", "provenance.json"}:
+        raise EvidencePublicationError(f"reserved or invalid evidence path: {raw!r}")
+    if Path(canonical).suffix.lower() not in PUBLISHED_EVIDENCE_EXTENSIONS:
+        raise EvidencePublicationError(f"unsupported extension for evidence path: {raw!r}")
+    return canonical, posix_path
+
+
+def validate_published_evidence(root: Path) -> PublishedEvidenceBundle | None:
+    """Validate the optional executor evidence directory without modifying it."""
+    if _is_link_like(root):
+        raise EvidencePublicationError("published_evidence directory must not be a symlink")
+    if not root.exists():
+        return None
+    if not root.is_dir():
+        raise EvidencePublicationError("published_evidence must be a directory")
+
+    manifest_path = root / "manifest.json"
+    if _is_link_like(manifest_path):
+        raise EvidencePublicationError("manifest.json must not be a symlink")
+    if not manifest_path.exists():
+        raise EvidencePublicationError("published_evidence/manifest.json does not exist")
+    if not manifest_path.is_file():
+        raise EvidencePublicationError("published_evidence/manifest.json must be a file")
+    manifest_size = manifest_path.stat().st_size
+    if manifest_size > PUBLISHED_EVIDENCE_MAX_FILE_BYTES:
+        raise EvidencePublicationError("manifest.json exceeds the 1 MiB single-file limit")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise EvidencePublicationError(f"manifest.json is not valid UTF-8 JSON: {exc}") from exc
+    if not isinstance(manifest, dict):
+        raise EvidencePublicationError("manifest.json root must be an object")
+    if manifest.get("schema_version") != "v1":
+        raise EvidencePublicationError("manifest schema_version must be 'v1'")
+    entries = manifest.get("files")
+    if not isinstance(entries, list):
+        raise EvidencePublicationError("manifest files must be an array")
+    if len(entries) > PUBLISHED_EVIDENCE_MAX_FILES:
+        raise EvidencePublicationError(
+            f"manifest exceeds the {PUBLISHED_EVIDENCE_MAX_FILES}-file limit"
+        )
+
+    seen: set[str] = set()
+    published_files: list[PublishedEvidenceFile] = []
+    total_size = manifest_size
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            raise EvidencePublicationError(f"manifest files[{index}] must be an object")
+        for field in ("path", "kind", "description"):
+            if not isinstance(entry.get(field), str) or not entry[field].strip():
+                raise EvidencePublicationError(
+                    f"manifest files[{index}].{field} must be a non-empty string"
+                )
+        if "command" in entry and not isinstance(entry["command"], str):
+            raise EvidencePublicationError(
+                f"manifest files[{index}].command must be a string when present"
+            )
+        canonical, relative = _canonical_evidence_path(entry["path"])
+        if canonical in seen:
+            raise EvidencePublicationError(f"duplicate evidence path: {canonical!r}")
+        seen.add(canonical)
+
+        source = root.joinpath(*relative.parts)
+        cursor = root
+        for part in relative.parts:
+            cursor = cursor / part
+            if _is_link_like(cursor):
+                raise EvidencePublicationError(f"evidence path contains a symlink: {canonical!r}")
+        if not source.exists():
+            raise EvidencePublicationError(f"manifest evidence file does not exist: {canonical!r}")
+        if not source.is_file():
+            raise EvidencePublicationError(f"manifest evidence path is not a file: {canonical!r}")
+        if os.path.commonpath((str(root.resolve()), str(source.resolve()))) != str(root.resolve()):
+            raise EvidencePublicationError(f"evidence path escapes publication root: {canonical!r}")
+        size = source.stat().st_size
+        if size > PUBLISHED_EVIDENCE_MAX_FILE_BYTES:
+            raise EvidencePublicationError(
+                f"evidence file exceeds the 1 MiB single-file limit: {canonical!r}"
+            )
+        total_size += size
+        if total_size > PUBLISHED_EVIDENCE_MAX_TOTAL_BYTES:
+            raise EvidencePublicationError("published evidence exceeds the 5 MiB total-size limit")
+        published_files.append(
+            PublishedEvidenceFile(
+                relative_path=canonical,
+                source_path=source,
+                size_bytes=size,
+                sha256=_sha256(source),
+            )
+        )
+
+    actual_files: set[str] = set()
+    for directory, directory_names, file_names in os.walk(root, followlinks=False):
+        directory_path = Path(directory)
+        for name in directory_names:
+            child = directory_path / name
+            if _is_link_like(child):
+                relative = child.relative_to(root).as_posix()
+                raise EvidencePublicationError(
+                    f"published_evidence contains a symlink directory: {relative!r}"
+                )
+        for name in file_names:
+            child = directory_path / name
+            relative = child.relative_to(root).as_posix()
+            if _is_link_like(child):
+                raise EvidencePublicationError(
+                    f"published_evidence contains a symlink file: {relative!r}"
+                )
+            if relative != "manifest.json":
+                actual_files.add(relative)
+    unlisted = sorted(actual_files - seen)
+    if unlisted:
+        raise EvidencePublicationError(
+            "published_evidence contains files not listed in manifest: " + ", ".join(unlisted)
+        )
+
+    return PublishedEvidenceBundle(
+        root=root,
+        manifest_path=manifest_path,
+        manifest_size_bytes=manifest_size,
+        manifest_sha256=_sha256(manifest_path),
+        files=tuple(published_files),
+    )
 
 
 def validate_state(state: dict[str, Any], *, operational: bool = False) -> None:
@@ -440,6 +627,11 @@ class Controller:
         old_report = runtime / "execution_report.md"
         if old_report.exists():
             old_report.unlink()
+        old_published_evidence = runtime / PUBLISHED_EVIDENCE_DIR
+        if old_published_evidence.is_symlink() or old_published_evidence.is_file():
+            old_published_evidence.unlink()
+        elif old_published_evidence.is_dir():
+            shutil.rmtree(old_published_evidence)
 
     def _changed_paths(self, worktree: Path, before_head: str) -> tuple[str, ...]:
         tracked = self._git(
@@ -615,6 +807,81 @@ class Controller:
             output = self._git(*args, cwd=worktree).stdout
             (run_dir / filename).write_text(output, encoding="utf-8")
 
+    def _stage_executor_evidence(
+        self,
+        bundle: PublishedEvidenceBundle,
+        stage_dir: Path,
+        *,
+        claimed: dict[str, Any],
+        candidate: str,
+        session_id: str | None,
+    ) -> None:
+        if stage_dir.exists() or stage_dir.is_symlink():
+            raise EvidencePublicationError(f"executor evidence staging path already exists: {stage_dir}")
+        stage_dir.mkdir(parents=True)
+        try:
+            if (
+                _is_link_like(bundle.manifest_path)
+                or not bundle.manifest_path.is_file()
+                or bundle.manifest_path.stat().st_size != bundle.manifest_size_bytes
+                or _sha256(bundle.manifest_path) != bundle.manifest_sha256
+            ):
+                raise EvidencePublicationError("manifest.json changed after validation")
+            staged_manifest = stage_dir / "manifest.json"
+            shutil.copyfile(bundle.manifest_path, staged_manifest)
+            if (
+                staged_manifest.stat().st_size != bundle.manifest_size_bytes
+                or _sha256(staged_manifest) != bundle.manifest_sha256
+            ):
+                raise EvidencePublicationError("manifest.json copy verification failed")
+            provenance_files: list[dict[str, Any]] = []
+            for evidence_file in bundle.files:
+                if _is_link_like(evidence_file.source_path) or not evidence_file.source_path.is_file():
+                    raise EvidencePublicationError(
+                        f"evidence file changed after validation: {evidence_file.relative_path!r}"
+                    )
+                if (
+                    evidence_file.source_path.stat().st_size != evidence_file.size_bytes
+                    or _sha256(evidence_file.source_path) != evidence_file.sha256
+                ):
+                    raise EvidencePublicationError(
+                        f"evidence file changed after validation: {evidence_file.relative_path!r}"
+                    )
+                destination = stage_dir.joinpath(*PurePosixPath(evidence_file.relative_path).parts)
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(evidence_file.source_path, destination)
+                if (
+                    destination.stat().st_size != evidence_file.size_bytes
+                    or _sha256(destination) != evidence_file.sha256
+                ):
+                    raise EvidencePublicationError(
+                        f"evidence copy verification failed: {evidence_file.relative_path!r}"
+                    )
+                provenance_files.append(
+                    {
+                        "path": evidence_file.relative_path,
+                        "size_bytes": evidence_file.size_bytes,
+                        "sha256": evidence_file.sha256,
+                    }
+                )
+            provenance = {
+                "schema_version": "v1",
+                "task_id": claimed["task_id"],
+                "round": claimed["round"],
+                "candidate_commit": candidate,
+                "zcode_session_id": session_id,
+                "captured_at": utc_now(),
+                "worker": claimed["worker"],
+                "files": provenance_files,
+            }
+            (stage_dir / "provenance.json").write_text(
+                json.dumps(provenance, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+        except Exception:
+            shutil.rmtree(stage_dir, ignore_errors=True)
+            raise
+
     def _commit_candidate(self, state: dict[str, Any], worktree: Path) -> str:
         self._commit(
             f"agent({state['task_id']}): round {state['round']} execution",
@@ -635,6 +902,7 @@ class Controller:
         candidate: str | None,
         session_id: str | None,
         error: str | None,
+        executor_evidence_stage: Path | None,
     ) -> None:
         remote_sha, remote_state = self._fetch_control()
         if (
@@ -651,7 +919,14 @@ class Controller:
         if evidence_destination.exists():
             raise ControllerError(f"evidence destination already exists: {evidence_destination}")
         destination.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(run_dir, evidence_destination)
+        controller_destination = evidence_destination / "controller"
+        shutil.copytree(
+            run_dir,
+            controller_destination,
+            ignore=shutil.ignore_patterns("_executor_bundle"),
+        )
+        if executor_evidence_stage is not None:
+            shutil.copytree(executor_evidence_stage, evidence_destination / "executor")
         tracked_paths: list[Path] = [task_dir(claimed) / "evidence"]
 
         if report_source and report_source.is_file():
@@ -687,6 +962,7 @@ class Controller:
         candidate: str | None = None
         session_id: str | None = claimed.get("zcode_session_id")
         error: str | None = None
+        executor_evidence_stage: Path | None = None
         before_head = "UNKNOWN"
 
         try:
@@ -723,8 +999,30 @@ class Controller:
             self._enforce_allowed_paths(claimed, worktree, before_head, run_dir)
             candidate = self._commit_candidate(claimed, worktree)
             self._capture_git_after(worktree, run_dir, before_head, candidate)
+            published_evidence = validate_published_evidence(
+                worktree / RUNTIME_DIR / PUBLISHED_EVIDENCE_DIR
+            )
+            if published_evidence is not None:
+                executor_evidence_stage = run_dir / "_executor_bundle"
+                self._stage_executor_evidence(
+                    published_evidence,
+                    executor_evidence_stage,
+                    claimed=claimed,
+                    candidate=candidate,
+                    session_id=session_id,
+                )
             if failures:
                 error = "; ".join(failures)
+        except EvidencePublicationError as exc:
+            error = f"evidence publication failure: {exc}"
+            (run_dir / "controller-error.txt").write_text(error + "\n", encoding="utf-8")
+            if worktree is not None and before_head != "UNKNOWN":
+                try:
+                    self._capture_uncommitted_git(worktree, run_dir, before_head)
+                except Exception as capture_exc:
+                    (run_dir / "git-capture-error.txt").write_text(
+                        f"{type(capture_exc).__name__}: {capture_exc}\n", encoding="utf-8"
+                    )
         except Exception as exc:  # preserve evidence and move the claimed task to ERROR
             error = f"{type(exc).__name__}: {exc}"
             (run_dir / "controller-error.txt").write_text(error + "\n", encoding="utf-8")
@@ -743,6 +1041,7 @@ class Controller:
             candidate=candidate,
             session_id=session_id,
             error=error,
+            executor_evidence_stage=executor_evidence_stage,
         )
 
     def run_once(self) -> str:

@@ -143,17 +143,35 @@ Every active round uses this derived layout:
   EXECUTION_REPORT.md
   REVIEW.md                    # written later by the reviewer
   evidence/
-    process.json
-    zcode.stdout.json
-    zcode.stderr.txt
-    git-before.txt
-    git-status.txt
-    changed-files.txt
-    git-diff-stat.txt
-    git-diff.patch
-    candidate-show.txt
-    candidate-commit.txt
+    controller/                # independently observed Git/process evidence
+      process.json
+      zcode.stdout.json
+      zcode.stderr.txt
+      git-before.txt
+      git-status.txt
+      changed-files.txt
+      git-diff-stat.txt
+      git-diff.patch
+      candidate-show.txt
+      candidate-commit.txt
+    executor/                  # optional executor-published evidence
+      manifest.json
+      provenance.json
+      <manifest-listed files>
 ```
+
+An executor may request durable publication of additional reviewer evidence by
+placing a `manifest.json` and its listed files under
+`.agent_runtime/published_evidence/`. The Controller validates this bundle,
+copies the original manifest and files, and generates `provenance.json` bound
+to the candidate commit and Z Code session. It does not interpret whether the
+evidence proves PASS or FAIL.
+
+V1 accepts at most 20 files, 1 MiB per file, and 5 MiB total (including the
+manifest). Allowed extensions are `.txt`, `.log`, `.json`, `.csv`, `.md`,
+`.patch`, and `.diff`. Invalid paths, symlinks, unlisted/missing files, and
+limit violations put the round in `ERROR`; a candidate already committed and
+pushed remains recorded in state.
 
 ## Windows Controller
 
@@ -220,6 +238,8 @@ part of V1.
   inspection and recovery rather than guessing that a run is stale.
 - Executor timeout, non-zero exit, missing JSON envelope, or missing execution
   report/session ID is published as `ERROR` with available evidence.
+- Invalid executor evidence publication is also `ERROR`; the Controller never
+  silently truncates or skips requested evidence.
 - A later round must retain both the reviewed `candidate_commit` and
   `zcode_session_id`; the controller verifies the remote task branch before
   using `--resume`.

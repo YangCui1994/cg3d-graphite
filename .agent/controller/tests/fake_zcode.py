@@ -47,6 +47,50 @@ def main() -> int:
         (cwd / "dummy.txt").write_text("no session\n", encoding="utf-8")
         summary = "completed without a session ID"
         session_id = None
+    elif "DUMMY_PUBLISH_EVIDENCE=1" in task:
+        (cwd / "dummy.txt").write_text("published evidence\n", encoding="utf-8")
+        evidence = cwd / ".agent_runtime" / "published_evidence"
+        evidence.mkdir(parents=True)
+        (evidence / "level_a.log").write_text("level-a: PASS\n", encoding="utf-8")
+        (evidence / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "v1",
+                    "files": [
+                        {
+                            "path": "level_a.log",
+                            "kind": "validation_log",
+                            "description": "CPU Level A regression",
+                            "command": "LBM_ARCH=cpu python tests/run_level_a.py",
+                        }
+                    ],
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        summary = "created dummy.txt and published evidence"
+    elif "DUMMY_PUBLISH_MISSING=1" in task:
+        (cwd / "dummy.txt").write_text("candidate survives\n", encoding="utf-8")
+        evidence = cwd / ".agent_runtime" / "published_evidence"
+        evidence.mkdir(parents=True)
+        (evidence / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "v1",
+                    "files": [
+                        {
+                            "path": "missing.log",
+                            "kind": "validation_log",
+                            "description": "Missing on purpose",
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        summary = "created candidate with invalid evidence manifest"
     else:
         raise SystemExit("unknown dummy task")
 

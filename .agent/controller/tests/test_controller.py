@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import os
 import subprocess
@@ -24,6 +25,8 @@ ControllerError = controller_module.ControllerError
 validate_state = controller_module.validate_state
 parse_allowed_paths = controller_module.parse_allowed_paths
 path_is_allowed = controller_module.path_is_allowed
+EvidencePublicationError = controller_module.EvidencePublicationError
+validate_published_evidence = controller_module.validate_published_evidence
 
 
 def git(cwd: Path, *args: str) -> str:
@@ -66,6 +69,112 @@ class StateValidationTests(unittest.TestCase):
         self.assertTrue(path_is_allowed("pkg/nested.py", allowed))
         self.assertTrue(path_is_allowed("tests/test_one.py", allowed))
         self.assertFalse(path_is_allowed("other.txt", allowed))
+
+
+class PublishedEvidenceValidationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name) / "published_evidence"
+        self.root.mkdir()
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def manifest(self, files: list[dict[str, object]]) -> None:
+        (self.root / "manifest.json").write_text(
+            json.dumps({"schema_version": "v1", "files": files}),
+            encoding="utf-8",
+        )
+
+    @staticmethod
+    def entry(path: str) -> dict[str, object]:
+        return {
+            "path": path,
+            "kind": "validation_log",
+            "description": f"Evidence at {path}",
+        }
+
+    def test_valid_manifest_and_text_log(self) -> None:
+        data = b"validation: PASS\n"
+        (self.root / "level_a.log").write_bytes(data)
+        self.manifest([self.entry("level_a.log")])
+
+        bundle = validate_published_evidence(self.root)
+
+        self.assertIsNotNone(bundle)
+        assert bundle is not None
+        self.assertEqual(bundle.files[0].relative_path, "level_a.log")
+        self.assertEqual(bundle.files[0].size_bytes, len(data))
+        self.assertEqual(bundle.files[0].sha256, hashlib.sha256(data).hexdigest())
+
+    def test_missing_file_rejected(self) -> None:
+        self.manifest([self.entry("missing.log")])
+        with self.assertRaisesRegex(EvidencePublicationError, "does not exist"):
+            validate_published_evidence(self.root)
+
+    def test_unlisted_file_rejected(self) -> None:
+        (self.root / "extra.log").write_text("extra", encoding="utf-8")
+        self.manifest([])
+        with self.assertRaisesRegex(EvidencePublicationError, "not listed"):
+            validate_published_evidence(self.root)
+
+    def test_path_traversal_rejected(self) -> None:
+        self.manifest([self.entry("../outside.log")])
+        with self.assertRaisesRegex(EvidencePublicationError, "path traversal"):
+            validate_published_evidence(self.root)
+
+    def test_absolute_path_rejected(self) -> None:
+        self.manifest([self.entry("C:/outside.log")])
+        with self.assertRaisesRegex(EvidencePublicationError, "absolute"):
+            validate_published_evidence(self.root)
+
+    def test_symlink_rejected(self) -> None:
+        target = Path(self.temp.name) / "target.log"
+        target.write_text("secret", encoding="utf-8")
+        (self.root / "linked.log").symlink_to(target)
+        self.manifest([self.entry("linked.log")])
+        with self.assertRaisesRegex(EvidencePublicationError, "symlink"):
+            validate_published_evidence(self.root)
+
+    def test_unsupported_binary_extension_rejected(self) -> None:
+        (self.root / "array.bin").write_bytes(b"binary")
+        self.manifest([self.entry("array.bin")])
+        with self.assertRaisesRegex(EvidencePublicationError, "unsupported extension"):
+            validate_published_evidence(self.root)
+
+    def test_directory_listed_as_evidence_rejected(self) -> None:
+        (self.root / "directory.log").mkdir()
+        self.manifest([self.entry("directory.log")])
+        with self.assertRaisesRegex(EvidencePublicationError, "not a file"):
+            validate_published_evidence(self.root)
+
+    def test_single_file_limit_rejected(self) -> None:
+        (self.root / "large.log").write_bytes(b"x" * (1024 * 1024 + 1))
+        self.manifest([self.entry("large.log")])
+        with self.assertRaisesRegex(EvidencePublicationError, "single-file limit"):
+            validate_published_evidence(self.root)
+
+    def test_total_size_limit_rejected(self) -> None:
+        entries = []
+        for index in range(6):
+            name = f"part-{index}.log"
+            (self.root / name).write_bytes(b"x" * (900 * 1024))
+            entries.append(self.entry(name))
+        self.manifest(entries)
+        with self.assertRaisesRegex(EvidencePublicationError, "total-size limit"):
+            validate_published_evidence(self.root)
+
+    def test_file_count_limit_rejected(self) -> None:
+        entries = [self.entry(f"file-{index}.log") for index in range(21)]
+        self.manifest(entries)
+        with self.assertRaisesRegex(EvidencePublicationError, "20-file limit"):
+            validate_published_evidence(self.root)
+
+    def test_duplicate_path_rejected(self) -> None:
+        (self.root / "same.log").write_text("same", encoding="utf-8")
+        self.manifest([self.entry("same.log"), self.entry("same.log")])
+        with self.assertRaisesRegex(EvidencePublicationError, "duplicate"):
+            validate_published_evidence(self.root)
 
 
 class TwoRoundIntegrationTest(unittest.TestCase):
@@ -148,8 +257,22 @@ class TwoRoundIntegrationTest(unittest.TestCase):
         git(
             self.remote,
             "show",
-            "control:.agent/tasks/ADS-DUMMY-001/round-01/evidence/process.json",
+            "control:.agent/tasks/ADS-DUMMY-001/round-01/evidence/controller/process.json",
         )
+        missing_executor = subprocess.run(
+            [
+                "git",
+                "--git-dir",
+                str(self.remote),
+                "cat-file",
+                "-e",
+                "control:.agent/tasks/ADS-DUMMY-001/round-01/evidence/executor/manifest.json",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self.assertNotEqual(missing_executor.returncode, 0)
         git(
             self.remote,
             "show",
@@ -195,7 +318,7 @@ class TwoRoundIntegrationTest(unittest.TestCase):
         )
 
         process = self.remote_json(
-            ".agent/tasks/ADS-DUMMY-001/round-02/evidence/process.json"
+            ".agent/tasks/ADS-DUMMY-001/round-02/evidence/controller/process.json"
         )
         command = process["command"]
         self.assertIn("--resume", command)
@@ -280,7 +403,7 @@ class TwoRoundIntegrationTest(unittest.TestCase):
         self.assertEqual(state["status"], "ERROR")
         self.assertIn("timed out", state["last_error"])
         process = self.remote_json(
-            ".agent/tasks/ADS-DUMMY-001/round-01/evidence/process.json"
+            ".agent/tasks/ADS-DUMMY-001/round-01/evidence/controller/process.json"
         )
         self.assertTrue(process["timed_out"])
         self.assertTrue(process["terminated_after_timeout"])
@@ -334,6 +457,92 @@ class TwoRoundIntegrationTest(unittest.TestCase):
         result = self.remote_json(".agent/state.json")
         self.assertEqual(result["status"], "ERROR")
         self.assertIn("expected candidate", result["last_error"])
+
+    def test_executor_evidence_end_to_end_publication_and_provenance(self) -> None:
+        task_path = (
+            self.repo
+            / ".agent"
+            / "tasks"
+            / "ADS-DUMMY-001"
+            / "round-01"
+            / "TASK.md"
+        )
+        task_path.write_text(
+            "# TASK\n\n## Scope\n\n### Allowed\n\n- `dummy.txt`\n\n"
+            "### Do not modify\n\n- everything else\n\nDUMMY_PUBLISH_EVIDENCE=1\n",
+            encoding="utf-8",
+        )
+        git(self.repo, "add", str(task_path.relative_to(self.repo)))
+        git(self.repo, "commit", "-m", "request published evidence fake task")
+        git(self.repo, "push", "origin", "control")
+
+        self.assertEqual(self.controller.run_once(), "EXECUTED")
+        state = self.remote_json(".agent/state.json")
+        self.assertEqual(state["status"], "AWAITING_REVIEW")
+        candidate = str(state["candidate_commit"])
+        session_id = str(state["zcode_session_id"])
+        prefix = ".agent/tasks/ADS-DUMMY-001/round-01/evidence"
+        git(self.remote, "show", f"control:{prefix}/controller/process.json")
+        manifest = self.remote_json(f"{prefix}/executor/manifest.json")
+        self.assertEqual(manifest["schema_version"], "v1")
+        log = git(self.remote, "show", f"control:{prefix}/executor/level_a.log")
+        self.assertEqual(log, "level-a: PASS\n")
+        provenance = self.remote_json(f"{prefix}/executor/provenance.json")
+        self.assertEqual(provenance["task_id"], "ADS-DUMMY-001")
+        self.assertEqual(provenance["round"], 1)
+        self.assertEqual(provenance["candidate_commit"], candidate)
+        self.assertEqual(provenance["zcode_session_id"], session_id)
+        self.assertEqual(provenance["worker"], "test-worker")
+        self.assertEqual(provenance["files"][0]["path"], "level_a.log")
+        self.assertEqual(provenance["files"][0]["size_bytes"], len(log.encode()))
+        self.assertEqual(
+            provenance["files"][0]["sha256"], hashlib.sha256(log.encode()).hexdigest()
+        )
+
+    def test_evidence_publication_failure_preserves_candidate_and_sets_error(self) -> None:
+        task_path = (
+            self.repo
+            / ".agent"
+            / "tasks"
+            / "ADS-DUMMY-001"
+            / "round-01"
+            / "TASK.md"
+        )
+        task_path.write_text(
+            "# TASK\n\n## Scope\n\n### Allowed\n\n- `dummy.txt`\n\n"
+            "### Do not modify\n\n- everything else\n\nDUMMY_PUBLISH_MISSING=1\n",
+            encoding="utf-8",
+        )
+        git(self.repo, "add", str(task_path.relative_to(self.repo)))
+        git(self.repo, "commit", "-m", "request invalid published evidence fake task")
+        git(self.repo, "push", "origin", "control")
+
+        self.assertEqual(self.controller.run_once(), "EXECUTED")
+        state = self.remote_json(".agent/state.json")
+        self.assertEqual(state["status"], "ERROR")
+        self.assertRegex(str(state["candidate_commit"]), r"^[0-9a-f]{40}$")
+        self.assertEqual(
+            git(self.remote, "rev-parse", "agent-task/ADS-DUMMY-001"),
+            str(state["candidate_commit"]) + "\n",
+        )
+        self.assertIn("evidence publication failure", str(state["last_error"]))
+        self.assertIn("does not exist", str(state["last_error"]))
+        prefix = ".agent/tasks/ADS-DUMMY-001/round-01/evidence"
+        git(self.remote, "show", f"control:{prefix}/controller/process.json")
+        missing_executor = subprocess.run(
+            [
+                "git",
+                "--git-dir",
+                str(self.remote),
+                "cat-file",
+                "-e",
+                f"control:{prefix}/executor/manifest.json",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self.assertNotEqual(missing_executor.returncode, 0)
 
 
 if __name__ == "__main__":

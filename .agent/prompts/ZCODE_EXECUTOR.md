@@ -35,4 +35,41 @@ using:
 
 The execution report is your claim about what happened. Do not invent command results, exit codes, commit hashes, convergence status, or artifacts. Use `UNKNOWN`, `NOT_RUN`, or `INCONCLUSIVE` when appropriate.
 
+## Optional durable executor evidence
+
+Only when a reviewer needs to inspect additional validation logs, comparisons,
+metrics, or small text artifacts from GitHub, place them under:
+
+`.agent_runtime/published_evidence/`
+
+That directory must contain `manifest.json` with schema version `v1`. Every
+file in the directory other than the manifest must be listed exactly once.
+Each entry requires non-empty `path`, `kind`, and `description` strings;
+`command` is optional. Example:
+
+```json
+{
+  "schema_version": "v1",
+  "files": [
+    {
+      "path": "level_a.log",
+      "kind": "validation_log",
+      "description": "CPU Level A regression",
+      "command": "LBM_ARCH=cpu python tests/run_level_a.py"
+    }
+  ]
+}
+```
+
+Limits: at most 20 files, at most 1 MiB per file, and at most 5 MiB total.
+Allowed extensions are `.txt`, `.log`, `.json`, `.csv`, `.md`, `.patch`, and
+`.diff`. Use relative paths only. Do not use symlinks. Do not place large
+simulation outputs, binary arrays, figures, or checkpoints in this directory.
+The Controller validates and hashes the bundle and creates `provenance.json`;
+do not create that file yourself.
+
+If no extra evidence needs durable reviewer inspection, do not create
+`published_evidence/`. In all cases, summarize decisive validation results in
+`.agent_runtime/execution_report.md`; published files supplement that report.
+
 Finish with one finite suggested next action.
