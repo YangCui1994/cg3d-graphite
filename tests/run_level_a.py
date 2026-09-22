@@ -46,7 +46,10 @@ def reset(s, psi, solid):
 def main():
     t00 = time.time()
 
-    # A1 — M / inv_M consistency (pure numpy on the module tables)
+    # A1 — M / inv_M consistency (pure numpy on the module tables).
+    # The tables are allocated by the explicit runtime boundary now, not at
+    # import (CG3D-TAICHI-INIT-001) — read them only after calling it.
+    mod.ensure_lattice_tables()
     M = mod.M.to_numpy().astype(np.float64)
     iM = mod.inv_M.to_numpy().astype(np.float64)
     err = float(np.abs(M @ iM - np.eye(19)).max())
