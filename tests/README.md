@@ -13,6 +13,7 @@
 
 ```bash
 python tests/run_level_a.py            # A1-A5, one 32^3 instance
+python tests/test_import_no_taichi_init.py  # import has no Taichi side effect
 python tests/test_postprocessing.py    # 11 numpy checks
 python tests/test_compute_c_bulk.py    # PR-2 1.1 regression
 python tests/test_poiseuille_cg3d.py   # PR-2 1.2 regression (eff ~ 1.0)

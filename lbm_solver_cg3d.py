@@ -54,30 +54,41 @@ Timestep (identical order to 2D):
   streaming3 -> Boundary_condition_psi -> apply_reservoirs.
 
 Backend: LBM_ARCH env var — default ti.gpu (CUDA), 'cpu' forces CPU.
+The runtime itself is started by the explicit boundary in
+``cg3d.runtime``; importing this module does not call ``ti.init()``.
 """
 import os
 
 import numpy as np
 import taichi as ti
 
-if os.environ.get('LBM_ARCH', 'gpu') == 'cpu':
-    ti.init(arch=ti.cpu, offline_cache=True)
-else:
-    ti.init(arch=ti.gpu, offline_cache=True)
+from cg3d.runtime import init_runtime
 
 # ============================================================
 #  Shared D3Q19 lattice tables + MRT matrix (module level)
 # ============================================================
+# Taichi fields cannot be created before ti.init() (1.7.4 raises
+# "Cannont create field, maybe you forgot to call ti.init() first?"), so
+# the tables are allocated lazily by ensure_lattice_tables() instead of
+# at import.  Same names, same contents, only the creation time moved.
 
-e   = ti.Vector.field(3, ti.i32, shape=(19,))
-e_f = ti.Vector.field(3, ti.f32, shape=(19,))
-w   = ti.field(ti.f32, shape=(19,))
-LR  = ti.field(ti.i32, shape=(19,))     # bounce-back opposite-direction map
-M   = ti.field(ti.f32, shape=(19, 19))  # upstream :124-142
-inv_M = ti.field(ti.f32, shape=(19, 19))
+e   = None    # ti.Vector.field(3, ti.i32, shape=(19,))
+e_f = None    # ti.Vector.field(3, ti.f32, shape=(19,))
+w   = None    # ti.field(ti.f32, shape=(19,))
+LR  = None    # ti.field(ti.i32, shape=(19,))     # bounce-back opposite map
+M   = None    # ti.field(ti.f32, shape=(19, 19))  # upstream :124-142
+inv_M = None  # ti.field(ti.f32, shape=(19, 19))
 
 
 def _init_lattice_tables():
+    """Create + fill the shared tables; the runtime must be up already."""
+    global e, e_f, w, LR, M, inv_M
+    e   = ti.Vector.field(3, ti.i32, shape=(19,))
+    e_f = ti.Vector.field(3, ti.f32, shape=(19,))
+    w   = ti.field(ti.f32, shape=(19,))
+    LR  = ti.field(ti.i32, shape=(19,))
+    M   = ti.field(ti.f32, shape=(19, 19))
+    inv_M = ti.field(ti.f32, shape=(19, 19))
     e_np = np.array(
         [[0, 0, 0],
          [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1],
@@ -115,7 +126,25 @@ def _init_lattice_tables():
     inv_M.from_numpy(np.linalg.inv(M_np).astype(np.float32))
 
 
-_init_lattice_tables()
+_TABLES_READY = False
+
+
+def ensure_lattice_tables():
+    """Explicit initialization boundary for the shared module tables.
+
+    Starts the Taichi runtime (``cg3d.runtime.init_runtime``) and then
+    creates and fills the D3Q19/MRT tables — the order the old import-time
+    code used.  Idempotent.  ``ColorGradientSolver3D.__init__`` calls it,
+    so any solver use passes through here; call it directly before reading
+    the module-level tables (``mod.M``, ``mod.inv_M``, ...) without
+    constructing a solver.
+    """
+    global _TABLES_READY
+    if _TABLES_READY:
+        return
+    init_runtime()
+    _init_lattice_tables()
+    _TABLES_READY = True
 
 
 # ============================================================
@@ -212,6 +241,7 @@ class ColorGradientSolver3D:
                  psi_x_left=-1.0, psi_x_right=1.0,
                  psi_y_left=1.0, psi_y_right=1.0,
                  psi_z_left=1.0, psi_z_right=1.0):
+        ensure_lattice_tables()
         self.nx, self.ny, self.nz = int(nx), int(ny), int(nz)
 
         # ---- runtime-tunable physics scalars (0-d fields) ----
