@@ -3,11 +3,11 @@
   "task_id": "ADS-DUMMY-001",
   "round": 1,
   "max_rounds": 3,
-  "revision": 2,
-  "status": "RUNNING",
-  "zcode_session_id": null,
-  "candidate_commit": null,
-  "worker": "windows-zcode-01",
-  "updated_at": "2026-09-22T08:44:19Z",
+  "revision": 3,
+  "status": "AWAITING_REVIEW",
+  "zcode_session_id": "sess_dc7d9ea7-00ac-4158-99de-3b5b3ec15fb0",
+  "candidate_commit": "6b1267df3968985ad3a99eaac359f86a266af767",
+  "worker": null,
+  "updated_at": "2026-09-22T08:45:23Z",
   "last_error": null
 }
