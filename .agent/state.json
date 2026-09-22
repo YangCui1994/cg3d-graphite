@@ -3,11 +3,11 @@
   "task_id": "CG3D-PERIODIC-CONN-002",
   "round": 1,
   "max_rounds": 3,
-  "revision": 15,
-  "status": "READY_FOR_EXECUTION",
+  "revision": 16,
+  "status": "RUNNING",
   "zcode_session_id": null,
   "candidate_commit": null,
-  "worker": null,
-  "updated_at": "2026-09-22T11:25:00Z",
+  "worker": "windows-zcode-01",
+  "updated_at": "2026-09-22T11:48:26Z",
   "last_error": null
 }
