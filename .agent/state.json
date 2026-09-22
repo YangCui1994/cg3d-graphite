@@ -3,11 +3,11 @@
   "task_id": "CG3D-CONVERGENCE-DIAG-003",
   "round": 1,
   "max_rounds": 3,
-  "revision": 19,
-  "status": "READY_FOR_EXECUTION",
+  "revision": 20,
+  "status": "RUNNING",
   "zcode_session_id": null,
   "candidate_commit": "0ca191c7cd6f8970fc8af7e20261f4d7f246fda0",
-  "worker": null,
-  "updated_at": "2026-09-22T23:58:00Z",
+  "worker": "windows-zcode-01",
+  "updated_at": "2026-09-22T23:58:03Z",
   "last_error": null
 }
