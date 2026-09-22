@@ -1,13 +1,13 @@
 {
   "schema_version": "v1-alpha",
-  "task_id": "ADS-DUMMY-001",
-  "round": 2,
+  "task_id": "CG3D-TAICHI-INIT-001",
+  "round": 1,
   "max_rounds": 3,
-  "revision": 7,
-  "status": "CLOSED",
-  "zcode_session_id": "sess_dc7d9ea7-00ac-4158-99de-3b5b3ec15fb0",
-  "candidate_commit": "82fbe493d4006ec4aeec6d107ec19c2660099ca2",
+  "revision": 8,
+  "status": "READY_FOR_EXECUTION",
+  "zcode_session_id": null,
+  "candidate_commit": null,
   "worker": null,
-  "updated_at": "2026-09-22T09:07:34Z",
+  "updated_at": "2026-09-22T09:47:00Z",
   "last_error": null
 }
