@@ -1,0 +1,13 @@
+{
+  "schema_version": "v1-alpha",
+  "task_id": "ADS-DUMMY-001",
+  "round": 1,
+  "max_rounds": 3,
+  "revision": 1,
+  "status": "READY_FOR_EXECUTION",
+  "zcode_session_id": null,
+  "candidate_commit": null,
+  "worker": null,
+  "updated_at": "2026-09-22T08:20:00Z",
+  "last_error": null
+}
