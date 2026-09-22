@@ -1,13 +1,13 @@
 {
   "schema_version": "v1-alpha",
-  "task_id": "CG3D-TAICHI-INIT-001",
-  "round": 2,
+  "task_id": "CG3D-PERIODIC-CONN-002",
+  "round": 1,
   "max_rounds": 3,
-  "revision": 14,
-  "status": "CLOSED",
-  "zcode_session_id": "sess_5f1a8b42-e17a-4f23-9be5-c8e6d46f7314",
-  "candidate_commit": "05de9981a9d671c866ec2135e7a470d48752f79c",
+  "revision": 15,
+  "status": "READY_FOR_EXECUTION",
+  "zcode_session_id": null,
+  "candidate_commit": null,
   "worker": null,
-  "updated_at": "2026-09-22T11:05:00Z",
+  "updated_at": "2026-09-22T11:25:00Z",
   "last_error": null
 }
