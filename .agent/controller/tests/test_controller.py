@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 
@@ -20,6 +22,8 @@ Config = controller_module.Config
 Controller = controller_module.Controller
 ControllerError = controller_module.ControllerError
 validate_state = controller_module.validate_state
+parse_allowed_paths = controller_module.parse_allowed_paths
+path_is_allowed = controller_module.path_is_allowed
 
 
 def git(cwd: Path, *args: str) -> str:
@@ -54,6 +58,15 @@ class StateValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ControllerError, "max_rounds"):
             validate_state(state)
 
+    def test_allowed_path_parser_and_matcher(self) -> None:
+        allowed = parse_allowed_paths(
+            "# TASK\n\n## Scope\n\n### Allowed\n\n- `one.txt`\n- `pkg/`\n- `tests/test_*.py`\n\n### Do not modify\n"
+        )
+        self.assertTrue(path_is_allowed("one.txt", allowed))
+        self.assertTrue(path_is_allowed("pkg/nested.py", allowed))
+        self.assertTrue(path_is_allowed("tests/test_one.py", allowed))
+        self.assertFalse(path_is_allowed("other.txt", allowed))
+
 
 class TwoRoundIntegrationTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -77,7 +90,9 @@ class TwoRoundIntegrationTest(unittest.TestCase):
             "# Test executor prompt\n", encoding="utf-8"
         )
         (self.repo / ".agent" / "tasks" / "ADS-DUMMY-001" / "round-01" / "TASK.md").write_text(
-            "# TASK\n\nDUMMY_ROUND=1\n", encoding="utf-8"
+            "# TASK\n\n## Scope\n\n### Allowed\n\n- `dummy.txt`\n\n"
+            "### Do not modify\n\n- everything else\n\nDUMMY_ROUND=1\n",
+            encoding="utf-8",
         )
         (self.repo / ".agent" / "state.json").write_text(
             json.dumps(base_state(), indent=2) + "\n", encoding="utf-8"
@@ -143,7 +158,11 @@ class TwoRoundIntegrationTest(unittest.TestCase):
 
         round2_dir = self.repo / ".agent" / "tasks" / "ADS-DUMMY-001" / "round-02"
         round2_dir.mkdir(parents=True)
-        (round2_dir / "TASK.md").write_text("# TASK\n\nDUMMY_ROUND=2\n", encoding="utf-8")
+        (round2_dir / "TASK.md").write_text(
+            "# TASK\n\n## Scope\n\n### Allowed\n\n- `dummy.txt`\n\n"
+            "### Do not modify\n\n- everything else\n\nDUMMY_ROUND=2\n",
+            encoding="utf-8",
+        )
         round1_dir = self.repo / ".agent" / "tasks" / "ADS-DUMMY-001" / "round-01"
         (round1_dir / "REVIEW.md").write_text(
             "# REVIEW\n\n## Decision\n\nPASS\n\n## Next Action\n\nContinue to round 2.\n",
@@ -204,6 +223,117 @@ class TwoRoundIntegrationTest(unittest.TestCase):
             stderr=subprocess.PIPE,
         )
         self.assertNotEqual(missing.returncode, 0)
+
+    def test_out_of_scope_change_is_not_pushed_as_candidate(self) -> None:
+        task_path = (
+            self.repo
+            / ".agent"
+            / "tasks"
+            / "ADS-DUMMY-001"
+            / "round-01"
+            / "TASK.md"
+        )
+        task_path.write_text(
+            "# TASK\n\n## Scope\n\n### Allowed\n\n- `dummy.txt`\n\n"
+            "### Do not modify\n\n- everything else\n\nDUMMY_OUT_OF_SCOPE=1\n",
+            encoding="utf-8",
+        )
+        git(self.repo, "add", str(task_path.relative_to(self.repo)))
+        git(self.repo, "commit", "-m", "request out-of-scope fake change")
+        git(self.repo, "push", "origin", "control")
+
+        self.assertEqual(self.controller.run_once(), "EXECUTED")
+        state = self.remote_json(".agent/state.json")
+        self.assertEqual(state["status"], "ERROR")
+        self.assertIn("outside TASK.md", state["last_error"])
+        missing = subprocess.run(
+            ["git", "--git-dir", str(self.remote), "show-ref", "--verify", "refs/heads/agent-task/ADS-DUMMY-001"],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self.assertNotEqual(missing.returncode, 0)
+
+    def test_timeout_terminates_executor_before_publishing_error(self) -> None:
+        task_path = (
+            self.repo
+            / ".agent"
+            / "tasks"
+            / "ADS-DUMMY-001"
+            / "round-01"
+            / "TASK.md"
+        )
+        task_path.write_text(
+            "# TASK\n\n## Scope\n\n### Allowed\n\n- `dummy.txt`\n\n"
+            "### Do not modify\n\n- everything else\n\nDUMMY_TIMEOUT=1\n",
+            encoding="utf-8",
+        )
+        git(self.repo, "add", str(task_path.relative_to(self.repo)))
+        git(self.repo, "commit", "-m", "request timeout fake task")
+        git(self.repo, "push", "origin", "control")
+
+        timeout_controller = Controller(
+            replace(self.controller.config, zcode_timeout_seconds=0.2)
+        )
+        self.assertEqual(timeout_controller.run_once(), "EXECUTED")
+        state = self.remote_json(".agent/state.json")
+        self.assertEqual(state["status"], "ERROR")
+        self.assertIn("timed out", state["last_error"])
+        process = self.remote_json(
+            ".agent/tasks/ADS-DUMMY-001/round-01/evidence/process.json"
+        )
+        self.assertTrue(process["timed_out"])
+        self.assertTrue(process["terminated_after_timeout"])
+
+        pid_path = (
+            self.worktrees
+            / "ADS-DUMMY-001"
+            / ".agent_runtime"
+            / "fake_pid.txt"
+        )
+        pid = int(pid_path.read_text(encoding="utf-8"))
+        with self.assertRaises(ProcessLookupError):
+            os.kill(pid, 0)
+
+    def test_missing_session_id_publishes_error(self) -> None:
+        task_path = (
+            self.repo
+            / ".agent"
+            / "tasks"
+            / "ADS-DUMMY-001"
+            / "round-01"
+            / "TASK.md"
+        )
+        task_path.write_text(
+            "# TASK\n\n## Scope\n\n### Allowed\n\n- `dummy.txt`\n\n"
+            "### Do not modify\n\n- everything else\n\nDUMMY_NO_SESSION=1\n",
+            encoding="utf-8",
+        )
+        git(self.repo, "add", str(task_path.relative_to(self.repo)))
+        git(self.repo, "commit", "-m", "request missing-session fake task")
+        git(self.repo, "push", "origin", "control")
+
+        self.assertEqual(self.controller.run_once(), "EXECUTED")
+        state = self.remote_json(".agent/state.json")
+        self.assertEqual(state["status"], "ERROR")
+        self.assertIn("did not return a session ID", state["last_error"])
+        self.assertIsNone(state["zcode_session_id"])
+
+    def test_candidate_mismatch_publishes_error_without_execution(self) -> None:
+        state_path = self.repo / ".agent" / "state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        state["candidate_commit"] = "0" * 40
+        state_path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+        git(self.repo, "add", ".agent/state.json")
+        git(self.repo, "commit", "-m", "set mismatched candidate")
+        git(self.repo, "branch", "agent-task/ADS-DUMMY-001")
+        git(self.repo, "push", "origin", "agent-task/ADS-DUMMY-001")
+        git(self.repo, "push", "origin", "control")
+
+        self.assertEqual(self.controller.run_once(), "EXECUTED")
+        result = self.remote_json(".agent/state.json")
+        self.assertEqual(result["status"], "ERROR")
+        self.assertIn("expected candidate", result["last_error"])
 
 
 if __name__ == "__main__":

@@ -10,9 +10,11 @@ never merges a candidate.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import os
 import re
+import signal
 import shutil
 import subprocess
 import sys
@@ -108,6 +110,7 @@ class ProcessResult:
     elapsed_seconds: float
     exit_code: int | None
     timed_out: bool
+    terminated_after_timeout: bool
     stdout: str
     stderr: str
     envelope: dict[str, Any] | None
@@ -134,6 +137,49 @@ def task_file(state: dict[str, Any]) -> Path:
 
 def task_branch(state: dict[str, Any], prefix: str) -> str:
     return f"{prefix}{state['task_id']}"
+
+
+def parse_allowed_paths(task_text: str) -> tuple[str, ...]:
+    """Read exact path entries from TASK.md's `### Allowed` bullet list."""
+    in_allowed = False
+    paths: list[str] = []
+    for line in task_text.splitlines():
+        stripped = line.strip()
+        if stripped == "### Allowed":
+            in_allowed = True
+            continue
+        if in_allowed and stripped.startswith("#"):
+            break
+        if not in_allowed:
+            continue
+        match = re.fullmatch(r"-\s+`([^`]+)`(?:\s+.*)?", stripped)
+        if not match:
+            continue
+        value = match.group(1).replace("\\", "/").strip()
+        if not value or value.startswith("/") or ".." in Path(value).parts:
+            raise ControllerError(f"invalid allowed path in TASK.md: {value!r}")
+        paths.append(value)
+    if not paths:
+        raise ControllerError("TASK.md must contain backtick paths under `### Allowed`")
+    return tuple(paths)
+
+
+def path_is_allowed(path: str, allowed_paths: tuple[str, ...]) -> bool:
+    normalized = path.replace("\\", "/")
+    if normalized.startswith("./"):
+        normalized = normalized[2:]
+    for allowed in allowed_paths:
+        candidate = allowed[2:] if allowed.startswith("./") else allowed
+        if candidate == ".":
+            return True
+        if any(character in candidate for character in "*?["):
+            if fnmatch.fnmatchcase(normalized, candidate):
+                return True
+            continue
+        prefix = candidate.rstrip("/")
+        if normalized == prefix or normalized.startswith(prefix + "/"):
+            return True
+    return False
 
 
 def validate_state(state: dict[str, Any], *, operational: bool = False) -> None:
@@ -344,6 +390,21 @@ class Controller:
         path = self.config.worktree_root / str(state["task_id"])
 
         remote_sha = self._remote_branch_sha(branch)
+        expected_candidate = state.get("candidate_commit")
+        if remote_sha and not expected_candidate:
+            raise ControllerError(
+                f"remote task branch {branch!r} exists but state has no candidate_commit"
+            )
+        if remote_sha and remote_sha != expected_candidate:
+            raise ControllerError(
+                f"remote task branch {branch!r} is at {remote_sha}, expected candidate {expected_candidate}"
+            )
+        if expected_candidate and not remote_sha:
+            raise ControllerError(
+                f"state names candidate {expected_candidate}, but remote task branch {branch!r} is missing"
+            )
+        if state["round"] > 1 and not expected_candidate:
+            raise ControllerError("rounds after Round 1 require the reviewed candidate_commit")
 
         if path.exists():
             if not (path / ".git").exists():
@@ -379,6 +440,33 @@ class Controller:
         old_report = runtime / "execution_report.md"
         if old_report.exists():
             old_report.unlink()
+
+    def _changed_paths(self, worktree: Path, before_head: str) -> tuple[str, ...]:
+        tracked = self._git(
+            "diff", "--name-only", "-z", before_head, cwd=worktree
+        ).stdout.split("\0")
+        untracked = self._git(
+            "ls-files", "--others", "--exclude-standard", "-z", cwd=worktree
+        ).stdout.split("\0")
+        return tuple(sorted({path for path in [*tracked, *untracked] if path}))
+
+    def _enforce_allowed_paths(
+        self,
+        state: dict[str, Any],
+        worktree: Path,
+        before_head: str,
+        run_dir: Path,
+    ) -> None:
+        task_text = (self.repo / task_file(state)).read_text(encoding="utf-8")
+        allowed = parse_allowed_paths(task_text)
+        changed = self._changed_paths(worktree, before_head)
+        (run_dir / "observed-changed-paths.txt").write_text(
+            "".join(f"{path}\n" for path in changed), encoding="utf-8"
+        )
+        violations = [path for path in changed if not path_is_allowed(path, allowed)]
+        if violations:
+            rendered = ", ".join(violations)
+            raise ControllerError(f"executor changed paths outside TASK.md `### Allowed`: {rendered}")
 
     def _executor_command(self, state: dict[str, Any], worktree: Path) -> list[str]:
         prompt = (
@@ -418,32 +506,56 @@ class Controller:
         started_wall = utc_now()
         started = time.monotonic()
         timed_out = False
-        exit_code: int | None
-        stdout = ""
-        stderr = ""
+        terminated_after_timeout = False
+        env = os.environ.copy()
+        env["GIT_TERMINAL_PROMPT"] = "0"
+        popen_options: dict[str, Any] = {}
+        if os.name == "nt":
+            popen_options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        else:
+            popen_options["start_new_session"] = True
+
+        process = subprocess.Popen(
+            command,
+            cwd=str(worktree),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=env,
+            **popen_options,
+        )
         try:
-            result = self._run(
-                command,
-                cwd=worktree,
-                check=False,
-                timeout=self.config.zcode_timeout_seconds,
-            )
-            exit_code = result.returncode
-            stdout = result.stdout
-            stderr = result.stderr
-        except subprocess.TimeoutExpired as exc:
+            stdout, stderr = process.communicate(timeout=self.config.zcode_timeout_seconds)
+        except subprocess.TimeoutExpired:
             timed_out = True
-            exit_code = None
-            stdout = exc.stdout.decode(errors="replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
-            stderr = exc.stderr.decode(errors="replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+            if os.name == "nt":
+                subprocess.run(
+                    ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=False,
+                )
+                if process.poll() is None:
+                    process.kill()
+            else:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            stdout, stderr = process.communicate()
+            terminated_after_timeout = process.poll() is not None
+            if not terminated_after_timeout:
+                raise ControllerError("executor remained alive after timeout cleanup")
 
         return ProcessResult(
             command=command,
             started_at=started_wall,
             finished_at=utc_now(),
             elapsed_seconds=round(time.monotonic() - started, 3),
-            exit_code=exit_code,
+            exit_code=process.returncode,
             timed_out=timed_out,
+            terminated_after_timeout=terminated_after_timeout,
             stdout=stdout,
             stderr=stderr,
             envelope=self._parse_envelope(stdout),
@@ -470,6 +582,7 @@ class Controller:
             "elapsed_seconds": result.elapsed_seconds,
             "exit_code": result.exit_code,
             "timed_out": result.timed_out,
+            "terminated_after_timeout": result.terminated_after_timeout,
             "envelope_parsed": result.envelope is not None,
             "session_id": result.session_id,
             "before_head": before_head,
@@ -490,6 +603,17 @@ class Controller:
             output = self._git(*args, cwd=worktree).stdout
             (run_dir / filename).write_text(output, encoding="utf-8")
         (run_dir / "candidate-commit.txt").write_text(candidate + "\n", encoding="utf-8")
+
+    def _capture_uncommitted_git(self, worktree: Path, run_dir: Path, before_head: str) -> None:
+        commands = {
+            "git-status.txt": ("status", "--short", "--branch"),
+            "changed-files.txt": ("diff", "--name-status", before_head),
+            "git-diff-stat.txt": ("diff", "--stat", before_head),
+            "git-diff.patch": ("diff", "--no-ext-diff", before_head),
+        }
+        for filename, args in commands.items():
+            output = self._git(*args, cwd=worktree).stdout
+            (run_dir / filename).write_text(output, encoding="utf-8")
 
     def _commit_candidate(self, state: dict[str, Any], worktree: Path) -> str:
         self._commit(
@@ -585,9 +709,18 @@ class Controller:
                 failures.append(f"Z Code exited with code {result.exit_code}")
             if result.envelope is None:
                 failures.append("Z Code stdout did not contain a JSON envelope")
+            expected_session = claimed.get("zcode_session_id")
+            if expected_session and result.session_id != expected_session:
+                failures.append(
+                    "Z Code resume did not return the expected session ID "
+                    f"{expected_session!r}"
+                )
+            elif not expected_session and not result.session_id:
+                failures.append("Z Code did not return a session ID for the parent task")
             if not report.is_file():
                 failures.append("Z Code did not write .agent_runtime/execution_report.md")
 
+            self._enforce_allowed_paths(claimed, worktree, before_head, run_dir)
             candidate = self._commit_candidate(claimed, worktree)
             self._capture_git_after(worktree, run_dir, before_head, candidate)
             if failures:
@@ -595,6 +728,13 @@ class Controller:
         except Exception as exc:  # preserve evidence and move the claimed task to ERROR
             error = f"{type(exc).__name__}: {exc}"
             (run_dir / "controller-error.txt").write_text(error + "\n", encoding="utf-8")
+            if worktree is not None and before_head != "UNKNOWN":
+                try:
+                    self._capture_uncommitted_git(worktree, run_dir, before_head)
+                except Exception as capture_exc:
+                    (run_dir / "git-capture-error.txt").write_text(
+                        f"{type(capture_exc).__name__}: {capture_exc}\n", encoding="utf-8"
+                    )
 
         self._publish(
             claimed,

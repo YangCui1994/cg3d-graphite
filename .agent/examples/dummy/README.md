@@ -26,8 +26,8 @@ If Round 1 is `PASS + CONTINUE`, the planner:
 1. writes `REVIEW.md` in the Round 1 directory;
 2. copies `ROUND_2_TASK.md` to
    `.agent/tasks/ADS-DUMMY-001/round-02/TASK.md`;
-3. increments `round` and `revision`, retains `zcode_session_id`, and changes
-   state to `READY_FOR_EXECUTION`;
+3. increments `round` and `revision`, retains `candidate_commit` and
+   `zcode_session_id`, and changes state to `READY_FOR_EXECUTION`;
 4. commits and pushes the control branch.
 
 Round 2 must run with `--resume <round-1-session-id>`. A second `PASS` means

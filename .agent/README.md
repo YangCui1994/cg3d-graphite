@@ -208,6 +208,10 @@ part of V1.
 
 - Setting state to `READY_FOR_EXECUTION` authorizes controller commits and
   pushes only to the configured control branch and derived task branch.
+- `TASK.md` must list machine-checkable backtick paths under `### Allowed`.
+  The controller refuses to commit a candidate containing other paths. A
+  listed directory covers its descendants; simple `*`, `?`, and `[]` glob
+  patterns are also accepted.
 - The controller never merges, force-pushes, deletes a branch/worktree, or
   decides PASS.
 - A push rejection or dirty controller/task worktree stops the operation
@@ -215,7 +219,10 @@ part of V1.
 - A crash after claim can leave state at `RUNNING`; V1 requires manual
   inspection and recovery rather than guessing that a run is stale.
 - Executor timeout, non-zero exit, missing JSON envelope, or missing execution
-  report is published as `ERROR` with available evidence.
+  report/session ID is published as `ERROR` with available evidence.
+- A later round must retain both the reviewed `candidate_commit` and
+  `zcode_session_id`; the controller verifies the remote task branch before
+  using `--resume`.
 
 The two-round harmless test fixture is documented in
 `.agent/examples/dummy/README.md`.
