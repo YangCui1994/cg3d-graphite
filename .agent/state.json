@@ -3,11 +3,11 @@
   "task_id": "CG3D-TAICHI-INIT-001",
   "round": 1,
   "max_rounds": 3,
-  "revision": 8,
-  "status": "READY_FOR_EXECUTION",
+  "revision": 9,
+  "status": "RUNNING",
   "zcode_session_id": null,
   "candidate_commit": null,
-  "worker": null,
-  "updated_at": "2026-09-22T09:47:00Z",
+  "worker": "windows-zcode-01",
+  "updated_at": "2026-09-22T09:53:01Z",
   "last_error": null
 }
