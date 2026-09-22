@@ -3,11 +3,11 @@
   "task_id": "ADS-DUMMY-001",
   "round": 2,
   "max_rounds": 3,
-  "revision": 6,
-  "status": "AWAITING_REVIEW",
+  "revision": 7,
+  "status": "CLOSED",
   "zcode_session_id": "sess_dc7d9ea7-00ac-4158-99de-3b5b3ec15fb0",
   "candidate_commit": "82fbe493d4006ec4aeec6d107ec19c2660099ca2",
   "worker": null,
-  "updated_at": "2026-09-22T09:02:44Z",
+  "updated_at": "2026-09-22T09:07:34Z",
   "last_error": null
 }
