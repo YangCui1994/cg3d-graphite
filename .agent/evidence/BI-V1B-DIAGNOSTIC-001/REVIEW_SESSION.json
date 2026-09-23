@@ -1,0 +1,8 @@
+{
+ "session_id": "sess_b2c10344-a1db-4d78-aa5e-01ee20391d91",
+ "exit_code": 0,
+ "resumed_from": null,
+ "mode": "yolo",
+ "launched_by": "START_V1B.md section 5 (fresh headless, no --resume)",
+ "stdout_log": ".agent_runtime/BI-V1B-DIAGNOSTIC-001/reviewer_session_stdout.log"
+}
