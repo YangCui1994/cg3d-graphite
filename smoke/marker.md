@@ -2,6 +2,10 @@
 
 Infrastructure rehearsal marker for the smoke mini-episode, not scientific content.
 
+## Acceptance token
+
+SMOKE-PASS-TOKEN-7f3a
+
 - Episode: BI-VALIDATION-001
 - Stage: SMOKE-1 (A0 runner isolation test)
 - Round: 1 of the stage's bounded rework cycle
