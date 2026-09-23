@@ -1,0 +1,57 @@
+{
+ "stage": "V0",
+ "attempt": 1,
+ "contract_sha256": "b87368bca1ab70ca6f92206d04cae8be89b43c6517fe0d88b6ee893fc2be5d64",
+ "contract_snapshot": "D:/2026_agent_work/01_GLM_LBM3D_porous_media/cg3d-graphite/.agent_runtime/episodes/BI-VALIDATION-001/real/V0/contract_snapshot.md",
+ "contract_drift": null,
+ "branch": "agent-episode/BI-VALIDATION-001",
+ "product_push": {
+  "branch": "agent-episode/BI-VALIDATION-001",
+  "remote_ref": "280a46fed488b12975c3de96b5493362942822ec",
+  "pushed_sha": "280a46fed488b12975c3de96b5493362942822ec",
+  "verified_at": "2026-09-23T14:05:34Z"
+ },
+ "pending": {
+  "attempt": 1,
+  "decision": "PASS",
+  "sha": "280a46fed488b12975c3de96b5493362942822ec",
+  "validation_only": false
+ },
+ "approved_runner": {
+  "commit": "83577f0d670958c7550227d6a0682ccce80a9852",
+  "runner_blob": "fae7912b69cf70621af142419ecd808ad7428bef",
+  "runner_blob_source": "commit",
+  "review": "D:/2026_agent_work/01_GLM_LBM3D_porous_media/cg3d-graphite/.agent/evidence/BI-VALIDATION-001/A0_SMOKE_R3/A0_EXTERNAL_REVIEW_R4_PASS.md",
+  "approved_at": "2026-09-23T13:30:17Z"
+ },
+ "candidates": [
+  {
+   "attempt": 1,
+   "sha": "280a46fed488b12975c3de96b5493362942822ec",
+   "base": "9ede55c8ef7589b61606e11c033c84d9bcd1de94",
+   "validation_only": false
+  }
+ ],
+ "decisions": [],
+ "executor_sessions": [
+  {
+   "attempt": 1,
+   "session_id": "sess_4dc861c4-3dae-402c-a444-00167d4024fa",
+   "exit_code": 0,
+   "timed_out": false,
+   "resumed_from": null
+  }
+ ],
+ "reviewer_sessions": [
+  {
+   "attempt": 1,
+   "session_id": "sess_ef78083c-6411-4fd4-a04b-4b9ce5add562",
+   "exit_code": 0,
+   "timed_out": false,
+   "resumed_from": null
+  }
+ ],
+ "runner_commit": null,
+ "episode_status": "RUNNING",
+ "published_at": "2026-09-23T14:05:34Z"
+}
