@@ -1072,6 +1072,16 @@ def cmd_run_smoke(args) -> None:
             .replace("-", "") + ".json")
         SMOKE_STATE_PATH.replace(bak)
         print("archived previous smoke state ->", bak.name)
+    runtime = STATE_DIR / cfg["mode"]        # rounds/contract snapshots
+    if runtime.exists():
+        # a fresh smoke must not inherit round artifacts from an older
+        # run: stale execution_report.md files would flag every new
+        # executor session as invalid (observed live on 2026-09-23)
+        bak = runtime.with_name(
+            cfg["mode"] + "_runtime_archived_"
+            + utc_now().replace(":", "").replace("-", ""))
+        runtime.replace(bak)
+        print("archived previous smoke runtime ->", bak.name)
     state = fresh_state(cfg, episode_id=f"{EPISODE_ID}-SMOKE")
     state["episode_status"] = "RUNNING"      # smoke needs no A0 gate
     _record_runner_commit(state, cfg)
