@@ -1,0 +1,36 @@
+{
+  "schema_version": "v1",
+  "task_id": "ADS-EXECUTION-BASE-005",
+  "round": 1,
+  "candidate_commit": "bdf0ad5bc267e905b751f18b3f81205cef1e9073",
+  "zcode_session_id": "sess_e53314ac-bd72-46d4-be48-bae20be67abd",
+  "captured_at": "2026-09-23T03:15:36Z",
+  "worker": "windows-zcode-01",
+  "files": [
+    {
+      "path": "controller_tests.log",
+      "size_bytes": 3313,
+      "sha256": "c3e35a84bca857876bde1e4f95fc9081921d85d327974a12639e66893ea62d20"
+    },
+    {
+      "path": "base_semantics_summary.json",
+      "size_bytes": 905,
+      "sha256": "70f91530037de51ea9e33aa5934c1f9426577528e2afbcab41012d6ddbd90544"
+    },
+    {
+      "path": "prerepair_negative_control.log",
+      "size_bytes": 18999,
+      "sha256": "1b785318722dad9674445401610a8c1c0a9e6b5e2b3985da9002e8fc00d29856"
+    },
+    {
+      "path": "base_probe.log",
+      "size_bytes": 2199,
+      "sha256": "fce196c35cf9b6017422d09ed8bf4bc46891a1cea206cfb8742ac969360923e0"
+    },
+    {
+      "path": "base_probe_script.txt",
+      "size_bytes": 4844,
+      "sha256": "67801597ba484502941971cb515e157bf54b7d1557ae18d764110e8dbff55b96"
+    }
+  ]
+}

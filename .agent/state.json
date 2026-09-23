@@ -3,12 +3,12 @@
   "task_id": "ADS-EXECUTION-BASE-005",
   "round": 1,
   "max_rounds": 3,
-  "revision": 28,
-  "status": "RUNNING",
+  "revision": 29,
+  "status": "AWAITING_REVIEW",
   "execution_base_commit": "dbecc71898131cc6545bf314dc2f7ba56d1df337",
-  "zcode_session_id": null,
-  "candidate_commit": "dbecc71898131cc6545bf314dc2f7ba56d1df337",
-  "worker": "windows-zcode-01",
-  "updated_at": "2026-09-23T03:03:20Z",
+  "zcode_session_id": "sess_e53314ac-bd72-46d4-be48-bae20be67abd",
+  "candidate_commit": "bdf0ad5bc267e905b751f18b3f81205cef1e9073",
+  "worker": null,
+  "updated_at": "2026-09-23T03:15:39Z",
   "last_error": null
 }

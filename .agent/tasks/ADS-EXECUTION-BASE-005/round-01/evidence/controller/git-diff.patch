@@ -1,0 +1,798 @@
+diff --git a/.agent/README.md b/.agent/README.md
+index 116f7d4..bcacb4a 100644
+--- a/.agent/README.md
++++ b/.agent/README.md
+@@ -112,6 +112,7 @@ Required fields:
+ | `status` | One of the states below |
+ | `zcode_session_id` | Saved after Round 1 and reused with `--resume` |
+ | `candidate_commit` | Latest task-branch candidate, if available |
++| `execution_base_commit` | Accepted cumulative base the parent task starts from; full lowercase SHA for active tasks, `null` only in `DRAFT` |
+ | `worker` | Claiming controller while `RUNNING`, otherwise `null` |
+ | `updated_at` | UTC timestamp of the last transition |
+ | `last_error` | Short controller error, otherwise `null` |
+@@ -135,6 +136,33 @@ READY round > max_rounds -> STOPPED_MAX_ROUNDS
+ requirements are satisfied. It does not close the parent task automatically.
+ Fresh-session review and merge remain manual.
+ 
++### Execution base and round starting revisions
++
++`execution_base_commit` is the revision a parent task is allowed to start from.
++It is provenance for the whole parent task, not an instruction to reset later
++rounds:
++
++```text
++Round 1:      worktree before_head == state.execution_base_commit
++Round N > 1:  worktree before_head == prior reviewed state.candidate_commit
++state.execution_base_commit: unchanged for the lifetime of the parent task
++```
++
++- Round 1 creates the task branch from `execution_base_commit`, never from the
++  control `ready_sha`. The control branch carries the task description and the
++  state, so its READY commit is expected to differ from the execution base; that
++  difference no longer selects the product-code starting revision.
++- A task branch that already exists when Round 1 starts must resolve to
++  `execution_base_commit`. A mismatch fails before Z Code is invoked and is
++  published as `ERROR`; the branch is never reset, rebased, or force-updated.
++- Round 2/3 keep the same `execution_base_commit` and continue from the reviewed
++  `candidate_commit`, so rework does not lose the accepted earlier rounds.
++- After preparing the worktree and before invoking the executor, the Controller
++  asserts the observed head against the expected revision above.
++- An active state whose `execution_base_commit` is missing, `null`, or not a full
++  40-character lowercase hex SHA is refused before the round is claimed. Only
++  `DRAFT` may carry `null`.
++
+ Every active round uses this derived layout:
+ 
+ ```text
+@@ -164,8 +192,14 @@ An executor may request durable publication of additional reviewer evidence by
+ placing a `manifest.json` and its listed files under
+ `.agent_runtime/published_evidence/`. The Controller validates this bundle,
+ copies the original manifest and files, and generates `provenance.json` bound
+-to the candidate commit and Z Code session. It does not interpret whether the
+-evidence proves PASS or FAIL.
++to the candidate commit, the execution base, and the Z Code session. It does not
++interpret whether the evidence proves PASS or FAIL.
++
++Both Controller-owned records carry the base: `process.json` holds
++`before_head` next to `execution_base_commit`, and the generated
++`provenance.json` holds `execution_base_commit` next to `candidate_commit`. A
++reviewer can therefore check the Round-1 and later-round invariants from the
++published evidence alone, without rerunning the round.
+ 
+ V1 accepts at most 20 files, 1 MiB per file, and 5 MiB total (including the
+ manifest). Allowed extensions are `.txt`, `.log`, `.json`, `.csv`, `.md`,
+@@ -243,6 +277,10 @@ part of V1.
+ - A later round must retain both the reviewed `candidate_commit` and
+   `zcode_session_id`; the controller verifies the remote task branch before
+   using `--resume`.
++- Round 1 must start at the declared `execution_base_commit`. An active state
++  without a valid base, or a task branch that resolves to any other revision, is
++  refused before Z Code runs and published as `ERROR`, without touching the
++  branch.
+ 
+ The two-round harmless test fixture is documented in
+ `.agent/examples/dummy/README.md`.
+diff --git a/.agent/controller/controller.py b/.agent/controller/controller.py
+index f215667..19573de 100644
+--- a/.agent/controller/controller.py
++++ b/.agent/controller/controller.py
+@@ -43,6 +43,7 @@ TERMINAL_OR_WAITING_STATUSES = {
+ }
+ ALL_STATUSES = TERMINAL_OR_WAITING_STATUSES | {READY}
+ TASK_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$")
++GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+ PUBLISHED_EVIDENCE_DIR = "published_evidence"
+ PUBLISHED_EVIDENCE_MAX_FILES = 20
+ PUBLISHED_EVIDENCE_MAX_FILE_BYTES = 1024 * 1024
+@@ -379,6 +380,7 @@ def validate_state(state: dict[str, Any], *, operational: bool = False) -> None:
+         "status",
+         "zcode_session_id",
+         "candidate_commit",
++        "execution_base_commit",
+         "worker",
+         "updated_at",
+         "last_error",
+@@ -400,11 +402,21 @@ def validate_state(state: dict[str, Any], *, operational: bool = False) -> None:
+         if state[field] is not None and not isinstance(state[field], str):
+             raise ControllerError(f"{field} must be a string or null")
+ 
++    execution_base = state["execution_base_commit"]
++    if execution_base is not None and (
++        not isinstance(execution_base, str) or not GIT_SHA_RE.fullmatch(execution_base)
++    ):
++        raise ControllerError(
++            "execution_base_commit must be a full 40-character lowercase hex Git SHA or null"
++        )
++
+     if operational or state["status"] != "DRAFT":
+         if not isinstance(state["task_id"], str) or not TASK_ID_RE.fullmatch(state["task_id"]):
+             raise ControllerError("task_id must use only letters, digits, dot, underscore, and hyphen")
+         if state["round"] < 1:
+             raise ControllerError("an active task must have round >= 1")
++        if execution_base is None:
++            raise ControllerError("an active task requires execution_base_commit")
+     elif state["task_id"] is not None:
+         if not isinstance(state["task_id"], str) or not TASK_ID_RE.fullmatch(state["task_id"]):
+             raise ControllerError("draft task_id has an invalid format")
+@@ -568,7 +580,30 @@ class Controller:
+         )
+         return sha
+ 
+-    def _prepare_worktree(self, state: dict[str, Any], ready_sha: str) -> Path:
++    def _local_branch_sha(self, branch: str) -> str | None:
++        result = self._git("show-ref", "--verify", "--hash", f"refs/heads/{branch}", check=False)
++        if result.returncode != 0:
++            return None
++        return result.stdout.strip() or None
++
++    @staticmethod
++    def _round_start_head(state: dict[str, Any]) -> tuple[str, str]:
++        """Return the revision a round must start from plus the state field declaring it.
++
++        Round 1 starts exactly from the immutable parent-task execution base. Later
++        rounds continue from the latest reviewed candidate, not from that base.
++        """
++        if int(state["round"]) == 1:
++            base = state["execution_base_commit"]
++            if not isinstance(base, str) or not GIT_SHA_RE.fullmatch(base):
++                raise ControllerError("round 1 requires a valid execution_base_commit")
++            return base, "execution_base_commit"
++        candidate = state.get("candidate_commit")
++        if not isinstance(candidate, str) or not candidate:
++            raise ControllerError("rounds after Round 1 require the reviewed candidate_commit")
++        return candidate, "candidate_commit"
++
++    def _prepare_worktree(self, state: dict[str, Any]) -> Path:
+         branch = task_branch(state, self.config.task_branch_prefix)
+         if branch == self.config.control_branch:
+             raise ControllerError("task branch must differ from the control branch")
+@@ -576,22 +611,42 @@ class Controller:
+         self.config.worktree_root.mkdir(parents=True, exist_ok=True)
+         path = self.config.worktree_root / str(state["task_id"])
+ 
+-        remote_sha = self._remote_branch_sha(branch)
++        round_number = int(state["round"])
++        expected_head, expected_field = self._round_start_head(state)
+         expected_candidate = state.get("candidate_commit")
+-        if remote_sha and not expected_candidate:
+-            raise ControllerError(
+-                f"remote task branch {branch!r} exists but state has no candidate_commit"
+-            )
+-        if remote_sha and remote_sha != expected_candidate:
+-            raise ControllerError(
+-                f"remote task branch {branch!r} is at {remote_sha}, expected candidate {expected_candidate}"
+-            )
+-        if expected_candidate and not remote_sha:
+-            raise ControllerError(
+-                f"state names candidate {expected_candidate}, but remote task branch {branch!r} is missing"
+-            )
+-        if state["round"] > 1 and not expected_candidate:
+-            raise ControllerError("rounds after Round 1 require the reviewed candidate_commit")
++        remote_sha = self._remote_branch_sha(branch)
++        local_branch_sha = self._local_branch_sha(branch)
++
++        if round_number == 1:
++            # Round 1 starts from the declared execution base, never from the control
++            # ready_sha. An existing task branch must already be at that base and is
++            # never reset, rebased, or force-updated.
++            for location, sha in (("remote", remote_sha), ("local", local_branch_sha)):
++                if sha and sha != expected_head:
++                    raise ControllerError(
++                        f"{location} task branch {branch!r} is at {sha}, "
++                        f"but execution_base_commit is {expected_head}"
++                    )
++            if expected_candidate and expected_candidate != expected_head:
++                raise ControllerError(
++                    f"state names candidate {expected_candidate} for round 1, "
++                    f"but execution_base_commit is {expected_head}"
++                )
++            if expected_candidate and not remote_sha:
++                raise ControllerError(
++                    f"state names candidate {expected_candidate}, but remote task branch {branch!r} is missing"
++                )
++        else:
++            if not expected_candidate:
++                raise ControllerError("rounds after Round 1 require the reviewed candidate_commit")
++            if not remote_sha:
++                raise ControllerError(
++                    f"state names candidate {expected_candidate}, but remote task branch {branch!r} is missing"
++                )
++            if remote_sha != expected_candidate:
++                raise ControllerError(
++                    f"remote task branch {branch!r} is at {remote_sha}, expected candidate {expected_candidate}"
++                )
+ 
+         if path.exists():
+             if not (path / ".git").exists():
+@@ -599,20 +654,18 @@ class Controller:
+             current_branch = self._git("branch", "--show-current", cwd=path).stdout.strip()
+             if current_branch != branch:
+                 raise ControllerError(f"worktree {path} is on {current_branch!r}, expected {branch!r}")
+-            local_sha = self._git("rev-parse", "HEAD", cwd=path).stdout.strip()
+-            if remote_sha and local_sha != remote_sha:
++            worktree_head = self._git("rev-parse", "HEAD", cwd=path).stdout.strip()
++            if remote_sha and worktree_head != remote_sha:
+                 raise ControllerError(
+                     f"local task branch {branch!r} differs from remote; manual reconciliation is required"
+                 )
++        elif local_branch_sha:
++            self._git("worktree", "add", str(path), branch)
++        elif remote_sha:
++            self._git("branch", branch, f"refs/remotes/{self.config.remote}/{branch}")
++            self._git("worktree", "add", str(path), branch)
+         else:
+-            local_branch = self._git("show-ref", "--verify", f"refs/heads/{branch}", check=False)
+-            if local_branch.returncode == 0:
+-                self._git("worktree", "add", str(path), branch)
+-            elif remote_sha:
+-                self._git("branch", branch, f"refs/remotes/{self.config.remote}/{branch}")
+-                self._git("worktree", "add", str(path), branch)
+-            else:
+-                self._git("worktree", "add", "-b", branch, str(path), ready_sha)
++            self._git("worktree", "add", "-b", branch, str(path), expected_head)
+ 
+         dirty = self._git("status", "--porcelain", cwd=path).stdout.strip()
+         if dirty:
+@@ -763,7 +816,15 @@ class Controller:
+         path.mkdir(parents=True)
+         return path
+ 
+-    def _capture_process(self, result: ProcessResult, run_dir: Path, *, before_head: str, worktree: Path) -> None:
++    def _capture_process(
++        self,
++        result: ProcessResult,
++        run_dir: Path,
++        *,
++        before_head: str,
++        worktree: Path,
++        execution_base_commit: str | None,
++    ) -> None:
+         (run_dir / "zcode.stdout.json").write_text(result.stdout, encoding="utf-8")
+         (run_dir / "zcode.stderr.txt").write_text(result.stderr, encoding="utf-8")
+         process = {
+@@ -778,6 +839,7 @@ class Controller:
+             "envelope_parsed": result.envelope is not None,
+             "session_id": result.session_id,
+             "before_head": before_head,
++            "execution_base_commit": execution_base_commit,
+         }
+         (run_dir / "process.json").write_text(
+             json.dumps(process, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+@@ -869,6 +931,7 @@ class Controller:
+                 "task_id": claimed["task_id"],
+                 "round": claimed["round"],
+                 "candidate_commit": candidate,
++                "execution_base_commit": claimed["execution_base_commit"],
+                 "zcode_session_id": session_id,
+                 "captured_at": utc_now(),
+                 "worker": claimed["worker"],
+@@ -955,7 +1018,7 @@ class Controller:
+             f"published {claimed['task_id']} round {claimed['round']} as {final_state['status']}"
+         )
+ 
+-    def _execute_claimed(self, claimed: dict[str, Any], ready_sha: str) -> None:
++    def _execute_claimed(self, claimed: dict[str, Any]) -> None:
+         run_dir = self._new_run_dir(claimed)
+         worktree: Path | None = None
+         report: Path | None = None
+@@ -966,15 +1029,27 @@ class Controller:
+         before_head = "UNKNOWN"
+ 
+         try:
+-            worktree = self._prepare_worktree(claimed, ready_sha)
++            worktree = self._prepare_worktree(claimed)
+             self._materialize_task(claimed, worktree)
+             before_head = self._git("rev-parse", "HEAD", cwd=worktree).stdout.strip()
++            expected_head, expected_field = self._round_start_head(claimed)
++            if before_head != expected_head:
++                raise ControllerError(
++                    f"round {claimed['round']} must start at {expected_field} {expected_head}, "
++                    f"but the task worktree is at {before_head}"
++                )
+             (run_dir / "git-before.txt").write_text(
+                 self._git("status", "--short", "--branch", cwd=worktree).stdout,
+                 encoding="utf-8",
+             )
+             result = self._invoke_executor(claimed, worktree)
+-            self._capture_process(result, run_dir, before_head=before_head, worktree=worktree)
++            self._capture_process(
++                result,
++                run_dir,
++                before_head=before_head,
++                worktree=worktree,
++                execution_base_commit=claimed["execution_base_commit"],
++            )
+             session_id = result.session_id or session_id
+             report = worktree / RUNTIME_DIR / "execution_report.md"
+ 
+@@ -1058,7 +1133,7 @@ class Controller:
+             return "STOPPED_MAX_ROUNDS"
+ 
+         claimed = self._claim(remote_sha, state)
+-        self._execute_claimed(claimed, remote_sha)
++        self._execute_claimed(claimed)
+         return "EXECUTED"
+ 
+     def run_forever(self) -> None:
+diff --git a/.agent/controller/tests/test_controller.py b/.agent/controller/tests/test_controller.py
+index 2204306..804bc81 100644
+--- a/.agent/controller/tests/test_controller.py
++++ b/.agent/controller/tests/test_controller.py
+@@ -48,12 +48,44 @@ def base_state() -> dict[str, object]:
+         "status": "READY_FOR_EXECUTION",
+         "zcode_session_id": None,
+         "candidate_commit": None,
++        "execution_base_commit": "0" * 40,
+         "worker": None,
+         "updated_at": None,
+         "last_error": None,
+     }
+ 
+ 
++def process_is_alive(pid: int) -> bool:
++    """Portable liveness probe for a PID owned by someone else.
++
++    `os.kill(pid, 0)` is not portable here: a dead PID raises `ProcessLookupError`
++    on POSIX but a plain `OSError` (WinError 87) on Windows.
++    """
++    if os.name == "nt":
++        # The output encoding is locale-dependent, so only the ASCII PID is searched.
++        result = subprocess.run(
++            ["tasklist", "/FI", f"PID eq {pid}", "/NH"],
++            stdout=subprocess.PIPE,
++            stderr=subprocess.PIPE,
++        )
++        return str(pid).encode("ascii") in result.stdout
++    try:
++        os.kill(pid, 0)
++    except ProcessLookupError:
++        return False
++    except PermissionError:
++        return True
++    return True
++
++
++def publish_base_semantics(summary: dict[str, object]) -> None:
++    """Record the end-to-end base-selection facts for the reviewer evidence bundle."""
++    print("BASE_SEMANTICS_SUMMARY " + json.dumps(summary, sort_keys=True))
++    path = Path(".agent_runtime") / "base_semantics_summary.json"
++    path.parent.mkdir(parents=True, exist_ok=True)
++    path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
++
++
+ class StateValidationTests(unittest.TestCase):
+     def test_rejects_more_than_three_rounds_in_policy(self) -> None:
+         state = base_state()
+@@ -61,6 +93,29 @@ class StateValidationTests(unittest.TestCase):
+         with self.assertRaisesRegex(ControllerError, "max_rounds"):
+             validate_state(state)
+ 
++    def test_active_state_missing_execution_base_commit_is_rejected(self) -> None:
++        state = base_state()
++        del state["execution_base_commit"]
++        with self.assertRaisesRegex(ControllerError, "execution_base_commit"):
++            validate_state(state)
++
++    def test_active_state_null_and_malformed_execution_base_commit_is_rejected(self) -> None:
++        malformed: list[object] = [None, "", "0" * 39, "0" * 41, "A" * 40, "z" * 40, "dbecc71"]
++        for value in malformed:
++            state = base_state()
++            state["execution_base_commit"] = value
++            with self.subTest(value=value):
++                with self.assertRaisesRegex(ControllerError, "execution_base_commit"):
++                    validate_state(state)
++
++    def test_draft_state_may_use_null_execution_base_commit(self) -> None:
++        state = base_state()
++        state.update(status="DRAFT", round=0, execution_base_commit=None)
++        validate_state(state)
++
++        state["execution_base_commit"] = "0" * 40
++        validate_state(state)
++
+     def test_allowed_path_parser_and_matcher(self) -> None:
+         allowed = parse_allowed_paths(
+             "# TASK\n\n## Scope\n\n### Allowed\n\n- `one.txt`\n- `pkg/`\n- `tests/test_*.py`\n\n### Do not modify\n"
+@@ -190,25 +245,37 @@ class TwoRoundIntegrationTest(unittest.TestCase):
+         git(self.repo, "config", "user.name", "Test Planner")
+         git(self.repo, "config", "user.email", "planner@example.invalid")
+ 
+-        (self.repo / ".agent" / "prompts").mkdir(parents=True)
+-        (self.repo / ".agent" / "tasks" / "ADS-DUMMY-001" / "round-01").mkdir(parents=True)
+-        (self.repo / ".agent_runtime").mkdir()
++        # The accepted execution base is a separate, earlier commit than the control
++        # READY commit that queues the task, so every test below runs with
++        # `control ready_sha != execution_base_commit`.
+         (self.repo / ".gitignore").write_text(".agent_runtime/\n", encoding="utf-8")
+         (self.repo / "AGENTS.md").write_text("# Test agent rules\n", encoding="utf-8")
++        (self.repo / ".agent" / "prompts").mkdir(parents=True)
+         (self.repo / ".agent" / "prompts" / "ZCODE_EXECUTOR.md").write_text(
+             "# Test executor prompt\n", encoding="utf-8"
+         )
++        git(self.repo, "add", ".")
++        git(self.repo, "commit", "-m", "seed execution base")
++        self.execution_base = git(self.repo, "rev-parse", "HEAD").strip()
++
++        (self.repo / ".agent" / "tasks" / "ADS-DUMMY-001" / "round-01").mkdir(parents=True)
++        (self.repo / ".agent_runtime").mkdir()
++        (self.repo / "ready_only_marker.txt").write_text("control only\n", encoding="utf-8")
+         (self.repo / ".agent" / "tasks" / "ADS-DUMMY-001" / "round-01" / "TASK.md").write_text(
+             "# TASK\n\n## Scope\n\n### Allowed\n\n- `dummy.txt`\n\n"
+             "### Do not modify\n\n- everything else\n\nDUMMY_ROUND=1\n",
+             encoding="utf-8",
+         )
++        state = base_state()
++        state["execution_base_commit"] = self.execution_base
+         (self.repo / ".agent" / "state.json").write_text(
+-            json.dumps(base_state(), indent=2) + "\n", encoding="utf-8"
++            json.dumps(state, indent=2) + "\n", encoding="utf-8"
+         )
+         git(self.repo, "add", ".")
+-        git(self.repo, "commit", "-m", "seed round 1")
++        git(self.repo, "commit", "-m", "queue round 1")
+         git(self.repo, "push", "-u", "origin", "control")
++        self.ready_sha = git(self.repo, "rev-parse", "HEAD").strip()
++        self.assertNotEqual(self.execution_base, self.ready_sha)
+ 
+         fake = Path(__file__).resolve().parent / "fake_zcode.py"
+         config_path = self.root / "config.json"
+@@ -244,21 +311,51 @@ class TwoRoundIntegrationTest(unittest.TestCase):
+         raw = git(self.remote, "show", f"{branch}:{path}")
+         return json.loads(raw)
+ 
++    def advance_to_round_two(self, round1: dict[str, object]) -> None:
++        """Review Round 1 and queue Round 2 exactly as a planner would."""
++        round2_dir = self.repo / ".agent" / "tasks" / "ADS-DUMMY-001" / "round-02"
++        round2_dir.mkdir(parents=True)
++        (round2_dir / "TASK.md").write_text(
++            "# TASK\n\n## Scope\n\n### Allowed\n\n- `dummy.txt`\n\n"
++            "### Do not modify\n\n- everything else\n\nDUMMY_ROUND=2\n",
++            encoding="utf-8",
++        )
++        round1_dir = self.repo / ".agent" / "tasks" / "ADS-DUMMY-001" / "round-01"
++        (round1_dir / "REVIEW.md").write_text(
++            "# REVIEW\n\n## Decision\n\nPASS\n\n## Next Action\n\nContinue to round 2.\n",
++            encoding="utf-8",
++        )
++        next_state = dict(round1)
++        next_state.update(
++            round=2,
++            revision=int(round1["revision"]) + 1,
++            status="READY_FOR_EXECUTION",
++            worker=None,
++            updated_at="2026-09-22T00:00:00Z",
++            last_error=None,
++        )
++        (self.repo / ".agent" / "state.json").write_text(
++            json.dumps(next_state, indent=2) + "\n", encoding="utf-8"
++        )
++        git(self.repo, "add", ".agent")
++        git(self.repo, "commit", "-m", "review round 1 and request round 2")
++        git(self.repo, "push", "origin", "control")
++
+     def test_two_rounds_claim_execute_resume_and_publish(self) -> None:
++        self.assertNotEqual(self.execution_base, self.ready_sha)
+         self.assertEqual(self.controller.run_once(), "EXECUTED")
+         round1 = self.remote_json(".agent/state.json")
+         self.assertEqual(round1["status"], "AWAITING_REVIEW")
+         self.assertEqual(round1["round"], 1)
+         self.assertEqual(round1["zcode_session_id"], "fake-session-001")
+-        self.assertRegex(str(round1["candidate_commit"]), r"^[0-9a-f]{40}$")
++        self.assertEqual(round1["execution_base_commit"], self.execution_base)
++        round1_candidate = str(round1["candidate_commit"])
++        self.assertRegex(round1_candidate, r"^[0-9a-f]{40}$")
+         self.assertEqual(
+             git(self.remote, "show", "agent-task/ADS-DUMMY-001:dummy.txt"), "round 1\n"
+         )
+-        git(
+-            self.remote,
+-            "show",
+-            "control:.agent/tasks/ADS-DUMMY-001/round-01/evidence/controller/process.json",
+-        )
++        process_path = ".agent/tasks/ADS-DUMMY-001/round-01/evidence/controller/process.json"
++        git(self.remote, "show", f"control:{process_path}")
+         missing_executor = subprocess.run(
+             [
+                 "git",
+@@ -279,52 +376,192 @@ class TwoRoundIntegrationTest(unittest.TestCase):
+             "control:.agent/tasks/ADS-DUMMY-001/round-01/EXECUTION_REPORT.md",
+         )
+ 
+-        round2_dir = self.repo / ".agent" / "tasks" / "ADS-DUMMY-001" / "round-02"
+-        round2_dir.mkdir(parents=True)
+-        (round2_dir / "TASK.md").write_text(
+-            "# TASK\n\n## Scope\n\n### Allowed\n\n- `dummy.txt`\n\n"
+-            "### Do not modify\n\n- everything else\n\nDUMMY_ROUND=2\n",
+-            encoding="utf-8",
+-        )
+-        round1_dir = self.repo / ".agent" / "tasks" / "ADS-DUMMY-001" / "round-01"
+-        (round1_dir / "REVIEW.md").write_text(
+-            "# REVIEW\n\n## Decision\n\nPASS\n\n## Next Action\n\nContinue to round 2.\n",
+-            encoding="utf-8",
+-        )
+-        next_state = dict(round1)
+-        next_state.update(
+-            round=2,
+-            revision=int(round1["revision"]) + 1,
+-            status="READY_FOR_EXECUTION",
+-            worker=None,
+-            updated_at="2026-09-22T00:00:00Z",
+-            last_error=None,
++        # Round 1 started exactly at the declared execution base: the candidate is a
++        # direct child of that base, and the control-only marker file never reached the
++        # task branch (it would be there had Round 1 started from the control READY sha).
++        round1_process = self.remote_json(process_path)
++        self.assertEqual(round1_process["before_head"], self.execution_base)
++        self.assertEqual(round1_process["execution_base_commit"], self.execution_base)
++        self.assertNotEqual(round1_process["before_head"], self.ready_sha)
++        self.assertEqual(
++            git(self.remote, "rev-parse", f"{round1_candidate}^"), self.execution_base + "\n"
+         )
+-        (self.repo / ".agent" / "state.json").write_text(
+-            json.dumps(next_state, indent=2) + "\n", encoding="utf-8"
++        control_only_marker = subprocess.run(
++            [
++                "git",
++                "--git-dir",
++                str(self.remote),
++                "cat-file",
++                "-e",
++                "agent-task/ADS-DUMMY-001:ready_only_marker.txt",
++            ],
++            text=True,
++            stdout=subprocess.PIPE,
++            stderr=subprocess.PIPE,
+         )
+-        git(self.repo, "add", ".agent")
+-        git(self.repo, "commit", "-m", "review round 1 and request round 2")
+-        git(self.repo, "push", "origin", "control")
++        self.assertNotEqual(control_only_marker.returncode, 0)
+ 
++        self.advance_to_round_two(round1)
+         self.assertEqual(self.controller.run_once(), "EXECUTED")
+         round2 = self.remote_json(".agent/state.json")
+         self.assertEqual(round2["status"], "AWAITING_REVIEW")
+         self.assertEqual(round2["round"], 2)
+         self.assertEqual(round2["zcode_session_id"], "fake-session-001")
++        self.assertEqual(round2["execution_base_commit"], self.execution_base)
++        round2_candidate = str(round2["candidate_commit"])
+         self.assertEqual(
+             git(self.remote, "show", "agent-task/ADS-DUMMY-001:dummy.txt"),
+             "round 1\nround 2\n",
+         )
+ 
+-        process = self.remote_json(
++        # Round 2 continued from the reviewed Round-1 candidate, not from the base.
++        round2_process = self.remote_json(
+             ".agent/tasks/ADS-DUMMY-001/round-02/evidence/controller/process.json"
+         )
+-        command = process["command"]
++        self.assertEqual(round2_process["before_head"], round1_candidate)
++        self.assertEqual(round2_process["execution_base_commit"], self.execution_base)
++        self.assertEqual(
++            git(self.remote, "rev-parse", f"{round2_candidate}^"), round1_candidate + "\n"
++        )
++        self.assertNotEqual(round2_candidate, self.execution_base)
++        command = round2_process["command"]
+         self.assertIn("--resume", command)
+         resume_index = command.index("--resume")
+         self.assertEqual(command[resume_index + 1], "fake-session-001")
+ 
++        publish_base_semantics(
++            {
++                "test_case": (
++                    "TwoRoundIntegrationTest.test_two_rounds_claim_execute_resume_and_publish"
++                ),
++                "execution_base_commit": self.execution_base,
++                "control_ready_sha": self.ready_sha,
++                "round1_before_head": round1_process["before_head"],
++                "round1_candidate_commit": round1_candidate,
++                "round2_before_head": round2_process["before_head"],
++                "round2_candidate_commit": round2_candidate,
++                "control_ready_sha_differs_from_execution_base": (
++                    self.ready_sha != self.execution_base
++                ),
++                "round1_before_head_equals_execution_base": (
++                    round1_process["before_head"] == self.execution_base
++                ),
++                "round1_candidate_parent_is_execution_base": (
++                    git(self.remote, "rev-parse", f"{round1_candidate}^").strip()
++                    == self.execution_base
++                ),
++                "control_only_marker_absent_from_round1_candidate": (
++                    control_only_marker.returncode != 0
++                ),
++                "round2_before_head_equals_round1_candidate": (
++                    round2_process["before_head"] == round1_candidate
++                ),
++                "execution_base_commit_unchanged_across_rounds": (
++                    round2["execution_base_commit"] == self.execution_base
++                ),
++                "all_relevant_assertions_passed": True,
++            }
++        )
++
++    def test_round1_preexisting_branch_at_wrong_base_fails_before_executor(self) -> None:
++        git(self.repo, "branch", "agent-task/ADS-DUMMY-001")
++        git(self.repo, "push", "origin", "agent-task/ADS-DUMMY-001")
++        wrong_sha = git(self.repo, "rev-parse", "agent-task/ADS-DUMMY-001").strip()
++        self.assertEqual(wrong_sha, self.ready_sha)
++
++        self.assertEqual(self.controller.run_once(), "EXECUTED")
++        state = self.remote_json(".agent/state.json")
++        self.assertEqual(state["status"], "ERROR")
++        self.assertEqual(state["execution_base_commit"], self.execution_base)
++        self.assertIsNone(state["candidate_commit"])
++        self.assertIn("execution_base_commit", str(state["last_error"]))
++        # The pre-existing branch was neither reset nor rewritten.
++        self.assertEqual(
++            git(self.repo, "rev-parse", "agent-task/ADS-DUMMY-001").strip(), wrong_sha
++        )
++        self.assertEqual(
++            git(self.remote, "rev-parse", "agent-task/ADS-DUMMY-001"), wrong_sha + "\n"
++        )
++        # Z Code never ran: the failure was recorded before any worktree existed.
++        prefix = ".agent/tasks/ADS-DUMMY-001/round-01/evidence/controller"
++        self.assertIn(
++            "execution_base_commit", git(self.remote, "show", f"control:{prefix}/controller-error.txt")
++        )
++        no_process = subprocess.run(
++            [
++                "git",
++                "--git-dir",
++                str(self.remote),
++                "cat-file",
++                "-e",
++                f"control:{prefix}/process.json",
++            ],
++            text=True,
++            stdout=subprocess.PIPE,
++            stderr=subprocess.PIPE,
++        )
++        self.assertNotEqual(no_process.returncode, 0)
++        self.assertFalse((self.worktrees / "ADS-DUMMY-001").exists())
++
++    def test_round1_preexisting_branch_at_declared_base_continues_from_base(self) -> None:
++        git(self.repo, "branch", "agent-task/ADS-DUMMY-001", self.execution_base)
++        git(self.repo, "push", "origin", "agent-task/ADS-DUMMY-001")
++
++        self.assertEqual(self.controller.run_once(), "EXECUTED")
++        state = self.remote_json(".agent/state.json")
++        self.assertEqual(state["status"], "AWAITING_REVIEW")
++        self.assertEqual(state["execution_base_commit"], self.execution_base)
++        candidate = str(state["candidate_commit"])
++        self.assertEqual(
++            git(self.remote, "rev-parse", f"{candidate}^").strip(), self.execution_base
++        )
++        process = self.remote_json(
++            ".agent/tasks/ADS-DUMMY-001/round-01/evidence/controller/process.json"
++        )
++        self.assertEqual(process["before_head"], self.execution_base)
++
++    def test_round1_state_candidate_outside_the_base_publishes_error(self) -> None:
++        state_path = self.repo / ".agent" / "state.json"
++        state = json.loads(state_path.read_text(encoding="utf-8"))
++        state["candidate_commit"] = "0" * 40
++        state_path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
++        git(self.repo, "add", ".agent/state.json")
++        git(self.repo, "commit", "-m", "set round 1 candidate outside the base")
++        git(self.repo, "push", "origin", "control")
++
++        self.assertEqual(self.controller.run_once(), "EXECUTED")
++        result = self.remote_json(".agent/state.json")
++        self.assertEqual(result["status"], "ERROR")
++        self.assertIn("execution_base_commit", str(result["last_error"]))
++        no_branch = subprocess.run(
++            [
++                "git",
++                "--git-dir",
++                str(self.remote),
++                "show-ref",
++                "--verify",
++                "refs/heads/agent-task/ADS-DUMMY-001",
++            ],
++            text=True,
++            stdout=subprocess.PIPE,
++            stderr=subprocess.PIPE,
++        )
++        self.assertNotEqual(no_branch.returncode, 0)
++
++    def test_round1_candidate_at_base_without_branch_publishes_error(self) -> None:
++        state_path = self.repo / ".agent" / "state.json"
++        state = json.loads(state_path.read_text(encoding="utf-8"))
++        state["candidate_commit"] = self.execution_base
++        state_path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
++        git(self.repo, "add", ".agent/state.json")
++        git(self.repo, "commit", "-m", "set round 1 candidate without a task branch")
++        git(self.repo, "push", "origin", "control")
++
++        self.assertEqual(self.controller.run_once(), "EXECUTED")
++        result = self.remote_json(".agent/state.json")
++        self.assertEqual(result["status"], "ERROR")
++        self.assertIn("is missing", str(result["last_error"]))
++
+     def test_ready_round_above_cap_stops_without_executor(self) -> None:
+         state_path = self.repo / ".agent" / "state.json"
+         state = json.loads(state_path.read_text(encoding="utf-8"))
+@@ -415,8 +652,7 @@ class TwoRoundIntegrationTest(unittest.TestCase):
+             / "fake_pid.txt"
+         )
+         pid = int(pid_path.read_text(encoding="utf-8"))
+-        with self.assertRaises(ProcessLookupError):
+-            os.kill(pid, 0)
++        self.assertFalse(process_is_alive(pid), f"timed-out executor process {pid} survived")
+ 
+     def test_missing_session_id_publishes_error(self) -> None:
+         task_path = (
+@@ -442,22 +678,6 @@ class TwoRoundIntegrationTest(unittest.TestCase):
+         self.assertIn("did not return a session ID", state["last_error"])
+         self.assertIsNone(state["zcode_session_id"])
+ 
+-    def test_candidate_mismatch_publishes_error_without_execution(self) -> None:
+-        state_path = self.repo / ".agent" / "state.json"
+-        state = json.loads(state_path.read_text(encoding="utf-8"))
+-        state["candidate_commit"] = "0" * 40
+-        state_path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+-        git(self.repo, "add", ".agent/state.json")
+-        git(self.repo, "commit", "-m", "set mismatched candidate")
+-        git(self.repo, "branch", "agent-task/ADS-DUMMY-001")
+-        git(self.repo, "push", "origin", "agent-task/ADS-DUMMY-001")
+-        git(self.repo, "push", "origin", "control")
+-
+-        self.assertEqual(self.controller.run_once(), "EXECUTED")
+-        result = self.remote_json(".agent/state.json")
+-        self.assertEqual(result["status"], "ERROR")
+-        self.assertIn("expected candidate", result["last_error"])
+-
+     def test_executor_evidence_end_to_end_publication_and_provenance(self) -> None:
+         task_path = (
+             self.repo
+@@ -491,12 +711,25 @@ class TwoRoundIntegrationTest(unittest.TestCase):
+         self.assertEqual(provenance["task_id"], "ADS-DUMMY-001")
+         self.assertEqual(provenance["round"], 1)
+         self.assertEqual(provenance["candidate_commit"], candidate)
++        self.assertEqual(provenance["execution_base_commit"], self.execution_base)
+         self.assertEqual(provenance["zcode_session_id"], session_id)
+         self.assertEqual(provenance["worker"], "test-worker")
+         self.assertEqual(provenance["files"][0]["path"], "level_a.log")
+-        self.assertEqual(provenance["files"][0]["size_bytes"], len(log.encode()))
++        # The digest covers the bytes the Controller published, and the committed blob
++        # may differ from them when Git rewrites line endings on `git add`.
++        source = (
++            self.worktrees
++            / "ADS-DUMMY-001"
++            / ".agent_runtime"
++            / "published_evidence"
++            / "level_a.log"
++        )
++        published = self.repo / prefix / "executor" / "level_a.log"
++        self.assertEqual(published.read_bytes(), source.read_bytes())
++        self.assertEqual(provenance["files"][0]["size_bytes"], len(published.read_bytes()))
+         self.assertEqual(
+-            provenance["files"][0]["sha256"], hashlib.sha256(log.encode()).hexdigest()
++            provenance["files"][0]["sha256"],
++            hashlib.sha256(published.read_bytes()).hexdigest(),
+         )
+ 
+     def test_evidence_publication_failure_preserves_candidate_and_sets_error(self) -> None:
+diff --git a/.agent/templates/TASK.md b/.agent/templates/TASK.md
+index 73884aa..ccccc1e 100644
+--- a/.agent/templates/TASK.md
++++ b/.agent/templates/TASK.md
+@@ -4,6 +4,16 @@
+ 
+ `<TASK-ID>`
+ 
++## Execution Base
++
++`<full 40-character lowercase commit SHA of the accepted cumulative product commit>`
++
++Round 1 starts exactly from this revision. Later rounds continue from the
++reviewed candidate, so this field stays unchanged for the lifetime of the parent
++task. The value must also be present as `execution_base_commit` in
++`.agent/state.json`; that state field, not this section, is what the Controller
++enforces.
++
+ ## Objective
+ 
+ Describe one finite outcome.
