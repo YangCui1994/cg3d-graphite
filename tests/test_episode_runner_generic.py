@@ -1,4 +1,4 @@
-"""CG3D bilateral-episode A0-R1 generic-engine tests (offline).
+"""CG3D bilateral-episode A0-R1/R2 generic-engine tests (offline).
 
   python tests/test_episode_runner_generic.py      (exit 0 = pass)
 
@@ -6,13 +6,24 @@ Exercises the SAME generic orchestration path (start_stage / run_round
 / run_episode / publish_round / approve_a0_from_text) that the real
 smoke and V0-V3 use, with stubbed ZCode sessions (no GLM, no GPU,
 fully deterministic).  Scenario coverage maps to the A0 external
-review acceptance list (A0_EXTERNAL_REVIEW.md "Required A0 rework
-acceptance"): validation-only unchanged-source review, CHANGES_REQUESTED
-attempt increment, rework consumes the immediately prior review, fresh
-reviewer sessions, failed/timed-out/stale sessions never advance,
-PASS auto-promotes without start-stage, max attempts -> HUMAN_REQUIRED,
-HUMAN_REQUIRED stop, terminal stage stops at CHECKPOINT_READY, durable
-publication produced, explicit A0 authorization required.
+review acceptance lists:
+
+  A0_EXTERNAL_REVIEW.md (R1) — validation-only unchanged-source review,
+  CHANGES_REQUESTED attempt increment, rework consumes the immediately
+  prior review, fresh reviewer sessions, failed/timed-out/stale
+  sessions never advance, PASS auto-promotes without start-stage, max
+  attempts -> HUMAN_REQUIRED, HUMAN_REQUIRED stop, terminal stage stops
+  at CHECKPOINT_READY, durable publication produced, explicit A0
+  authorization required.
+
+  A0_EXTERNAL_REVIEW_R2.md — product-branch push at every publication
+  boundary (B9), frozen contract snapshot with live-drift inertness and
+  tamper refusal (B10), A0 approval requires a full candidate binding
+  (B11), failed executor session that committed -> terminal orphan,
+  never silently reused (B12), failed reviewer retries on the SAME
+  frozen candidate without rerunning the executor (B13), worktree
+  identity/expected-HEAD enforcement at attach (H4), persisted ERROR
+  terminates run-episode deterministically (H5).
 """
 import json
 import os
@@ -53,7 +64,10 @@ def git(wt, *args, check=True):
 class StubLauncher:
     """Deterministic stand-in for headless ZCode sessions.  Implements
     the marker/validation-only task semantics from prompt text, with a
-    queue of per-call failure overrides for B5 scenarios."""
+    queue of per-call failure overrides for B5/B12/B13 scenarios.
+    `skip_artifact=True` makes the session leave NO side effects at all
+    (clean failure); by default a failing session still commits the
+    marker first (the B12 orphan shape)."""
 
     def __init__(self, wt):
         self.wt = wt
@@ -191,11 +205,17 @@ class Harness:
         self.state['runner_commit'] = self.base
         self.launcher = StubLauncher(self.wt)
         self.pub_calls = []
+        self.prod_pushes = []      # (branch, expected_sha) per publication
 
     def publisher(self, s, c, cs, a):
         self.pub_calls.append((cs['name'], a))
+
+        def pp(cfg, expected):
+            self.prod_pushes.append((cfg['branch'], expected))
+            return dict(branch=cfg['branch'], remote_ref=expected,
+                        pushed_sha=expected, stub=True)
         return er.publish_round(s, c, cs, a, control_repo=self.control,
-                                push=False)
+                                push=False, product_push=pp)
 
     def save(self, s):
         er.save_state_at(self.cfg['state_path'], s)
@@ -203,6 +223,10 @@ class Harness:
     def run_episode(self):
         return er.run_episode(self.state, self.cfg, launcher=self.launcher,
                               publisher=self.publisher, save=self.save)
+
+    def record_path(self, stage):
+        return (self.control / '.agent' / 'evidence' / er.EPISODE_ID
+                / 'TEST' / stage / 'stage_record.json')
 
 
 # ---------------------------------------------------------------- S1
@@ -255,10 +279,12 @@ def scenario_happy_path():
           and (ev / 'SMOKE-2' / 'round-01' / 'review.md').exists()
           and rec['decisions'][0]['decision'] == 'CHANGES_REQUESTED'
           and len(rec['executor_sessions']) == 2)
-    check('S1j contract provenance frozen per stage (H3)',
+    snap1 = Path(st1['contract_snapshot'])
+    check('S1j contract frozen into an immutable snapshot; prompts cite '
+          'the snapshot + hash (H3/B10)',
           bool(st1['contract_sha256'])
-          and st1['contract_sha256'] == er.sha256_file(
-              h.cfg['stages'][0]['contract'])
+          and st1['contract_sha256'] == er.sha256_file(snap1)
+          and snap1.as_posix() in exe_calls[0]['prompt']
           and 'snapshot sha256 ' + st1['contract_sha256'] in
           exe_calls[0]['prompt'])
     check('S1k role contracts delivered by absolute path (B6)',
@@ -335,11 +361,13 @@ def failure_scenario(name, override, *, role='executor',
 
 
 def scenario_failures():
-    failure_scenario('S3 failed executor session (exit!=0) -> ERROR, '
-                     'no advance', dict(exit_code=1),
+    # clean failures: the stub session leaves NO source change
+    failure_scenario('S3 failed executor session (exit!=0, source '
+                     'untouched) -> ERROR, no advance',
+                     dict(exit_code=1, skip_artifact=True),
                      expect_event='executor-session-invalid')
     failure_scenario('S4 timed-out executor session -> ERROR, no advance',
-                     dict(timed_out=True),
+                     dict(timed_out=True, skip_artifact=True),
                      expect_event='executor-session-invalid')
     failure_scenario('S5 executor wrote no report -> ERROR, no advance',
                      dict(skip_artifact=True),
@@ -348,6 +376,7 @@ def scenario_failures():
     d = h.cfg['run_root'] / 'smoke' / 'SMOKE-1' / 'round-01'
     d.mkdir(parents=True)
     (d / 'execution_report.md').write_text('STALE', encoding='utf-8')
+    h.launcher.failures.append(dict(_role='executor', skip_artifact=True))
     er.start_stage(h.state, h.cfg, 'SMOKE-1')
     outcome = er.run_round(h.state, h.cfg, 'SMOKE-1', launcher=h.launcher,
                            publisher=h.publisher, save=h.save)
@@ -356,13 +385,25 @@ def scenario_failures():
           and h.state['stages']['SMOKE-1']['candidates'] == []
           and any(e['event'] == 'executor-session-invalid'
                   for e in h.state['history']))
-    failure_scenario('S7 dirty worktree after executor -> ERROR before '
-                     'review', dict(dirty_extra=True),
-                     expect_event='dirty-worktree-before-review')
-    failure_scenario('S8 failed reviewer session -> ERROR, no decision '
-                     '(executor candidate kept, no decision recorded)',
-                     dict(exit_code=3), role='reviewer',
-                     expect_event='review-session-invalid', n_candidates=1)
+    h7 = failure_scenario('S7 dirty worktree after executor -> ERROR '
+                          'before review (retryable)',
+                          dict(dirty_extra=True),
+                          expect_event='dirty-worktree-before-review')
+    check('S7b dirty-worktree ERROR is executor-pending retryable',
+          h7.state['stages']['SMOKE-1']['error_phase']
+          == 'executor_pending')
+    h8 = failure_scenario('S8 failed reviewer session -> ERROR review-'
+                          'pending, executor candidate frozen intact',
+                          dict(exit_code=3), role='reviewer',
+                          expect_event='review-session-invalid',
+                          n_candidates=1)
+    st8 = h8.state['stages']['SMOKE-1']
+    check('S8b reviewer ERROR recorded as review_pending (B13) and the '
+          'frozen candidate was published (B9 crash checkpoint)',
+          st8['error_phase'] == 'review_pending'
+          and h8.prod_pushes
+          and h8.prod_pushes[-1] ==
+          ('test-episode-branch', st8['candidates'][-1]['sha']))
 
 
 # ------------------------------------------------- S9/S10 limits
@@ -427,11 +468,241 @@ def scenario_parse_review():
         check(f'S11 parse_review: {name}', good)
 
 
+# ------------------------------------------------- S12 product push (B9)
+def scenario_product_push():
+    h = Harness()
+    outcome = h.run_episode()
+    st1, st2 = h.state['stages']['SMOKE-1'], h.state['stages']['SMOKE-2']
+    c1, c2 = st1['candidates'][0]['sha'], st1['candidates'][1]['sha']
+    check('S12a product branch pushed at EVERY publication boundary '
+          'with the exact candidate sha (B9)',
+          outcome == 'CHECKPOINT_READY'
+          and h.prod_pushes == [('test-episode-branch', c1),
+                                ('test-episode-branch', c2),
+                                ('test-episode-branch', c2)])
+    rec = json.loads(h.record_path('SMOKE-2').read_text(encoding='utf-8'))
+    check('S12b stage_record.json records the product push '
+          '(branch/ref/sha)',
+          rec['product_push']['branch'] == 'test-episode-branch'
+          and rec['product_push']['remote_ref'] == c2
+          and rec['product_push']['pushed_sha'] == c2)
+
+
+# ------------------------------------- S13 frozen contract snapshot (B10)
+def scenario_contract_freeze():
+    # (a) live contract mutated after freeze -> inert
+    h = Harness()
+    original = (er.EPISODE_DIR / 'runner' / 'SMOKE_CONTRACT.md'
+                ).read_text(encoding='utf-8')
+    tmpc = h.tmp / 'contract_mut.md'
+    tmpc.write_text(original, encoding='utf-8')
+    h.cfg = dict(h.cfg, stages=[dict(h.cfg['stages'][0], contract=tmpc),
+                                h.cfg['stages'][1]])
+    h.state = er.fresh_state(h.cfg, episode_id='TEST')
+    h.state['episode_status'] = 'RUNNING'
+    h.state['runner_commit'] = h.base
+    er.start_stage(h.state, h.cfg, 'SMOKE-1')
+    frozen_sha = h.state['stages']['SMOKE-1']['contract_sha256']
+    tmpc.write_text(original + '\nMUTATED AFTER FREEZE\n',
+                    encoding='utf-8')
+    outcome = er.run_round(h.state, h.cfg, 'SMOKE-1',
+                           launcher=h.launcher, publisher=h.publisher,
+                           save=h.save)
+    exe_prompt = h.launcher.calls[0]['prompt']
+    ev = h.control / '.agent' / 'evidence' / er.EPISODE_ID / 'TEST' \
+        / 'SMOKE-1'
+    pub_snap = (ev / 'contract_snapshot.md').read_text(encoding='utf-8')
+    rec = json.loads((ev / 'stage_record.json').read_text(
+        encoding='utf-8'))
+    check('S13a live-contract drift after freeze is inert (B10): '
+          'sessions read the snapshot, publication copies frozen bytes, '
+          'drift recorded',
+          outcome == 'CHANGES_REQUESTED'
+          and Path(h.state['stages']['SMOKE-1']
+                   ['contract_snapshot']).as_posix() in exe_prompt
+          and pub_snap == original
+          and er.sha256_file(ev / 'contract_snapshot.md') == frozen_sha
+          and rec['contract_drift'])
+    # (b) snapshot tampered after freeze -> refuse before any session
+    h2 = Harness()
+    er.start_stage(h2.state, h2.cfg, 'SMOKE-1')
+    snap2 = Path(h2.state['stages']['SMOKE-1']['contract_snapshot'])
+    snap2.write_text('TAMPERED', encoding='utf-8')
+    n_before = h2.launcher.n
+    try:
+        er.run_round(h2.state, h2.cfg, 'SMOKE-1',
+                     launcher=h2.launcher, publisher=h2.publisher,
+                     save=h2.save)
+        ok = False
+    except er.RunnerError:
+        ok = True
+    check('S13b tampered snapshot hash -> refuse before any session (B10)',
+          ok and h2.launcher.n == n_before)
+
+
+# ------------------------------------------- S14 A0 binding required (B11)
+def scenario_a0_binding():
+    h = Harness()
+    h.state['episode_status'] = 'A0_REVIEW'
+    h.state['smoke'] = dict(runner_commit=h.base)
+    cases = [
+        ('PASS with no candidate binding',
+         'stage: A0\nattempt: 1\n\nDecision: PASS\n'),
+        ('PASS with short candidate binding',
+         f'candidate: {h.base[:12]}\n\nDecision: PASS\n'),
+    ]
+    for name, text in cases:
+        try:
+            er.approve_a0_from_text(h.state, text, 'fake.md')
+            check(f'S14 {name} -> rejected', False)
+        except er.RunnerError:
+            check(f'S14 {name} -> rejected', True)
+    check('S14 rejections did not flip the episode status',
+          h.state['episode_status'] == 'A0_REVIEW')
+    h2 = Harness()
+    h2.state['episode_status'] = 'A0_REVIEW'    # no smoke runner_commit
+    try:
+        er.approve_a0_from_text(
+            h2.state, f'candidate: {h2.base}\n\nDecision: PASS\n',
+            'fake.md')
+        check('S14 missing smoke runner_commit in state -> rejected',
+              False)
+    except er.RunnerError:
+        check('S14 missing smoke runner_commit in state -> rejected', True)
+
+
+# --------------------------------- S15 orphan commit protection (B12)
+def scenario_orphan_commit():
+    h = Harness()
+    # stub executor COMMITS the marker, then the session reports exit!=0
+    h.launcher.failures.append(dict(_role='executor', exit_code=1))
+    er.start_stage(h.state, h.cfg, 'SMOKE-1')
+    base0 = er.head_sha(h.wt)
+    outcome = er.run_round(h.state, h.cfg, 'SMOKE-1',
+                           launcher=h.launcher, publisher=h.publisher,
+                           save=h.save)
+    st = h.state['stages']['SMOKE-1']
+    orphan_head = er.head_sha(h.wt)
+    check('S15a failed session that committed -> terminal HUMAN_REQUIRED '
+          'orphan, never a silent candidate (B12)',
+          outcome == 'HUMAN_REQUIRED'
+          and st['status'] == 'HUMAN_REQUIRED'
+          and h.state['episode_status'] == 'HUMAN_REQUIRED'
+          and st['candidates'] == [] and st['decisions'] == []
+          and orphan_head != base0
+          and st.get('orphan', {}).get('head') == orphan_head
+          and st['orphan']['base'] == base0
+          and any(e['event'] == 'orphan-after-failed-executor-session'
+                  for e in h.state['history']))
+    rec = json.loads(h.record_path('SMOKE-1').read_text(encoding='utf-8'))
+    check('S15b orphan publication is evidence-only (product branch NOT '
+          'pushed from an ambiguous tree)',
+          rec['product_push'] == dict(skipped=True,
+                                      reason='evidence-only')
+          and h.prod_pushes == [])
+    try:
+        er.run_round(h.state, h.cfg, 'SMOKE-1', launcher=h.launcher,
+                     publisher=h.publisher, save=h.save)
+        ok = False
+    except er.RunnerError:
+        ok = True
+    check('S15c no silent reuse: retry refused while HUMAN_REQUIRED',
+          ok and st['candidates'] == [])
+
+
+# ------------------------------- S16 reviewer retry on frozen candidate (B13)
+def scenario_reviewer_retry():
+    h = Harness()
+    h.launcher.failures = [
+        dict(_role='reviewer', decision='CHANGES_REQUESTED'),
+        dict(_role='reviewer', exit_code=3),
+    ]
+    outcome = h.run_episode()
+    st = h.state['stages']['SMOKE-1']
+    check('S16a reviewer failure after a frozen candidate -> ERROR '
+          'review-pending, candidate intact (B13)',
+          outcome == 'ERROR' and st['status'] == 'ERROR'
+          and st.get('error_phase') == 'review_pending'
+          and len(st['candidates']) == 2 and st['attempts'] == 2
+          and st['decisions'][0]['decision'] == 'CHANGES_REQUESTED')
+    n_exe = len([c for c in h.launcher.calls if c['role'] == 'executor'])
+    cand_sha = st['candidates'][-1]['sha']
+    outcome2 = er.run_round(h.state, h.cfg, 'SMOKE-1',
+                            launcher=h.launcher, publisher=h.publisher,
+                            save=h.save)
+    n_exe2 = len([c for c in h.launcher.calls if c['role'] == 'executor'])
+    rev_calls = [c for c in h.launcher.calls if c['role'] == 'reviewer']
+    check('S16b retry reruns ONLY a fresh reviewer on the SAME frozen '
+          'candidate — no executor call, identical sha, PASS',
+          outcome2 == 'PASS' and n_exe2 == n_exe == 2
+          and rev_calls[-1]['resume'] is None
+          and rev_calls[-1]['session_id'] not in
+          {r['session_id'] for r in rev_calls[:-1]}
+          and st['candidates'][-1]['sha'] == cand_sha
+          and st['status'] == 'PASS'
+          and h.state['stages']['SMOKE-2']['status'] == 'READY')
+
+
+# ------------------------------------------ S17 worktree identity (H4/H1)
+def scenario_worktree_identity():
+    h = Harness()
+    head0 = er.head_sha(h.wt)
+    (h.wt / 'smoke' / 'extra.md').write_text('x', encoding='utf-8')
+    git(h.wt, 'add', 'smoke/extra.md')
+    git(h.wt, 'commit', '-q', '-m', 'extra')
+    head1 = er.head_sha(h.wt)
+    try:
+        er.make_worktree(h.cfg, expected_head=head0)
+        check('S17a branch-correct, clean worktree at the WRONG head '
+              'is refused (H4/H1)', False)
+    except er.RunnerError:
+        check('S17a branch-correct, clean worktree at the WRONG head '
+              'is refused (H4/H1)', True)
+    check('S17b the state-implied head is accepted',
+          er.make_worktree(h.cfg, expected_head=head1) == h.wt)
+    cfgv = dict(h.cfg, mode='real',
+                stages=[dict(name='V0'), dict(name='V1')])
+    st = dict(V0=dict(status='PASS', candidates=[dict(sha='a' * 40)]),
+              V1=dict(status='READY', candidates=[]))
+    check('S17c _expected_product_head = latest started candidate (H4)',
+          er._expected_product_head(dict(stages=st), cfgv) == 'a' * 40)
+    st2 = dict(V0=dict(status='LOCKED', candidates=[]),
+               V1=dict(status='LOCKED', candidates=[]))
+    check('S17d no started stages -> declared product base',
+          er._expected_product_head(dict(stages=st2), cfgv)
+          == h.cfg['base'])
+
+
+# --------------------------------------- S18 persisted ERROR terminal (H5)
+def scenario_error_terminal():
+    h = Harness()
+    h.launcher.failures.append(dict(_role='executor', exit_code=1,
+                                    skip_artifact=True))
+    er.start_stage(h.state, h.cfg, 'SMOKE-1')
+    out1 = er.run_round(h.state, h.cfg, 'SMOKE-1', launcher=h.launcher,
+                        publisher=h.publisher, save=h.save)
+    n = h.launcher.n
+    out2 = h.run_episode()
+    check('S18 persisted ERROR terminates run-episode deterministically '
+          '(no busy loop, no extra sessions) (H5)',
+          out1 == 'ERROR' and out2 == 'ERROR'
+          and h.launcher.n == n
+          and any(e['event'] == 'episode-stopped-error-persisted'
+                  for e in h.state['history']))
+
+
 if __name__ == '__main__':
     scenario_happy_path()
     scenario_a0_gate()
     scenario_failures()
     scenario_limits()
     scenario_parse_review()
+    scenario_product_push()
+    scenario_contract_freeze()
+    scenario_a0_binding()
+    scenario_orphan_commit()
+    scenario_reviewer_retry()
+    scenario_worktree_identity()
+    scenario_error_terminal()
     print(('ALL PASS' if not FAIL else f'FAILURES: {FAIL}'))
     sys.exit(1 if FAIL else 0)

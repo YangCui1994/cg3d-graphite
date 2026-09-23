@@ -1,4 +1,4 @@
-"""Bilateral-imbibition episode runner (A0 bootstrap + R1 rework,
+"""Bilateral-imbibition episode runner (A0 bootstrap + R1/R2 rework,
 BI-VALIDATION-001).
 
 One GENERIC orchestration engine drives every stage — the harmless A0
@@ -8,7 +8,8 @@ are reused from the V1 Controller (headless zcode.cjs --json envelope
 sessionId, --resume executor rework, timeout process-tree kill,
 GIT_TERMINAL_PROMPT=0).
 
-Engine guarantees (A0 external review B1-B8, H1-H3):
+Engine guarantees (external reviews: R1 = B1-B8 + H1-H3,
+R2 = B9-B13 + H4-H5):
   B1  rework increments the attempt number and binds to the immediately
       preceding round's review/candidate;
   B2  smoke and real stages share run_round()/run_episode()/publish();
@@ -33,6 +34,32 @@ Engine guarantees (A0 external review B1-B8, H1-H3):
   B8  durable publication (contract snapshot + hash, candidate/report/
       review copies, session provenance, diff stat, attempt history)
       to the control-plane evidence directory with commit + push;
+  B9  every publication ALSO pushes the product branch itself (normal
+      non-force push; branch and exact SHA verified against the
+      round's candidate; remote ref confirmed afterwards) so reviewed
+      candidates are reachable from a remote ref, not only from the
+      local worktree;
+  B10 the stage contract is frozen at stage start into an immutable
+      runtime snapshot; executor/reviewer prompts point at the
+      snapshot, its hash is re-verified before every session and at
+      publication, and the publication copies the frozen bytes (never
+      the moving control-plane file; live drift is recorded, not
+      followed);
+  B11 approve-a0 requires a full 40-hex candidate binding exactly
+      equal to the runner commit that produced the smoke — a PASS
+      review with no (or short/wrong) binding is rejected;
+  B12 the round base is pinned before each executor session; a failed
+      executor session that advanced HEAD or left a dirty tree is an
+      ORPHAN — the episode stops HUMAN_REQUIRED with the orphan state
+      recorded (evidence-only publication), and an executor retry can
+      never silently adopt the unreviewed commit as its base
+      (base_guard);
+  B13 the round phase is explicit and persisted (EXECUTING/REWORK =
+      executor pending -> CANDIDATE_READY = candidate frozen, review
+      pending); a failed REVIEWER session retries a FRESH reviewer
+      against the SAME frozen candidate/report without rerunning the
+      executor; a candidate that is no longer intact stops
+      HUMAN_REQUIRED;
   H1  existing worktrees are identity-checked (branch, cleanliness,
       expected head) before reuse — ambiguous reuse is refused;
   H2  the reviewer write-restriction guarantee is exactly "persistent
@@ -40,7 +67,14 @@ Engine guarantees (A0 external review B1-B8, H1-H3):
       (post-session HEAD + git-status check).  No stronger sandbox is
       claimed in v0.1;
   H3  the stage contract is frozen at stage start (sha256 recorded in
-      state, quoted in both prompts, copied into the publication).
+      state, quoted in both prompts, copied into the publication);
+  H4  top-level attach paths (run-smoke, init-product) derive the
+      expected worktree HEAD from persisted state and pass it to the
+      H1 identity check — a branch-correct, clean, but
+      state-inconsistent worktree is refused;
+  H5  a persisted ERROR stage is TERMINAL for `run-episode`
+      (deterministic stop, never a busy loop); the explicit
+      same-attempt retry is the `run` command.
 
 Commands (control checkout root):
   init | run-smoke [--reset] | approve-a0 --review <path>
@@ -74,7 +108,7 @@ EVIDENCE_ROOT = REPO_ROOT / ".agent" / "evidence" / "BI-VALIDATION-001"
 EPISODE_ID = "BI-VALIDATION-001"
 PRODUCT_BRANCH = "agent-episode/BI-VALIDATION-001"
 PRODUCT_BASE = "9ede55c8ef7589b61606e11c033c84d9bcd1de94"
-SMOKE_BRANCH = "agent-episode/BI-VALIDATION-001-smoke-r1"
+SMOKE_BRANCH = "agent-episode/BI-VALIDATION-001-smoke-r2"
 WORKTREE_ROOT = REPO_ROOT.parent / "cg3d-episode-worktrees"
 ZCODE = ["node", "C:/Program Files/ZCode/resources/glm/zcode.cjs"]
 ZCODE_MODE = "yolo"
@@ -133,7 +167,7 @@ def smoke_config() -> dict:
         state_path=SMOKE_STATE_PATH,
         branch=SMOKE_BRANCH,
         base=PRODUCT_BASE,
-        worktree=WORKTREE_ROOT / f"{EPISODE_ID}-smoke-r1",
+        worktree=WORKTREE_ROOT / f"{EPISODE_ID}-smoke-r2",
         stages=[
             dict(name="SMOKE-1",
                  contract=EPISODE_DIR / "runner" / "SMOKE_CONTRACT.md",
@@ -144,7 +178,7 @@ def smoke_config() -> dict:
                  / "SMOKE_VALIDATION_CONTRACT.md",
                  task="validation-only", validation_only=True),
         ],
-        evidence_subdir="A0_SMOKE_R1",
+        evidence_subdir="A0_SMOKE_R2",
         run_root=STATE_DIR,
         timeout_s=SMOKE_TIMEOUT_S,
     )
@@ -181,7 +215,8 @@ def fresh_state(cfg: dict, *, episode_id: str) -> dict:
         stages={s["name"]: dict(
             status="READY" if i == 0 else "LOCKED", attempts=0,
             executor_sessions=[], reviewer_sessions=[], candidates=[],
-            decisions=[], contract_sha256=None) for i, s in
+            decisions=[], contract_sha256=None, contract_snapshot=None,
+            round_bases={}) for i, s in
             enumerate(cfg["stages"])},
         runner_commit=None, a0_review=None,
         history=[],
@@ -334,7 +369,7 @@ def product_at(worktree: Path, expected_sha: str, context: str) -> None:
 
 
 def make_worktree(cfg: dict, *, expected_head: str | None = None) -> Path:
-    """Create/attach the episode worktree with H1 identity checks."""
+    """Create/attach the episode worktree with H1/H4 identity checks."""
     wt = cfg["worktree"]
     branch = cfg["branch"]
     if wt.exists():
@@ -348,13 +383,29 @@ def make_worktree(cfg: dict, *, expected_head: str | None = None) -> Path:
             raise RunnerError(
                 f"refusing ambiguous worktree reuse {wt}: head="
                 f"{head_sha(wt)[:12]} (state expects "
-                f"{expected_head[:12]})")
+                f"{expected_head[:12]}); recover explicitly (reset the "
+                f"worktree to the expected commit, or dispose of the "
+                f"worktree) before reattaching")
         return wt
     parent = wt.parent
     parent.mkdir(parents=True, exist_ok=True)
     _git(REPO_ROOT, "worktree", "add", "-b", branch, str(wt),
          cfg["base"])
     return wt
+
+
+def _expected_product_head(state: dict, cfg: dict) -> str:
+    """H4: the worktree HEAD implied by persisted state — the declared
+    base advanced by every started stage's latest (possibly
+    validation-only) candidate."""
+    head = cfg["base"]
+    for s in cfg["stages"]:
+        st = state["stages"][s["name"]]
+        if st["status"] in ("LOCKED", "READY"):
+            continue
+        if st.get("candidates"):
+            head = st["candidates"][-1]["sha"]
+    return head
 
 
 # -------------------------------------------------------------- prompts
@@ -397,7 +448,9 @@ def _task_block(cfg_stage: dict, attempt: int) -> str:
 def executor_prompt(state: dict, cfg: dict, cfg_stage: dict, attempt: int,
                     *, base_sha: str, report: Path,
                     prev_review: Path | None) -> str:
-    contract = Path(cfg_stage["contract"]).as_posix()
+    stg = state["stages"][cfg_stage["name"]]
+    contract = stg.get("contract_snapshot") \
+        or Path(cfg_stage["contract"]).as_posix()
     parts = [
         f"You are the ZCode EXECUTOR for episode {EPISODE_ID}"
         + ("-SMOKE (harmless infrastructure rehearsal)"
@@ -409,8 +462,10 @@ def executor_prompt(state: dict, cfg: dict, cfg_stage: dict, attempt: int,
         f"- project guardrails: {CONTROL_DOCS['agents'].as_posix()}",
         f"- Episode Contract: {CONTROL_DOCS['plan'].as_posix()}",
         f"- Executor Contract: {CONTROL_DOCS['executor'].as_posix()}",
-        f"- Stage Contract: {contract} "
-        f"(snapshot sha256 {state['stages'][cfg_stage['name']]['contract_sha256']})",
+        f"- Stage Contract (FROZEN snapshot — this file, not the "
+        f"control-plane original, is the contract for this stage): "
+        f"{contract} "
+        f"(snapshot sha256 {stg['contract_sha256']})",
         f"Product branch: {cfg['branch']} (round base {base_sha[:12]}). "
         f"Work on this branch only. Never merge, never force-push, never "
         f"rewrite history.",
@@ -437,7 +492,9 @@ def reviewer_prompt(state: dict, cfg: dict, cfg_stage: dict, attempt: int,
                     *, candidate_sha: str, validation_only: bool,
                     report: Path, review_out: Path,
                     evidence_dir: Path) -> str:
-    contract = Path(cfg_stage["contract"]).as_posix()
+    stg = state["stages"][cfg_stage["name"]]
+    contract = stg.get("contract_snapshot") \
+        or Path(cfg_stage["contract"]).as_posix()
     kind = ("VALIDATION-ONLY candidate: the source is UNCHANGED at this "
             "SHA; there is intentionally no diff. Judge the execution "
             "report, the evidence it references, and read-only "
@@ -457,9 +514,10 @@ def reviewer_prompt(state: dict, cfg: dict, cfg_stage: dict, attempt: int,
         f"- project guardrails: {CONTROL_DOCS['agents'].as_posix()}",
         f"- Episode Contract: {CONTROL_DOCS['plan'].as_posix()}",
         f"- Reviewer Contract: {CONTROL_DOCS['reviewer'].as_posix()}",
-        f"- Stage Contract: {contract} "
-        f"(snapshot sha256 "
-        f"{state['stages'][cfg_stage['name']]['contract_sha256']})",
+        f"- Stage Contract (FROZEN snapshot — this file, not the "
+        f"control-plane original, is the contract for this stage): "
+        f"{contract} "
+        f"(snapshot sha256 {stg['contract_sha256']})",
         f"Candidate commit (frozen): {candidate_sha}. Verify with git in "
         f"your working tree that HEAD is exactly this commit; if it is "
         f"not, decide HUMAN_REQUIRED.",
@@ -511,12 +569,43 @@ def parse_review(review_path: Path, stage: str, attempt: int,
 
 
 # ------------------------------------------------------------ publication
+def push_product_branch(cfg: dict, expected_sha: str) -> dict:
+    """B9: durable product-branch push.  Verifies the worktree is on the
+    expected product branch at the exact reviewed SHA, pushes the branch
+    with a normal non-force push, then confirms the remote ref."""
+    wt = cfg["worktree"]
+    branch = _git(wt, "rev-parse", "--abbrev-ref", "HEAD")
+    if branch != cfg["branch"]:
+        raise RunnerError(f"product worktree is on branch {branch!r}, "
+                          f"expected {cfg['branch']!r}")
+    sha = head_sha(wt)
+    if sha != expected_sha:
+        raise RunnerError(f"product worktree head {sha[:12]} != expected "
+                          f"candidate {expected_sha[:12]} — refusing to "
+                          f"publish/push")
+    _git(wt, "push", "origin", cfg["branch"])          # never forced
+    remote = _git(wt, "ls-remote", "origin", f"refs/heads/{cfg['branch']}")
+    rsha = remote.split()[0] if remote.split() else None
+    if rsha != sha:
+        raise RunnerError(f"remote ref {cfg['branch']} resolved to "
+                          f"{(rsha or '?')[:12]} after push, expected "
+                          f"{sha[:12]}")
+    return dict(branch=cfg["branch"], remote_ref=sha, pushed_sha=sha,
+                verified_at=utc_now())
+
+
 def publish_round(state: dict, cfg: dict, cfg_stage: dict, attempt: int,
                   *, control_repo: Path | None = None,
-                  push: bool = True) -> Path:
-    """B8: durable publication of one finished round (and stage).
-    `control_repo`/`push=False` let offline tests publish into a temp
-    control repo without touching the real one."""
+                  push: bool = True, product_push=None) -> Path:
+    """B8/B9: durable publication of one round.  Evidence goes to the
+    control-plane directory (commit + push when push=True); the PRODUCT
+    branch is pushed too (verified non-force push) so the reviewed
+    candidate is reachable from a remote ref.  An orphan/evidence-only
+    round (state['_pub_mode']) publishes evidence but skips the product
+    push.  `control_repo`/`push=False` plus an injectable `product_push`
+    let offline tests exercise both paths with no real remote."""
+    if product_push is None and push:
+        product_push = push_product_branch
     repo = control_repo or REPO_ROOT
     sub = cfg.get("evidence_subdir") or cfg_stage["name"]
     stage_dir = repo / ".agent" / "evidence" / EPISODE_ID / sub / \
@@ -524,13 +613,36 @@ def publish_round(state: dict, cfg: dict, cfg_stage: dict, attempt: int,
     rnd = stage_dir / f"round-{attempt:02d}"
     rnd.mkdir(parents=True, exist_ok=True)
     st = state["stages"][cfg_stage["name"]]
-    contract = Path(cfg_stage["contract"])
+    # B10: publish the FROZEN snapshot bytes, never the moving file
+    snap = Path(st["contract_snapshot"]) if st.get("contract_snapshot") \
+        else Path(cfg_stage["contract"])
+    if st.get("contract_sha256") \
+            and sha256_file(snap) != st["contract_sha256"]:
+        raise RunnerError("frozen contract snapshot hash mismatch — "
+                          "refusing to publish")
     (stage_dir / "contract_snapshot.md").write_text(
-        contract.read_text(encoding="utf-8"), encoding="utf-8")
+        snap.read_text(encoding="utf-8"), encoding="utf-8")
+    drift = None
+    if sha256_file(Path(cfg_stage["contract"])) != st.get("contract_sha256"):
+        drift = ("live control-plane contract differs from the frozen "
+                 "snapshot; sessions and this publication used the "
+                 "FROZEN version")
+    pub_mode = state.pop("_pub_mode", None)
+    push_rec = None
+    if pub_mode:
+        push_rec = dict(skipped=True, reason=pub_mode)
+    elif product_push is not None:
+        cands = [c for c in st["candidates"] if c["attempt"] == attempt]
+        expected = (cands[-1]["sha"] if cands
+                    else head_sha(cfg["worktree"]))
+        push_rec = product_push(cfg, expected)
     record = dict(
         stage=cfg_stage["name"], attempt=attempt,
         contract_sha256=st["contract_sha256"],
+        contract_snapshot=st.get("contract_snapshot"),
+        contract_drift=drift,
         branch=cfg["branch"],
+        product_push=push_rec,
         candidates=st["candidates"], decisions=st["decisions"],
         executor_sessions=st["executor_sessions"],
         reviewer_sessions=st["reviewer_sessions"],
@@ -560,10 +672,11 @@ def publish_round(state: dict, cfg: dict, cfg_stage: dict, attempt: int,
                       stage_dir.as_posix())
         if staged:
             _git(repo, "add", stage_dir.as_posix())
+            decision = (st["decisions"][-1]["decision"]
+                        if st["decisions"] else "ERROR")
             _git(repo, "commit", "-m",
                  f"episode({cfg['mode']}): publish {cfg_stage['name']} "
-                 f"record (attempt {attempt}, "
-                 f"{st['decisions'][-1]['decision'] if st['decisions'] else '?'})")
+                 f"record (attempt {attempt}, {decision})")
             _git(repo, "push", "origin",
                  _git(repo, "rev-parse", "--abbrev-ref", "HEAD"))
     return stage_dir
@@ -575,8 +688,29 @@ def _run_dir(cfg: dict, stage: str, attempt: int) -> Path:
     return root / cfg["mode"] / stage / f"round-{attempt:02d}"
 
 
+def _contract_snapshot_path(cfg: dict, name: str) -> Path:
+    return Path(cfg["run_root"]) / cfg["mode"] / name / \
+        "contract_snapshot.md"
+
+
+def _verify_contract(st: dict, context: str) -> None:
+    """B10: the frozen snapshot must still hash to the recorded value
+    before any session (or publication) uses it."""
+    snap = st.get("contract_snapshot")
+    if not snap:
+        raise RunnerError(f"{context}: stage contract snapshot not frozen")
+    p = Path(snap)
+    if not p.exists():
+        raise RunnerError(f"{context}: frozen contract snapshot missing "
+                          f"at {p}")
+    if sha256_file(p) != st.get("contract_sha256"):
+        raise RunnerError(f"{context}: frozen contract snapshot hash "
+                          f"mismatch at {p} — refusing to continue")
+
+
 def start_stage(state: dict, cfg: dict, name: str) -> None:
-    """READY -> EXECUTING (attempt 1, contract frozen — H3)."""
+    """READY -> EXECUTING (attempt 1, contract frozen into an immutable
+    runtime snapshot — H3/B10)."""
     if name not in state["stages"]:
         raise RunnerError(f"unknown stage {name}")
     names = [s["name"] for s in cfg["stages"]]
@@ -587,13 +721,36 @@ def start_stage(state: dict, cfg: dict, name: str) -> None:
     if st["status"] != "READY":
         raise RunnerError(f"stage {name} status {st['status']}: cannot "
                           f"start")
+    cfg_stage = [s for s in cfg["stages"] if s["name"] == name][0]
+    snap = _contract_snapshot_path(cfg, name)
+    snap.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(cfg_stage["contract"], snap)
     st["attempts"] = 1
     st["status"] = "EXECUTING"
-    st["contract_sha256"] = sha256_file(
-        [s for s in cfg["stages"] if s["name"] == name][0]["contract"])
+    st["contract_snapshot"] = snap.as_posix()
+    st["contract_sha256"] = sha256_file(snap)
     state["episode_status"] = "RUNNING"
     record(state, "stage-start", stage=name, attempt=1,
-           contract_sha256=st["contract_sha256"][:16])
+           contract_sha256=st["contract_sha256"][:16],
+           contract_snapshot=snap.as_posix())
+
+
+def _orphan_stop(state: dict, cfg: dict, cfg_stage: dict, st: dict,
+                 stage_name: str, attempt: int, *, kind: str, base: str,
+                 head: str, event: str, save, publisher) -> str:
+    """Common terminal path for B12/B13 orphans: HUMAN_REQUIRED, orphan
+    recorded, evidence-only publication (the product branch is NOT
+    pushed from an ambiguous tree)."""
+    st["status"] = "HUMAN_REQUIRED"
+    state["episode_status"] = "HUMAN_REQUIRED"
+    st["orphan"] = dict(stage=stage_name, attempt=attempt, kind=kind,
+                        base=base, head=head)
+    record(state, event, stage=stage_name, attempt=attempt,
+           base=base[:12], head=head[:12])
+    save(state)
+    state["_pub_mode"] = "evidence-only"
+    publisher(state, cfg, cfg_stage, attempt)
+    return "HUMAN_REQUIRED"
 
 
 def run_round(state: dict, cfg: dict, stage_name: str, *,
@@ -601,95 +758,159 @@ def run_round(state: dict, cfg: dict, stage_name: str, *,
               save=None) -> str:
     """Drive ONE attempt of a stage through the generic path.  Returns
     the round outcome: PASS / CHANGES_REQUESTED / HUMAN_REQUIRED /
-    ERROR.  Never advances state on session failure (B5)."""
+    ERROR.  Session failures never advance the round (B5); a failed
+    session that touched the source is a terminal orphan (B12); a
+    failed reviewer retries on the frozen candidate (B13)."""
     save = save or (lambda s: save_state_at(cfg["state_path"], s))
     cfg_stage = [s for s in cfg["stages"] if s["name"] == stage_name][0]
     st = state["stages"][stage_name]
     attempt = st["attempts"]                       # B1: per-round number
     d = _run_dir(cfg, stage_name, attempt)
     log = d / "session_log.jsonl"
+
     if st["status"] == "ERROR":
-        # explicit retry of the same attempt: restore the phase that was
-        # interrupted and clear this round's artifacts so a fresh session
-        # rewrites them (stale files are never parsed)
-        st["status"] = st.pop("error_phase", "EXECUTING")
-        for name in ("execution_report.md", "review.md"):
-            (d / name).unlink(missing_ok=True)
-    if st["status"] not in ("EXECUTING", "REWORK"):
+        # explicit retry of the same attempt (recovery after H5's
+        # deterministic stop: the `run` command)
+        stage_phase = st.pop("error_stage_phase", "EXECUTING")
+        round_phase = st.pop("error_phase", "executor_pending")
+        if round_phase == "review_pending":
+            # B13: candidate already frozen — restore review-pending and
+            # drop any stale/partial review (it is never parsed)
+            st["status"] = "CANDIDATE_READY"
+            (d / "review.md").unlink(missing_ok=True)
+        else:
+            st["status"] = stage_phase
+            for name in ("execution_report.md", "review.md"):
+                (d / name).unlink(missing_ok=True)
+    if st["status"] not in ("EXECUTING", "REWORK", "CANDIDATE_READY"):
         raise RunnerError(f"stage {stage_name} status {st['status']}: "
                           f"use start-stage / run-episode")
-    phase_at_entry = st["status"]
 
-    prev_review = None
-    resume = None
-    if st["status"] == "REWORK":
-        prev_review = _run_dir(cfg, stage_name, attempt - 1) / "review.md"
-        if not prev_review.exists():
-            raise RunnerError(f"rework round {attempt} cannot find the "
-                              f"immediately preceding review "
-                              f"{prev_review}")
-        _, reset_ctx = parse_review(prev_review, stage_name, attempt - 1,
-                                    st["candidates"][-1]["sha"])
-        if not reset_ctx and st["executor_sessions"]:
-            resume = st["executor_sessions"][-1]["session_id"]
+    # ------------------------------------------- executor part (B12)
+    if st["status"] in ("EXECUTING", "REWORK"):
+        phase_at_entry = st["status"]
+        prev_review = None
+        resume = None
+        if st["status"] == "REWORK":
+            prev_review = _run_dir(cfg, stage_name, attempt - 1) / \
+                "review.md"
+            if not prev_review.exists():
+                raise RunnerError(f"rework round {attempt} cannot find "
+                                  f"the immediately preceding review "
+                                  f"{prev_review}")
+            _, reset_ctx = parse_review(prev_review, stage_name,
+                                        attempt - 1,
+                                        st["candidates"][-1]["sha"])
+            if not reset_ctx and st["executor_sessions"]:
+                resume = st["executor_sessions"][-1]["session_id"]
 
-    base = head_sha(cfg["worktree"])
+        # B12: pin this executor pass to a round base.  After a FAILED
+        # executor session the guard demands the tree be exactly back
+        # at that base — an unreviewed commit is never adopted silently
+        guard = st.pop("base_guard", None)
+        cur = head_sha(cfg["worktree"])
+        if guard is not None and cur != guard:
+            return _orphan_stop(
+                state, cfg, cfg_stage, st, stage_name, attempt,
+                kind="worktree-drift-since-failed-session", base=guard,
+                head=cur, event="worktree-drifted-since-failed-session",
+                save=save, publisher=publisher)
+        base = cur
+        st.setdefault("round_bases", {})[str(attempt)] = base
+        save(state)
+        _verify_contract(st, f"{stage_name} round-{attempt:02d} executor")
+
+        rep = d / "execution_report.md"
+        eprompt = executor_prompt(state, cfg, cfg_stage, attempt,
+                                  base_sha=base, report=rep,
+                                  prev_review=prev_review)
+        rep_pre = rep.exists()
+        exe = launcher(cfg["worktree"], eprompt, resume=resume,
+                       timeout_s=cfg["timeout_s"], log_path=log)
+        st["executor_sessions"].append(
+            dict(attempt=attempt, session_id=exe.session_id,
+                 exit_code=exe.exit_code, timed_out=exe.timed_out,
+                 resumed_from=resume))
+        try:
+            validate_session(exe, role="executor", artifact=rep,
+                             artifact_pre_exists=rep_pre,
+                             context=f"{stage_name} round-{attempt:02d} "
+                                     f"executor")
+        except RunnerError as e:
+            cur = head_sha(cfg["worktree"])
+            dirty = worktree_dirty(cfg["worktree"])
+            if cur != base or dirty:
+                # B12 orphan: the failed session left unreviewed source
+                # changes — terminal, never silently reused as a base
+                st["orphan_dirty"] = dirty
+                return _orphan_stop(
+                    state, cfg, cfg_stage, st, stage_name, attempt,
+                    kind="failed-session-source-change", base=base,
+                    head=cur,
+                    event="orphan-after-failed-executor-session",
+                    save=save, publisher=publisher)
+            st["base_guard"] = base
+            st["error_phase"] = "executor_pending"
+            st["error_stage_phase"] = phase_at_entry
+            st["status"] = "ERROR"
+            record(state, "executor-session-invalid", stage=stage_name,
+                   attempt=attempt, error=str(e))
+            save(state)
+            publisher(state, cfg, cfg_stage, attempt)
+            return "ERROR"
+        csha = head_sha(cfg["worktree"])
+        validation_only = (csha == base)
+        if validation_only and cfg_stage.get("validation_only") is False:
+            st["error_phase"] = "executor_pending"
+            st["error_stage_phase"] = phase_at_entry
+            st["status"] = "ERROR"
+            record(state, "no-candidate-where-commit-required",
+                   stage=stage_name, attempt=attempt)
+            save(state)
+            publisher(state, cfg, cfg_stage, attempt)
+            return "ERROR"
+        if worktree_dirty(cfg["worktree"]):
+            st["error_phase"] = "executor_pending"
+            st["error_stage_phase"] = phase_at_entry
+            st["status"] = "ERROR"
+            record(state, "dirty-worktree-before-review", stage=stage_name,
+                   attempt=attempt, dirty=worktree_dirty(cfg["worktree"]))
+            save(state)
+            publisher(state, cfg, cfg_stage, attempt)
+            return "ERROR"
+        st["status"] = "CANDIDATE_READY"            # B13: review pending
+        st["candidates"].append(
+            dict(attempt=attempt, sha=csha, base=base,
+                 validation_only=validation_only))
+        state.setdefault("_run_dirs", {}).setdefault(stage_name, {})[
+            str(attempt)] = str(d)
+        record(state, "candidate-ready", stage=stage_name, attempt=attempt,
+               sha=csha, validation_only=validation_only)
+        save(state)
+
+    # ------------------------------------------- reviewer part (B13)
+    cand = st["candidates"][-1]
+    if cand["attempt"] != attempt:
+        raise RunnerError(f"internal: last candidate is from attempt "
+                          f"{cand['attempt']}, round is {attempt}")
+    csha = cand["sha"]
+    validation_only = cand["validation_only"]
     rep = d / "execution_report.md"
-    eprompt = executor_prompt(state, cfg, cfg_stage, attempt, base_sha=base,
-                              report=rep, prev_review=prev_review)
-    rep_pre = rep.exists()
-    exe = launcher(cfg["worktree"], eprompt, resume=resume,
-                   timeout_s=cfg["timeout_s"], log_path=log)
-    st["executor_sessions"].append(
-        dict(attempt=attempt, session_id=exe.session_id,
-             exit_code=exe.exit_code, timed_out=exe.timed_out,
-             resumed_from=resume))
-    try:
-        validate_session(exe, role="executor", artifact=rep,
-                         artifact_pre_exists=rep_pre,
-                         context=f"{stage_name} round-{attempt:02d} "
-                                 f"executor")
-    except RunnerError as e:
-        st["error_phase"] = phase_at_entry
-        st["status"] = "ERROR"
-        record(state, "executor-session-invalid", stage=stage_name,
-               attempt=attempt, error=str(e))
-        save(state)
-        return "ERROR"
-    csha = head_sha(cfg["worktree"])
-    validation_only = (csha == base)
-    if validation_only and cfg_stage.get("validation_only") is False:
-        st["error_phase"] = phase_at_entry
-        st["status"] = "ERROR"
-        record(state, "no-candidate-where-commit-required",
-               stage=stage_name, attempt=attempt)
-        save(state)
-        return "ERROR"
-    if worktree_dirty(cfg["worktree"]):
-        st["error_phase"] = phase_at_entry
-        st["status"] = "ERROR"
-        record(state, "dirty-worktree-before-review", stage=stage_name,
-               attempt=attempt,
-               dirty=worktree_dirty(cfg["worktree"]))
-        save(state)
-        return "ERROR"
-    st["status"] = "CANDIDATE_READY"
-    st["candidates"].append(
-        dict(attempt=attempt, sha=csha, base=base,
-             validation_only=validation_only))
-    state.setdefault("_run_dirs", {}).setdefault(stage_name, {})[
-        str(attempt)] = str(d)
-    record(state, "candidate-ready", stage=stage_name, attempt=attempt,
-           sha=csha, validation_only=validation_only)
-    save(state)
-
+    cur = head_sha(cfg["worktree"])
+    if cur != csha or worktree_dirty(cfg["worktree"]) or not rep.exists():
+        return _orphan_stop(
+            state, cfg, cfg_stage, st, stage_name, attempt,
+            kind="candidate-not-intact", base=cand["base"], head=cur,
+            event="candidate-not-intact-before-review",
+            save=save, publisher=publisher)
     rev = d / "review.md"
+    rev.unlink(missing_ok=True)     # stale/partial reviews are never parsed
+    _verify_contract(st, f"{stage_name} round-{attempt:02d} reviewer")
     rprompt = reviewer_prompt(state, cfg, cfg_stage, attempt,
                               candidate_sha=csha,
                               validation_only=validation_only, report=rep,
                               review_out=rev,
                               evidence_dir=d / "reviewer_evidence")
-    rev_pre = rev.exists()
     rev_s = launcher(cfg["worktree"], rprompt, resume=None,   # ALWAYS fresh
                      timeout_s=cfg["timeout_s"], log_path=log)
     st["reviewer_sessions"].append(
@@ -698,18 +919,39 @@ def run_round(state: dict, cfg: dict, stage_name: str, *,
              resumed_from=None))
     try:
         validate_session(rev_s, role="reviewer", artifact=rev,
-                         artifact_pre_exists=rev_pre,
+                         artifact_pre_exists=False,
                          context=f"{stage_name} round-{attempt:02d} "
                                  f"reviewer")
+    except RunnerError as e:
+        # B13: candidate provenance intact -> retry a FRESH reviewer on
+        # the SAME frozen candidate next `run`; product no longer
+        # intact -> terminal orphan
+        cur = head_sha(cfg["worktree"])
+        if cur == csha and not worktree_dirty(cfg["worktree"]):
+            st["error_phase"] = "review_pending"
+            st["error_stage_phase"] = "CANDIDATE_READY"
+            st["status"] = "ERROR"
+            record(state, "review-session-invalid", stage=stage_name,
+                   attempt=attempt, error=str(e))
+            save(state)
+            publisher(state, cfg, cfg_stage, attempt)
+            return "ERROR"
+        return _orphan_stop(
+            state, cfg, cfg_stage, st, stage_name, attempt,
+            kind="reviewer-invalid-and-tree-moved", base=csha, head=cur,
+            event="orphan-reviewer-invalid-tree-moved",
+            save=save, publisher=publisher)
+    try:
         product_at(cfg["worktree"], csha,
                    f"{stage_name} round-{attempt:02d} review")
     except RunnerError as e:
-        st["error_phase"] = phase_at_entry
-        st["status"] = "ERROR"
-        record(state, "review-session-invalid", stage=stage_name,
-               attempt=attempt, error=str(e))
-        save(state)
-        return "ERROR"
+        # H2: a persistent reviewer modification of the product tree
+        return _orphan_stop(
+            state, cfg, cfg_stage, st, stage_name, attempt,
+            kind="reviewer-modified-product", base=csha,
+            head=head_sha(cfg["worktree"]),
+            event="reviewer-modified-product", save=save,
+            publisher=publisher)
     decision, _ = parse_review(rev, stage_name, attempt, csha)
     st["decisions"].append(dict(attempt=attempt, decision=decision,
                                 sha=csha,
@@ -717,6 +959,8 @@ def run_round(state: dict, cfg: dict, stage_name: str, *,
     record(state, "review-decision", stage=stage_name, attempt=attempt,
            decision=decision)
 
+    for k in ("error_phase", "error_stage_phase", "base_guard"):
+        st.pop(k, None)
     outcome = decision
     if decision == "PASS":
         st["status"] = "PASS"
@@ -755,7 +999,11 @@ def run_episode(state: dict, cfg: dict, *, launcher=launch_session,
                 save=None) -> str:
     """B7: autonomous loop — starts READY stages, drives rounds, bounded
     rework, auto-promotion; stops on HUMAN_REQUIRED / ERROR /
-    CHECKPOINT_READY.  Crash-resumable through persisted state."""
+    CHECKPOINT_READY.  H5: a persisted ERROR stage is TERMINAL for the
+    loop (deterministic stop, never a busy loop; explicit same-attempt
+    retry = the `run` command).  Crash-resumable via persisted state
+    (a persisted CANDIDATE_READY round resumes with the reviewer
+    only)."""
     save = save or (lambda s: save_state_at(cfg["state_path"], s))
     if state["episode_status"] in ("HUMAN_REQUIRED", "CHECKPOINT_READY"):
         return state["episode_status"]
@@ -771,14 +1019,27 @@ def run_episode(state: dict, cfg: dict, *, launcher=launch_session,
         if st["status"] == "READY":
             start_stage(state, cfg, stage)
             save(state)
-        elif st["status"] in ("EXECUTING", "REWORK"):
+        elif st["status"] in ("EXECUTING", "REWORK", "CANDIDATE_READY"):
             outcome = run_round(state, cfg, stage, launcher=launcher,
                                 publisher=publisher, save=save)
             if outcome == "ERROR":
                 record(state, "episode-stopped-error", stage=stage)
                 save(state)
                 return "ERROR"
+            if state["episode_status"] in ("HUMAN_REQUIRED",
+                                           "CHECKPOINT_READY"):
+                return state["episode_status"]
             continue
+        elif st["status"] == "ERROR":
+            # H5: no automatic transition exists from ERROR — terminate
+            # deterministically instead of spinning.  Recover by
+            # inspecting state and retrying the same attempt with `run`.
+            record(state, "episode-stopped-error-persisted", stage=stage)
+            save(state)
+            return "ERROR"
+        else:
+            raise RunnerError(f"stage {stage} status {st['status']} has "
+                              f"no loop transition")
         if state["episode_status"] in ("HUMAN_REQUIRED",
                                        "CHECKPOINT_READY"):
             return state["episode_status"]
@@ -814,7 +1075,9 @@ def cmd_run_smoke(args) -> None:
     state = fresh_state(cfg, episode_id=f"{EPISODE_ID}-SMOKE")
     state["episode_status"] = "RUNNING"      # smoke needs no A0 gate
     _record_runner_commit(state, cfg)
-    wt = make_worktree(cfg)
+    # H4: a fresh smoke starts from the declared base — an existing
+    # worktree at any other commit is refused
+    wt = make_worktree(cfg, expected_head=cfg["base"])
     save_state_at(SMOKE_STATE_PATH, state)
     outcome = run_episode(state, cfg)
     if outcome != "CHECKPOINT_READY":
@@ -830,25 +1093,33 @@ def cmd_run_smoke(args) -> None:
     record(main, "smoke-complete", runner_commit=state["runner_commit"])
     save_state_at(STATE_PATH, main)
     print("SMOKE episode CHECKPOINT_READY — main state A0_REVIEW; "
-          "evidence published under", EVIDENCE_ROOT / "A0_SMOKE_R1")
+          "evidence published under", EVIDENCE_ROOT / cfg["evidence_subdir"])
 
 
 def approve_a0_from_text(state: dict, text: str,
                          review_path: str) -> None:
-    """B4 core: flip A0_REVIEW -> A0_APPROVED only from a PASS external
-    review bound to the runner commit that produced the smoke."""
+    """B4/B11: flip A0_REVIEW -> A0_APPROVED only from a PASS external
+    review carrying a FULL 40-hex candidate binding exactly equal to
+    the runner commit that produced the smoke."""
     if state["episode_status"] != "A0_REVIEW":
         raise RunnerError(f"episode_status {state['episode_status']}: "
                           f"A0 approval applies to A0_REVIEW only")
     runner_commit = state.get("smoke", {}).get("runner_commit")
+    if not runner_commit:
+        raise RunnerError("state has no smoke runner_commit to bind the "
+                          "A0 approval to")
     text = text.replace("\r", "")
-    m = re.search(r"^candidate:?\s*(\S+)", text, re.M) or re.search(
-        r"reviewed candidate:?\s*\*?\*?`?([0-9a-f]{40})", text, re.I | re.M)
+    m = re.search(r"^candidate:?\s*([0-9a-f]{40})\b", text, re.M) or \
+        re.search(r"reviewed candidate:?\s*\*?\*?`?([0-9a-f]{40})",
+                  text, re.I | re.M)
     dm = re.search(r"^Decision:?\s*(\S+)", text, re.M)
     if not dm or dm.group(1).strip().upper().rstrip(".") != "PASS":
         raise RunnerError("referenced review is not a PASS decision")
-    cand = m.group(1) if m else None
-    if runner_commit and cand and cand != runner_commit:
+    if m is None:
+        raise RunnerError("referenced review carries no 40-hex candidate "
+                          "binding (required for A0 approval)")
+    cand = m.group(1)
+    if cand != runner_commit:
         raise RunnerError(f"review binds to candidate {cand[:12]} but the "
                           f"smoke ran runner commit "
                           f"{runner_commit[:12]}")
@@ -881,7 +1152,8 @@ def cmd_init_product(args) -> None:
     main = load_state(STATE_PATH)
     _require_real_ready(main)
     cfg = real_config()
-    wt = make_worktree(cfg)
+    # H4: derive the expected HEAD from persisted state
+    wt = make_worktree(cfg, expected_head=_expected_product_head(main, cfg))
     main["worktree"] = wt.as_posix()
     record(main, "product-initialized", branch=cfg["branch"])
     save_state_at(STATE_PATH, main)
@@ -924,8 +1196,10 @@ def cmd_status(args) -> None:
     out = dict(episode_status=main["episode_status"],
                current_stage=main["current_stage"],
                smoke=main.get("smoke", {}).get("status", "n/a"),
-               stages={k: dict(status=v["status"], attempts=v["attempts"])
-                       for k, v in main["stages"].items()})
+               stages={k: dict(
+                   status=v["status"], attempts=v["attempts"],
+                   **({"orphan": v["orphan"]} if v.get("orphan") else {}))
+                   for k, v in main["stages"].items()})
     if SMOKE_STATE_PATH.exists():
         sm = load_state(SMOKE_STATE_PATH)
         out["smoke_episode"] = dict(
