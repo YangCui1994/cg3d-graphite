@@ -1,0 +1,3 @@
+7ab0094 smoke(SMOKE-1): add required acceptance token to marker (round 2)
+ smoke/marker.md | 4 ++++
+ 1 file changed, 4 insertions(+)

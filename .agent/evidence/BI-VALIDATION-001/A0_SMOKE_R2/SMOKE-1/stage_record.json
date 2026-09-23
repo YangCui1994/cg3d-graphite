@@ -1,21 +1,27 @@
 {
  "stage": "SMOKE-1",
- "attempt": 1,
+ "attempt": 2,
  "contract_sha256": "a87eba7f30c65460414f5f194f413bbe247706c405ef5b2a7a35761c3879adb6",
  "contract_snapshot": "D:/2026_agent_work/01_GLM_LBM3D_porous_media/cg3d-graphite/.agent_runtime/episodes/BI-VALIDATION-001/smoke/SMOKE-1/contract_snapshot.md",
  "contract_drift": null,
  "branch": "agent-episode/BI-VALIDATION-001-smoke-r2",
  "product_push": {
   "branch": "agent-episode/BI-VALIDATION-001-smoke-r2",
-  "remote_ref": "c0c903cb5fbd8a8b1f5d72fb7851b391aca6700d",
-  "pushed_sha": "c0c903cb5fbd8a8b1f5d72fb7851b391aca6700d",
-  "verified_at": "2026-09-23T10:52:24Z"
+  "remote_ref": "7ab0094b9a5b4d5266a74fecb0a189b64f980621",
+  "pushed_sha": "7ab0094b9a5b4d5266a74fecb0a189b64f980621",
+  "verified_at": "2026-09-23T10:55:40Z"
  },
  "candidates": [
   {
    "attempt": 1,
    "sha": "c0c903cb5fbd8a8b1f5d72fb7851b391aca6700d",
    "base": "9ede55c8ef7589b61606e11c033c84d9bcd1de94",
+   "validation_only": false
+  },
+  {
+   "attempt": 2,
+   "sha": "7ab0094b9a5b4d5266a74fecb0a189b64f980621",
+   "base": "c0c903cb5fbd8a8b1f5d72fb7851b391aca6700d",
    "validation_only": false
   }
  ],
@@ -24,6 +30,12 @@
    "attempt": 1,
    "decision": "CHANGES_REQUESTED",
    "sha": "c0c903cb5fbd8a8b1f5d72fb7851b391aca6700d",
+   "validation_only": false
+  },
+  {
+   "attempt": 2,
+   "decision": "PASS",
+   "sha": "7ab0094b9a5b4d5266a74fecb0a189b64f980621",
    "validation_only": false
   }
  ],
@@ -34,6 +46,13 @@
    "exit_code": 0,
    "timed_out": false,
    "resumed_from": null
+  },
+  {
+   "attempt": 2,
+   "session_id": "sess_00db1a26-6e13-4b44-9ae3-7449f7fe85d3",
+   "exit_code": 0,
+   "timed_out": false,
+   "resumed_from": "sess_00db1a26-6e13-4b44-9ae3-7449f7fe85d3"
   }
  ],
  "reviewer_sessions": [
@@ -43,9 +62,16 @@
    "exit_code": 0,
    "timed_out": false,
    "resumed_from": null
+  },
+  {
+   "attempt": 2,
+   "session_id": "sess_2fb32a94-3c10-4d7c-aa46-06943c3491b9",
+   "exit_code": 0,
+   "timed_out": false,
+   "resumed_from": null
   }
  ],
  "runner_commit": "f6a9fe079dfa9e1ca55de9c61561227f844fba71",
  "episode_status": "RUNNING",
- "published_at": "2026-09-23T10:52:24Z"
+ "published_at": "2026-09-23T10:55:40Z"
 }
