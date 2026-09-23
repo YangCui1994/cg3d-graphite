@@ -1,0 +1,41 @@
+{
+  "schema_version": "v1",
+  "task_id": "CG3D-CONVERGENCE-DIAG-003",
+  "round": 1,
+  "candidate_commit": "3e49087e195ac98b41000bc647b115c685daa71b",
+  "zcode_session_id": "sess_f4a954a0-0375-4bf1-b95d-674e0fb4a75e",
+  "captured_at": "2026-09-23T00:03:53Z",
+  "worker": "windows-zcode-01",
+  "files": [
+    {
+      "path": "termination_diagnostics.log",
+      "size_bytes": 4411,
+      "sha256": "8458b94176b8d753c7f3594192a46dc9b556c4b32fd46f7dcf1ed813824c264f"
+    },
+    {
+      "path": "postprocessing.log",
+      "size_bytes": 914,
+      "sha256": "952e5d4dfd2b3d937fbcee6c410b5541c060f257ef8bf12474d6ea35371d78e6"
+    },
+    {
+      "path": "periodic_connectivity.log",
+      "size_bytes": 2257,
+      "sha256": "ac726619178fddd3f478599dfe5816814bfaf27431d06aa7b33e7f1bd41937e9"
+    },
+    {
+      "path": "termination_examples.json",
+      "size_bytes": 4779,
+      "sha256": "c92d60f0f78c52250b1e77f44e01c44b6393b0be3e6478f5603eb85cad68562e"
+    },
+    {
+      "path": "stopping_equivalence.log",
+      "size_bytes": 4483,
+      "sha256": "6f9b6239e90a067984b790dce47f42534bab481ea24634e814fdef9996edf29e"
+    },
+    {
+      "path": "stopping_equivalence_script.txt",
+      "size_bytes": 5381,
+      "sha256": "96c0a72cfdcb33863fdae4df2ca4f0bfedffc2bf5918179b70b4868a856fb442"
+    }
+  ]
+}

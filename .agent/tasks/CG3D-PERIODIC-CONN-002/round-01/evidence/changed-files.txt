@@ -1,0 +1,3 @@
+M	cg3d/diagnostics.py
+A	tests/test_periodic_connectivity.py
+M	tests/test_postprocessing.py

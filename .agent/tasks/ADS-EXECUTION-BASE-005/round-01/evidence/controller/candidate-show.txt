@@ -1,0 +1,6 @@
+bdf0ad5 agent(ADS-EXECUTION-BASE-005): require declared execution base for round 1
+ .agent/README.md                           |  42 +++-
+ .agent/controller/controller.py            | 137 ++++++++---
+ .agent/controller/tests/test_controller.py | 349 ++++++++++++++++++++++++-----
+ .agent/templates/TASK.md                   |  10 +
+ 4 files changed, 447 insertions(+), 91 deletions(-)

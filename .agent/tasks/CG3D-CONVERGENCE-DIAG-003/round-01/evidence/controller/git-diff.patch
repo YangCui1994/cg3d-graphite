@@ -1,0 +1,557 @@
+diff --git a/cg3d/diagnostics.py b/cg3d/diagnostics.py
+index 52a34fa..06b7703 100644
+--- a/cg3d/diagnostics.py
++++ b/cg3d/diagnostics.py
+@@ -1,10 +1,22 @@
+ """cg3d.diagnostics — host-side measurement / post-processing (PR-1/PR-3
+ instruments, moved here from run_common.py in PR-5; run_common re-exports
+ for compatibility).
++
++CG3D-CONVERGENCE-DIAG-003 adds a reporting layer on top of the rung exit:
++`termination_record` (why the rung stopped, as three independent flags) and
++`NumericalHealthTracker` (observed finite/non-finite sampled diagnostics).
++Both are observational — they decide nothing, add no stop condition and no
++new threshold, and leave every existing convergence calculation untouched.
+ """
++import math
++
+ import numpy as np
+ from scipy import ndimage
+ 
++QUASI_STEADY = 'quasi-steady'
++MAX_STEPS = 'max-steps'
++UMAX_CAP = 'umax-cap'
++
+ _CONN_STRUCT = {6: ndimage.generate_binary_structure(3, 1),
+                 18: ndimage.generate_binary_structure(3, 2),
+                 26: ndimage.generate_binary_structure(3, 3)}
+@@ -138,6 +150,105 @@ def eval_convergence(win, pore_cells, qs_tol, pc_drift_tol=0.01,
+     return out
+ 
+ 
++def termination_record(reason, qs_mode):
++    """Additive termination record for a normal `run_hold` return
++    (CG3D-CONVERGENCE-DIAG-003).  Splits the single legacy `reason`
++    string into the three independent statements it conflates, without
++    touching any stopping rule: `converged` is true only for the
++    configured quasi-steady exit, `step_limit_reached` only for the
++    step-budget exit, `safety_limit_triggered` only for the umax-cap
++    exit.  All three flags are read off `reason`; nothing is recomputed
++    and no decision is taken here.
++
++    `process_completed` is always True by construction: this record is
++    built only where `run_hold` returned normally.  Abnormal process
++    exits (exception, interrupt, external stop) never reach it and are
++    deliberately outside the record.  `reason` is echoed verbatim, so an
++    unrecognised future reason reports three False flags instead of
++    raising inside a running simulation.
++
++    \"converged\" here means only that the configured numerical stopping
++    criteria were satisfied; it is not a claim of physical equilibrium.
++    """
++    return dict(process_completed=True,
++                reason=str(reason),
++                converged=reason == QUASI_STEADY,
++                step_limit_reached=reason == MAX_STEPS,
++                safety_limit_triggered=reason == UMAX_CAP,
++                qs_mode=str(qs_mode))
++
++
++def _finite_or_none(value):
++    """float(value) for a real scalar, else None (value unavailable).
++
++    None, strings and anything that is not castable to a single real
++    number (e.g. a multi-element array) count as unavailable and are
++    ignored rather than reported as non-finite.
++    """
++    if value is None or isinstance(value, str):
++        return None
++    try:
++        return float(value)
++    except (TypeError, ValueError):
++        return None
++
++
++class NumericalHealthTracker:
++    """Observed finite/non-finite state of the sampled diagnostics
++    (CG3D-CONVERGENCE-DIAG-003).  Purely observational: it holds no
++    threshold, adds no stop condition, and cannot alter the trajectory —
++    a large but finite umax is finite here, and its umax-cap exit is a
++    safety limit, not a numerical failure.
++
++    `observe(step, sample)` takes one `OpenSystem.measure()` dict and
++    records every scalar field observed as NaN/Inf.  `record()` returns a
++    JSON-ready dict: `finite` is true only when no observed scalar was
++    non-finite (vacuously true when nothing was sampled, with
++    `sample_count = 0` recording that fact), `nonfinite_fields` lists the
++    offending field names sorted, `first_nonfinite_step` is the first
++    sampled step carrying any of them, and `first_nonfinite_fields` says
++    which fields were already bad at that step.
++    """
++
++    def __init__(self):
++        self.sample_count = 0
++        self.fields_observed = set()
++        self.nonfinite_counts = {}
++        self.first_nonfinite_step = None
++        self.first_nonfinite_fields = []
++
++    def observe(self, step, sample):
++        """One sampling point.  Never raises on odd values: a field that
++        is not a real scalar is skipped, not failed."""
++        self.sample_count += 1
++        if not isinstance(sample, dict):
++            return
++        first_here = []
++        for name, value in sample.items():
++            v = _finite_or_none(value)
++            if v is None:
++                continue
++            key = str(name)
++            self.fields_observed.add(key)
++            if math.isfinite(v):
++                continue
++            self.nonfinite_counts[key] = self.nonfinite_counts.get(key, 0) + 1
++            first_here.append(key)
++        if first_here and self.first_nonfinite_step is None:
++            self.first_nonfinite_step = int(step)
++            self.first_nonfinite_fields = first_here
++
++    def record(self):
++        return dict(finite=not self.nonfinite_counts,
++                    nonfinite_fields=sorted(self.nonfinite_counts),
++                    first_nonfinite_step=self.first_nonfinite_step,
++                    sample_count=int(self.sample_count),
++                    nonfinite_counts={k: self.nonfinite_counts[k]
++                                      for k in sorted(self.nonfinite_counts)},
++                    first_nonfinite_fields=list(self.first_nonfinite_fields),
++                    fields_observed=sorted(self.fields_observed))
++
++
+ def region_stats(rho, psi, v, mask):
+     """PR-1 instrument (Plan_20260919_v2, tasks 2.1-2.3): host-side
+     regional diagnostics from snapshot arrays.
+diff --git a/cg3d/protocol.py b/cg3d/protocol.py
+index 60f3c24..8d2ae52 100644
+--- a/cg3d/protocol.py
++++ b/cg3d/protocol.py
+@@ -13,7 +13,8 @@ import time
+ 
+ import numpy as np
+ 
+-from .diagnostics import region_stats, eval_convergence
++from .diagnostics import (region_stats, eval_convergence,
++                          termination_record, NumericalHealthTracker)
+ 
+ 
+ class OpenSystem:
+@@ -127,12 +128,22 @@ def run_hold(ns, sys_, d, label, phase=None, dump_frame=None,
+     dump_frame/live_ckpt so frames keep unique global names in a
+     resumed output dir; `live_ckpt(it_global)` is called at sampling
+     points whenever `ckpt_every` (multiple of ns.every) divides the
+-    global step.  Returns the ladder row dict."""
++    global step.  Returns the ladder row dict.
++
++    The row carries two additive reporting records alongside the legacy
++    fields (CG3D-CONVERGENCE-DIAG-003): `termination` states process
++    completion, the reason, and the converged / step-limit / safety-limit
++    flags separately, and `numerical_health` reports which sampled
++    diagnostics were ever non-finite.  Both are observational — the
++    stopping rules, thresholds, window rules and loop order are
++    unchanged, and `row["reason"]` / `row["convergence"]` keep their
++    existing meaning."""
+     s = sys_.s
+     sys_.set_ladder(d)
+     t0 = time.time()
+     hist = []      # (it, s_nw): quasi-steady slope
+     samples = []   # (it, full diagnostic dict): rung-tail means
++    health = NumericalHealthTracker()   # observe-only, decides nothing
+     it = it_start
+     reason = 'max-steps'
+     while it < ns.max_steps:
+@@ -145,6 +156,7 @@ def run_hold(ns, sys_, d, label, phase=None, dump_frame=None,
+                     and (it + it_offset) % ckpt_every == 0):
+                 live_ckpt(it + it_offset)
+             m = sys_.measure()
++            health.observe(it, m)
+             hist.append((it, m['s_nw']))
+             samples.append((it, m))
+             w = [(i, sv) for i, sv in hist
+@@ -199,6 +211,8 @@ def run_hold(ns, sys_, d, label, phase=None, dump_frame=None,
+                s_nw=float(np.mean(tail)) if tail else None,
+                s_nw_binary=tmean('s_nw_binary'),
+                convergence=conv,
++               termination=termination_record(reason, ns.qs_mode),
++               numerical_health=health.record(),
+                umax_last=m_last.get('umax'),
+                wall_s=round(time.time() - t0, 1))
+     if phase is not None:
+diff --git a/tests/test_termination_diagnostics.py b/tests/test_termination_diagnostics.py
+new file mode 100644
+index 0000000..575ffaa
+--- /dev/null
++++ b/tests/test_termination_diagnostics.py
+@@ -0,0 +1,363 @@
++"""Termination / numerical-health reporting tests (CG3D-CONVERGENCE-DIAG-003).
++
++Deterministic pure-Python tests for the additive reporting layer around
++`cg3d.protocol.run_hold`:
++
++  row["termination"]       why the rung stopped — process completion, the
++                           legacy reason, and the converged / step-limit /
++                           safety-limit statements as separate flags;
++  row["numerical_health"]  which sampled diagnostics were ever NaN/Inf.
++
++The fake system below implements only the members `run_hold` touches
++(s.step / set_ladder / measure / pore_cells), so the rung loop runs for
++real with no LBM step, no Taichi kernel and no GPU.  What is under test is
++the REPORTING, not the convergence policy: the quasi-steady threshold,
++window, minimum-step, qs_mode and umax-cap rules are the accepted ones and
++are exercised here, never re-derived.
++
++`scenario_specs()` keeps the four cases as data so that the same scenarios
++can be replayed against a pre-change copy of run_hold to show the stopping
++behaviour is untouched (see the published evidence bundle).
++
++Run:  python tests/test_termination_diagnostics.py   (exit 0 = pass)
++"""
++import json
++import os
++import sys
++from types import SimpleNamespace
++
++import numpy as np
++
++sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
++from cg3d.diagnostics import (  # noqa: E402
++    QUASI_STEADY, MAX_STEPS, UMAX_CAP, NumericalHealthTracker,
++    termination_record)
++from cg3d.protocol import run_hold  # noqa: E402
++
++FAIL = []
++
++# The row `run_hold` returned before this task; the new records must be
++# additive on top of exactly this set.
++LEGACY_ROW_KEYS = {'d', 'pc_nominal', 'pc_measured', 'rho_in_mean',
++                   'rho_out_mean', 'p_in_mean', 'p_out_mean', 'u_rms',
++                   'u_bulk_x', 'flux_r_rate', 'flux_b_rate', 'steps',
++                   'reason', 's_nw', 's_nw_binary', 'convergence',
++                   'umax_last', 'wall_s'}
++ADDED_ROW_KEYS = {'termination', 'numerical_health'}
++
++RUNG_D = 0.06
++
++
++def check(name, cond):
++    print(('PASS ' if cond else 'FAIL ') + name)
++    if not cond:
++        FAIL.append(name)
++
++
++def _json_ok(obj, **kw):
++    try:
++        json.dumps(obj, **kw)
++        return True
++    except (TypeError, ValueError):
++        return False
++
++
++# --------------------------------------------------------------------------
++# fake system
++
++
++def sample_flat(_step, _n):
++    """All-finite, all-flat diagnostics — the shape OpenSystem.measure()
++    returns, carrying every field run_hold / eval_convergence read."""
++    return dict(s_nw=0.42, s_nw_binary=0.40, umax=1e-3,
++                rho_in_mean=1.0, rho_out_mean=1.0,
++                p_in_mean=1 / 3.0, p_out_mean=1 / 3.0,
++                pc_band_in=0.35, pc_band_out=0.32, pc_measured=0.03,
++                u_rms=1e-3, u_bulk_x=0.0,
++                inj_r=0.0, inj_b=0.0, inj_m=0.0)
++
++
++def sample_drift(step, _n):
++    """s_nw drifts 1e-2/step, far above qs_tol=1e-3: the saturation slope
++    never qualifies, so the rung must burn the whole step budget."""
++    return dict(sample_flat(step, _n), s_nw=0.30 + 0.01 * step)
++
++
++def sample_umax_spike(step, _n):
++    """Every metric stays finite and flat; only umax crosses the safety cap
++    (at step 3, i.e. before a 9-sample quasi-steady window can exist)."""
++    return dict(sample_flat(step, _n), umax=0.5 if step >= 3 else 1e-3)
++
++
++def sample_nonfinite(step, _n):
++    """pc_measured (a pressure indicator, not the sat-mode criterion) goes
++    NaN from step 2, u_bulk_x goes +Inf from step 4, saturation stays flat:
++    the sat-mode rung still exits quasi-steady."""
++    m = sample_flat(step, _n)
++    if step >= 2:
++        m['pc_measured'] = float('nan')
++    if step >= 4:
++        m['u_bulk_x'] = float('inf')
++    return m
++
++
++class FakeSolver:
++    """run_hold only ever calls step() on the solver."""
++
++    def __init__(self):
++        self.n = 0
++
++    def step(self):
++        self.n += 1
++
++
++class FakeSystem:
++    """Minimal OpenSystem stand-in: the four members run_hold uses.
++    `sample_fn(step, sample_index) -> dict` scripts the measurements."""
++
++    def __init__(self, sample_fn):
++        self.s = FakeSolver()
++        self.pore_cells = 1000.0
++        self._sample_fn = sample_fn
++        self.n_samples = 0
++        self.ladders = []
++
++    def set_ladder(self, d):
++        self.ladders.append(d)
++
++    def measure(self):
++        self.n_samples += 1
++        return self._sample_fn(self.s.n, self.n_samples)
++
++
++def ns(**over):
++    """Config namespace with run_hold's fields.  These values make a flat
++    fake reach the quasi-steady test at step 9 (every=1, qs_window=10,
++    min_steps=5, window span 8 >= 10*0.8)."""
++    cfg = dict(every=1, min_steps=5, max_steps=30, qs_window=10, qs_tol=1e-3,
++               qs_mode='sat', pc_drift_tol=0.01, flux_tol=1e-6,
++               u_rel_tol=0.05, umax_cap=0.1, dump_every=0)
++    cfg.update(over)
++    return SimpleNamespace(**cfg)
++
++
++def scenario_specs():
++    """The four required semantic cases as data: name -> (config, sample_fn,
++    description)."""
++    return {
++        'quasi_steady': (
++            ns(), sample_flat,
++            'saturation slope within qs_tol, sat mode: configured criterion '
++            'reached at step 9; all sampled diagnostics finite'),
++        'max_steps': (
++            ns(max_steps=25), sample_drift,
++            's_nw drifts 1e-2/step (> qs_tol=1e-3): criterion not reached '
++            'inside max_steps=25; all sampled diagnostics finite'),
++        'umax_cap': (
++            ns(), sample_umax_spike,
++            'umax=0.5 crosses umax_cap=0.1 at step 3 while every metric stays '
++            'finite: safety-limit exit, not a numerical-health failure'),
++        'nonfinite_observation': (
++            ns(), sample_nonfinite,
++            'pc_measured=NaN from step 2 and u_bulk_x=Inf from step 4; the '
++            'sat-mode criterion (saturation only) is still satisfied, so the '
++            'rung exits quasi-steady while numerical health is not finite'),
++    }
++
++
++def run_scenario(name, qs_mode=None, runner=None):
++    """Run one scenario through `run_hold` (or `runner`, e.g. a pre-change
++    copy of run_hold, for the A/B stopping comparison)."""
++    cfg, fn, _desc = scenario_specs()[name]
++    if qs_mode is not None:
++        cfg = ns(**dict(vars(cfg), qs_mode=qs_mode))
++    return (runner or run_hold)(cfg, FakeSystem(fn), RUNG_D, name)
++
++
++def example_records():
++    """The four scenarios in the shape published as evidence.  Only finite
++    values are kept, so the result is strict JSON."""
++    out = {}
++    for name, (_cfg, _fn, desc) in scenario_specs().items():
++        row = run_scenario(name)
++        out[name] = dict(description=desc, steps=row['steps'],
++                         reason=row['reason'],
++                         convergence_exit=row['convergence']['exit'],
++                         termination=row['termination'],
++                         numerical_health=row['numerical_health'])
++    return out
++
++
++# --------------------------------------------------------------------------
++# required semantic cases
++
++
++def test_quasi_steady_exit():
++    for mode in ('sat', 'multi'):
++        row = run_scenario('quasi_steady', qs_mode=mode)
++        term = row['termination']
++        check(f'[{mode}] rung exits quasi-steady at step 9',
++              row['reason'] == QUASI_STEADY and row['steps'] == 9)
++        check(f'[{mode}] termination.converged is True',
++              term['converged'] is True)
++        check(f'[{mode}] no step limit and no safety limit reported',
++              term['step_limit_reached'] is False
++              and term['safety_limit_triggered'] is False)
++        check(f'[{mode}] process_completed is True and qs_mode is echoed',
++              term['process_completed'] is True and term['qs_mode'] == mode)
++        check(f'[{mode}] numerical health is finite over 9 samples',
++              row['numerical_health']['finite'] is True
++              and row['numerical_health']['sample_count'] == 9
++              and row['numerical_health']['nonfinite_fields'] == []
++              and row['numerical_health']['first_nonfinite_step'] is None)
++
++
++def test_max_steps_exit():
++    row = run_scenario('max_steps')
++    term = row['termination']
++    check('max-steps: rung ran the full budget of 25 steps',
++          row['reason'] == MAX_STEPS and row['steps'] == 25)
++    check('max-steps: converged is False', term['converged'] is False)
++    check('max-steps: step_limit_reached is True',
++          term['step_limit_reached'] is True)
++    check('max-steps: no safety limit reported',
++          term['safety_limit_triggered'] is False)
++    check('max-steps: process_completed is True',
++          term['process_completed'] is True)
++    check('max-steps: finite metrics are not a numerical failure',
++          row['numerical_health']['finite'] is True
++          and row['numerical_health']['nonfinite_fields'] == [])
++
++
++def test_umax_cap_exit():
++    row = run_scenario('umax_cap')
++    term = row['termination']
++    check('umax-cap: rung exits at step 3',
++          row['reason'] == UMAX_CAP and row['steps'] == 3)
++    check('umax-cap: converged is False', term['converged'] is False)
++    check('umax-cap: safety_limit_triggered is True',
++          term['safety_limit_triggered'] is True)
++    check('umax-cap: no step limit reported',
++          term['step_limit_reached'] is False)
++    check('umax-cap: finite umax=0.5 keeps numerical health finite',
++          row['numerical_health']['finite'] is True
++          and row['numerical_health']['nonfinite_fields'] == []
++          and row['numerical_health']['first_nonfinite_step'] is None)
++    check('umax-cap: last sampled umax is the finite excursion',
++          row['umax_last'] == 0.5)
++
++
++def test_nonfinite_observation():
++    row = run_scenario('nonfinite_observation')
++    health = row['numerical_health']
++    check('non-finite: both bad fields reported by name',
++          health['finite'] is False
++          and health['nonfinite_fields'] == ['pc_measured', 'u_bulk_x'])
++    check('non-finite: first bad step and its fields recorded',
++          health['first_nonfinite_step'] == 2
++          and health['first_nonfinite_fields'] == ['pc_measured'])
++    check('non-finite: per-field sample counts recorded',
++          health['nonfinite_counts'] == {'pc_measured': 8, 'u_bulk_x': 6}
++          and health['sample_count'] == 9)
++    check('non-finite: a non-finite sample does not change the exit rule',
++          row['steps'] == 9 and row['reason'] == QUASI_STEADY)
++
++
++def test_convergence_and_health_are_independent():
++    row = run_scenario('nonfinite_observation')
++    check('converged=True and finite=False coexist in one record',
++          row['termination']['converged'] is True
++          and row['numerical_health']['finite'] is False)
++    row = run_scenario('max_steps')
++    check('converged=False with finite=True is reported too',
++          row['termination']['converged'] is False
++          and row['numerical_health']['finite'] is True)
++
++
++def test_legacy_fields_stay_consistent():
++    for name in scenario_specs():
++        row = run_scenario(name)
++        term = row['termination']
++        check(f'[{name}] row reason == convergence exit == termination reason',
++              row['reason'] == term['reason']
++              and row['convergence']['exit']['reason'] == term['reason'])
++        check(f'[{name}] convergence exit mode == termination qs_mode',
++              row['convergence']['exit']['mode'] == term['qs_mode'] == 'sat')
++        flags = (term['converged'], term['step_limit_reached'],
++                 term['safety_limit_triggered'])
++        check(f'[{name}] at most one stopping statement is true',
++              sum(1 for f in flags if f) <= 1)
++        check(f'[{name}] row keys = legacy set + two additive records',
++              set(row) == LEGACY_ROW_KEYS | ADDED_ROW_KEYS)
++        check(f'[{name}] convergence record keeps its existing fields',
++              set(row['convergence']) >= {'criteria_passed', 'thresholds',
++                                          'exit'}
++              and 'reason' in row['convergence']['exit'])
++        # the non-finite row carries NaN/Inf metrics by construction (Python
++        # json writes them as NaN/Infinity); the others must be strict JSON
++        check(f'[{name}] row stays JSON-serializable',
++              _json_ok(row, allow_nan=name == 'nonfinite_observation'))
++        check(f'[{name}] both new records are strict JSON',
++              _json_ok(row['termination'])
++              and _json_ok(row['numerical_health']))
++
++
++def test_helper_units():
++    """The helpers themselves, including values that are not real scalars."""
++    unknown = termination_record('some-future-reason', 'multi')
++    check('termination_record: unknown reason reports no flag but the reason',
++          unknown['process_completed'] is True
++          and unknown['reason'] == 'some-future-reason'
++          and unknown['qs_mode'] == 'multi'
++          and unknown['converged'] is False
++          and unknown['step_limit_reached'] is False
++          and unknown['safety_limit_triggered'] is False)
++    check('termination_record: every required key is present',
++          set(unknown) == {'process_completed', 'reason', 'converged',
++                           'step_limit_reached', 'safety_limit_triggered',
++                           'qs_mode'})
++
++    tr = NumericalHealthTracker()
++    empty = tr.record()
++    check('tracker: no samples reports finite with sample_count 0',
++          empty['finite'] is True and empty['sample_count'] == 0
++          and empty['nonfinite_fields'] == []
++          and empty['first_nonfinite_step'] is None)
++
++    tr.observe(7, dict(ok=1.0, missing=None, text='n/a',
++                       vect=np.array([1.0, 2.0]), boxed=np.float32(np.inf),
++                       flag=True))
++    rec = tr.record()
++    check('tracker: unavailable values ignored, NaN/Inf caught',
++          rec['nonfinite_fields'] == ['boxed']
++          and rec['first_nonfinite_step'] == 7
++          and rec['first_nonfinite_fields'] == ['boxed']
++          and rec['sample_count'] == 1
++          and rec['fields_observed'] == ['boxed', 'flag', 'ok'])
++    tr.observe(9, dict(ok=float('-inf')))
++    rec = tr.record()
++    check('tracker: first bad step stays the first, counts accumulate',
++          rec['nonfinite_fields'] == ['boxed', 'ok']
++          and rec['first_nonfinite_step'] == 7
++          and rec['first_nonfinite_fields'] == ['boxed']
++          and rec['nonfinite_counts'] == {'boxed': 1, 'ok': 1}
++          and rec['sample_count'] == 2)
++    check('tracker: record is strict JSON', _json_ok(rec))
++
++
++def main():
++    test_helper_units()
++    test_quasi_steady_exit()
++    test_max_steps_exit()
++    test_umax_cap_exit()
++    test_nonfinite_observation()
++    test_convergence_and_health_are_independent()
++    test_legacy_fields_stay_consistent()
++    if FAIL:
++        print(f'FAIL: {FAIL}')
++        sys.exit(1)
++    print('ALL PASS')
++
++
++if __name__ == '__main__':
++    main()

@@ -1,0 +1,20 @@
+{
+  "repository_path": "../..",
+  "remote": "origin",
+  "control_branch": "agent-dev/step0-protocol",
+  "task_branch_prefix": "agent-task/",
+  "worktree_root": "../../../cg3d-agent-worktrees",
+  "poll_interval_seconds": 15,
+  "worker_id": "windows-zcode-01",
+  "git_author_name": "ADS Controller",
+  "git_author_email": "ads-controller@local.invalid",
+  "zcode": {
+    "command": [
+      "node",
+      "C:/Program Files/ZCode/resources/glm/zcode.cjs"
+    ],
+    "mode": "yolo",
+    "timeout_seconds": 7200,
+    "extra_args": []
+  }
+}

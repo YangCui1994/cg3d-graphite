@@ -1,0 +1,26 @@
+{
+  "sessionId": "sess_e53314ac-bd72-46d4-be48-bae20be67abd",
+  "traceId": "b4165b8b-a942-4af9-bce9-5a350c719c12",
+  "turnId": "turn_f9e7bf9b-8351-4e8c-8a42-d38cad98896d",
+  "response": "Task complete. Here's what happened.\n\n## Outcome\n\nThe cumulative execution base is now a declared, machine-validated part of the V1 Controller protocol. Candidate commit **`bdf0ad5bc267e905b751f18b3f81205cef1e9073`** is committed and pushed to the pre-created task branch `agent-task/ADS-EXECUTION-BASE-005` (fast-forward from the bootstrap `dbecc71`, no merge, no force-push). The requested validation passes: `python .agent/controller/tests/test_controller.py` → **exit code 0, 28 tests, OK**.\n\n## What changed (4 files, all inside the Allowed scope)\n\n`execution_base_commit` was added to `.agent/controller/controller.py` as a required state field: a full 40-char lowercase SHA for active states, nullable only in `DRAFT`. Round 1 now takes its starting revision from that field instead of the control `ready_sha`, both when creating the task branch and in a new assertion on `before_head` that runs after the worktree is prepared and before Z Code is invoked. A pre-existing local or remote Round-1 branch must already be at the declared base; a mismatch is published as `ERROR` through the existing failure path without resetting, rebasing, or touching the branch. Rounds 2/3 keep the base unchanged and continue from the reviewed candidate. `process.json` now records `before_head` next to `execution_base_commit`, and the generated executor `provenance.json` records `execution_base_commit` next to `candidate_commit`. `.agent/templates/TASK.md` gained an `## Execution Base` section and `.agent/README.md` documents the field, the Round-1 selection rule, later-round continuation, and the control-revision versus execution-base distinction.\n\nThe test fixture was rebuilt into two commits so that the control READY SHA deliberately differs from the execution base in every integration test. Round 1 lands on the declared base (verified through `before_head`, through `<candidate>^ == <base>`, and by a control-only marker file that must be absent from the task branch), and Round 2 continues from the Round-1 candidate with `<round2-candidate>^ == <round1-candidate>`.\n\n## Two things you should know\n\n**Two pre-existing tests were platform-incorrect on Windows and I had to repair them to satisfy the task's \"existing tests still pass\" requirement.** On the untouched bootstrap source the suite already failed here (`Ran 22 tests ... FAILED (failures=1, errors=1)`): the timeout test used `os.kill(pid, 0)` with `assertRaises(ProcessLookupError)`, which on Windows raises `OSError`/WinError 87 instead, and the evidence test compared the provenance digest against the committed blob, which this machine's `core.autocrlf=true` rewrites from CRLF to LF. Both assertions now express the same property portably (a `process_is_alive()` probe, and a digest over the published bytes with a byte-equality check against the source file); neither check was weakened. These are documented as Deviation 1 in the report.\n\n**A negative control proves the new tests are not vacuous**: the same test file run against the pre-repair controller (`git show dbecc71:.agent/controller/controller.py`) gives `FAILED (failures=12, errors=1)` — the two-round test fails exactly at `before_head != execution_base_commit` — while the 15 tests unrelated to base selection still pass, so existing behaviour is intact.\n\n## Evidence\n\n`.agent_runtime/execution_report.md` holds the full report (requirements table, per-case coverage mapping, Git state, deviations). `.agent_runtime/published_evidence/` holds five files indexed by a `v1` manifest: the test log, the base-semantics summary emitted by the passing fixture, the negative-control log, and a single-round probe that prints the published `process.json` and `provenance.json` verbatim. The Controller's own `validate_published_evidence()` accepts the bundle (32 KB total, every file listed once).\n\nNo CG3D product or scientific code, no scientific test, no earlier task record, and no `.agent/state.json` was modified. Noted for follow-up but deliberately not changed: `.agent/examples/dummy/README.md` is outside the Allowed scope and now slightly stale about the planner's state fields, and this task's own `provenance.json` will be written by the still-deployed pre-repair Controller, so it will not itself contain the new field.",
+  "usage": {
+    "source": "provider",
+    "modelRequestCount": 71,
+    "inputTokens": 9752465,
+    "outputTokens": 91788,
+    "totalTokens": 9844253,
+    "cacheReadTokens": 9649408,
+    "cacheWriteTokens": 0,
+    "reasoningTokens": 60845,
+    "webFetchRequests": 0,
+    "webSearchRequests": 0
+  },
+  "eventCount": 65269,
+  "projection": {
+    "status": "idle",
+    "turnCount": 1,
+    "totalTokenCount": 9844253,
+    "contextUsed": 189755,
+    "contextWindow": 200000
+  }
+}

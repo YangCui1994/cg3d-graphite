@@ -1,0 +1,14 @@
+# requested: LBM_ARCH=cpu python tests/run_level_a.py
+# executed : "C:\Users\yangc\anaconda3\envs\lbm\python.exe" tests/run_level_a.py
+# cwd      : D:\2026_agent_work\09_cg3d_controller\worktrees\CG3D-V1-INTEGRATION-004
+# env      : {"LBM_ARCH": "cpu"}
+
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=x64
+PASS A1 M @ inv_M == I  max|err|=2.98e-08
+PASS A2 uniform phase stationary  max|v|=0.00e+00 psi_dev=0.0e+00
+PASS A3 colour-mass conservation  rel drift=3.58e-07
+PASS A4 reservoir pins rho/psi  rho=1.05000 psi=1.0000
+PASS A5 membrane blocks blue (psi_left stays red)  min psi[x<9]=1.000
+level A done in 13s
+LEVEL A: ALL PASS
