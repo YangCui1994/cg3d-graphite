@@ -1,6 +1,6 @@
 {
  "stage": "SMOKE-1",
- "attempt": 1,
+ "attempt": 2,
  "contract_sha256": "a87eba7f30c65460414f5f194f413bbe247706c405ef5b2a7a35761c3879adb6",
  "branch": "agent-episode/BI-VALIDATION-001-smoke-r1",
  "candidates": [
@@ -9,6 +9,12 @@
    "sha": "6c1d5a8960de448d498f50242318c7bb4b5445c8",
    "base": "9ede55c8ef7589b61606e11c033c84d9bcd1de94",
    "validation_only": false
+  },
+  {
+   "attempt": 2,
+   "sha": "2db5d1a1cb2fc60fe9862aa1af8018ac71fce4df",
+   "base": "6c1d5a8960de448d498f50242318c7bb4b5445c8",
+   "validation_only": false
   }
  ],
  "decisions": [
@@ -16,6 +22,12 @@
    "attempt": 1,
    "decision": "CHANGES_REQUESTED",
    "sha": "6c1d5a8960de448d498f50242318c7bb4b5445c8",
+   "validation_only": false
+  },
+  {
+   "attempt": 2,
+   "decision": "PASS",
+   "sha": "2db5d1a1cb2fc60fe9862aa1af8018ac71fce4df",
    "validation_only": false
   }
  ],
@@ -26,6 +38,13 @@
    "exit_code": 0,
    "timed_out": false,
    "resumed_from": null
+  },
+  {
+   "attempt": 2,
+   "session_id": "sess_878cbeba-01dc-4d32-8f84-2f1f5ce40884",
+   "exit_code": 0,
+   "timed_out": false,
+   "resumed_from": "sess_878cbeba-01dc-4d32-8f84-2f1f5ce40884"
   }
  ],
  "reviewer_sessions": [
@@ -35,9 +54,16 @@
    "exit_code": 0,
    "timed_out": false,
    "resumed_from": null
+  },
+  {
+   "attempt": 2,
+   "session_id": "sess_9a45baab-edb3-4047-ba45-5c4560e8fed6",
+   "exit_code": 0,
+   "timed_out": false,
+   "resumed_from": null
   }
  ],
  "runner_commit": "08117fd92db86212d8a7185141fae71b0a353006",
  "episode_status": "RUNNING",
- "published_at": "2026-09-23T08:55:07Z"
+ "published_at": "2026-09-23T08:57:32Z"
 }
