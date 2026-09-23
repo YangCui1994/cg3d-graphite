@@ -4,6 +4,16 @@
 
 `<TASK-ID>`
 
+## Execution Base
+
+`<full 40-character lowercase commit SHA of the accepted cumulative product commit>`
+
+Round 1 starts exactly from this revision. Later rounds continue from the
+reviewed candidate, so this field stays unchanged for the lifetime of the parent
+task. The value must also be present as `execution_base_commit` in
+`.agent/state.json`; that state field, not this section, is what the Controller
+enforces.
+
 ## Objective
 
 Describe one finite outcome.

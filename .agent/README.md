@@ -112,6 +112,7 @@ Required fields:
 | `status` | One of the states below |
 | `zcode_session_id` | Saved after Round 1 and reused with `--resume` |
 | `candidate_commit` | Latest task-branch candidate, if available |
+| `execution_base_commit` | Accepted cumulative base the parent task starts from; full lowercase SHA for active tasks, `null` only in `DRAFT` |
 | `worker` | Claiming controller while `RUNNING`, otherwise `null` |
 | `updated_at` | UTC timestamp of the last transition |
 | `last_error` | Short controller error, otherwise `null` |
@@ -134,6 +135,33 @@ READY round > max_rounds -> STOPPED_MAX_ROUNDS
 `PASS` belongs in `REVIEW.md` and means only that the current round's stated
 requirements are satisfied. It does not close the parent task automatically.
 Fresh-session review and merge remain manual.
+
+### Execution base and round starting revisions
+
+`execution_base_commit` is the revision a parent task is allowed to start from.
+It is provenance for the whole parent task, not an instruction to reset later
+rounds:
+
+```text
+Round 1:      worktree before_head == state.execution_base_commit
+Round N > 1:  worktree before_head == prior reviewed state.candidate_commit
+state.execution_base_commit: unchanged for the lifetime of the parent task
+```
+
+- Round 1 creates the task branch from `execution_base_commit`, never from the
+  control `ready_sha`. The control branch carries the task description and the
+  state, so its READY commit is expected to differ from the execution base; that
+  difference no longer selects the product-code starting revision.
+- A task branch that already exists when Round 1 starts must resolve to
+  `execution_base_commit`. A mismatch fails before Z Code is invoked and is
+  published as `ERROR`; the branch is never reset, rebased, or force-updated.
+- Round 2/3 keep the same `execution_base_commit` and continue from the reviewed
+  `candidate_commit`, so rework does not lose the accepted earlier rounds.
+- After preparing the worktree and before invoking the executor, the Controller
+  asserts the observed head against the expected revision above.
+- An active state whose `execution_base_commit` is missing, `null`, or not a full
+  40-character lowercase hex SHA is refused before the round is claimed. Only
+  `DRAFT` may carry `null`.
 
 Every active round uses this derived layout:
 
@@ -164,8 +192,14 @@ An executor may request durable publication of additional reviewer evidence by
 placing a `manifest.json` and its listed files under
 `.agent_runtime/published_evidence/`. The Controller validates this bundle,
 copies the original manifest and files, and generates `provenance.json` bound
-to the candidate commit and Z Code session. It does not interpret whether the
-evidence proves PASS or FAIL.
+to the candidate commit, the execution base, and the Z Code session. It does not
+interpret whether the evidence proves PASS or FAIL.
+
+Both Controller-owned records carry the base: `process.json` holds
+`before_head` next to `execution_base_commit`, and the generated
+`provenance.json` holds `execution_base_commit` next to `candidate_commit`. A
+reviewer can therefore check the Round-1 and later-round invariants from the
+published evidence alone, without rerunning the round.
 
 V1 accepts at most 20 files, 1 MiB per file, and 5 MiB total (including the
 manifest). Allowed extensions are `.txt`, `.log`, `.json`, `.csv`, `.md`,
@@ -243,6 +277,10 @@ part of V1.
 - A later round must retain both the reviewed `candidate_commit` and
   `zcode_session_id`; the controller verifies the remote task branch before
   using `--resume`.
+- Round 1 must start at the declared `execution_base_commit`. An active state
+  without a valid base, or a task branch that resolves to any other revision, is
+  refused before Z Code runs and published as `ERROR`, without touching the
+  branch.
 
 The two-round harmless test fixture is documented in
 `.agent/examples/dummy/README.md`.
