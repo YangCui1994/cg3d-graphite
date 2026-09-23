@@ -1,0 +1,52 @@
+{
+  "schema_version": "v1",
+  "files": [
+    {
+      "path": "v1_integration.log",
+      "kind": "validation_log",
+      "description": "New cumulative V1 integration test (sections A-D: runtime lifecycle, periodic topology, termination reporting, combined API/import). CPU forced; tiny instance constructed, never stepped.",
+      "command": "\"C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe\" tests/test_v1_integration.py"
+    },
+    {
+      "path": "import_lifecycle.log",
+      "kind": "validation_log",
+      "description": "Task 1 regression re-run (CG3D-TAICHI-INIT-001): import of lbm_solver_cg3d has no Taichi side effect; cg3d.runtime.init_runtime() is the boundary.",
+      "command": "\"C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe\" tests/test_import_no_taichi_init.py"
+    },
+    {
+      "path": "level_a.log",
+      "kind": "validation_log",
+      "description": "Task 1 regression re-run on the cumulative base: Level A structural sanity A1-A5 on one 32^3 solver instance (CPU).",
+      "command": "LBM_ARCH=cpu \"C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe\" tests/run_level_a.py"
+    },
+    {
+      "path": "postprocessing.log",
+      "kind": "validation_log",
+      "description": "Host-side post-processing/logic checks (21 checks incl. label_periodic and eval_convergence), re-run on the cumulative base.",
+      "command": "\"C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe\" tests/test_postprocessing.py"
+    },
+    {
+      "path": "periodic_connectivity.log",
+      "kind": "validation_log",
+      "description": "Task 2 regression re-run (CG3D-PERIODIC-CONN-002): 6/18/26 topology on wrapped seams incl. brute-force torus oracle over 252 combinations.",
+      "command": "\"C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe\" tests/test_periodic_connectivity.py"
+    },
+    {
+      "path": "termination_diagnostics.log",
+      "kind": "validation_log",
+      "description": "Task 3 regression re-run (CG3D-CONVERGENCE-DIAG-003): termination / numerical_health reporting over the real run_hold with a fake system.",
+      "command": "\"C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe\" tests/test_termination_diagnostics.py"
+    },
+    {
+      "path": "checkpoint_resume.log",
+      "kind": "validation_log",
+      "description": "Checkpoint/resume regression re-run (PR-7) crossing runtime init, OpenSystem, drivers and persisted state (CPU, incl. 3 driver subprocesses).",
+      "command": "LBM_ARCH=cpu \"C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe\" tests/test_checkpoint_resume.py"
+    },
+    {
+      "path": "integration_summary.json",
+      "kind": "validation_summary",
+      "description": "Per-validation command, interpreter, exit code, elapsed seconds and PASS/FAIL status for the seven requested validations."
+    }
+  ]
+}

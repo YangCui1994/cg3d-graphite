@@ -1,0 +1,85 @@
+{
+  "task": "CG3D-V1-INTEGRATION-004",
+  "interpreter": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe",
+  "cwd": "D:\\2026_agent_work\\09_cg3d_controller\\worktrees\\CG3D-V1-INTEGRATION-004",
+  "validations": [
+    {
+      "log": "v1_integration.log",
+      "command": "python tests/test_v1_integration.py",
+      "executed": [
+        "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe",
+        "tests/test_v1_integration.py"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 2.5,
+      "status": "PASS"
+    },
+    {
+      "log": "import_lifecycle.log",
+      "command": "python tests/test_import_no_taichi_init.py",
+      "executed": [
+        "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe",
+        "tests/test_import_no_taichi_init.py"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 1.2,
+      "status": "PASS"
+    },
+    {
+      "log": "level_a.log",
+      "command": "LBM_ARCH=cpu python tests/run_level_a.py",
+      "executed": [
+        "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe",
+        "tests/run_level_a.py"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 13.9,
+      "status": "PASS"
+    },
+    {
+      "log": "postprocessing.log",
+      "command": "python tests/test_postprocessing.py",
+      "executed": [
+        "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe",
+        "tests/test_postprocessing.py"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 0.9,
+      "status": "PASS"
+    },
+    {
+      "log": "periodic_connectivity.log",
+      "command": "python tests/test_periodic_connectivity.py",
+      "executed": [
+        "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe",
+        "tests/test_periodic_connectivity.py"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 1.2,
+      "status": "PASS"
+    },
+    {
+      "log": "termination_diagnostics.log",
+      "command": "python tests/test_termination_diagnostics.py",
+      "executed": [
+        "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe",
+        "tests/test_termination_diagnostics.py"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 0.6,
+      "status": "PASS"
+    },
+    {
+      "log": "checkpoint_resume.log",
+      "command": "LBM_ARCH=cpu python tests/test_checkpoint_resume.py",
+      "executed": [
+        "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe",
+        "tests/test_checkpoint_resume.py"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 50.6,
+      "status": "PASS"
+    }
+  ],
+  "all_passed": true
+}

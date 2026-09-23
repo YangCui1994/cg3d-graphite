@@ -1,0 +1,49 @@
+# requested: python tests/test_v1_integration.py
+# executed : "C:\Users\yangc\anaconda3\envs\lbm\python.exe" tests/test_v1_integration.py
+# cwd      : D:\2026_agent_work\09_cg3d_controller\worktrees\CG3D-V1-INTEGRATION-004
+# env      : {}
+
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+interpreter: C:\Users\yangc\anaconda3\envs\lbm\python.exe
+cwd: D:\2026_agent_work\09_cg3d_controller\worktrees\CG3D-V1-INTEGRATION-004  LBM_ARCH forced to cpu
+PASS A1 plain import leaves the project runtime uninitialized
+PASS A2 plain import allocates no shared lattice table  allocated=[]
+PASS A3 plain import materializes no Taichi program  absent
+PASS A4 LBM_ARCH=cpu selects the CPU backend
+[Taichi] Starting on arch=x64
+PASS A5 cg3d.init_runtime() is the call that starts the runtime  first call returned True
+PASS A6 a second init_runtime() is a no-op (runtime not re-created)  second call returned False
+PASS A7 the live Taichi program is the CPU backend  Arch.x64
+PASS A8 ensure_lattice_tables() materializes all six shared tables  missing=[]
+PASS A9 materialized tables have the D3Q19/MRT shapes
+PASS A10 materialized M @ inv_M == I  max|err|=2.98e-08
+PASS A11 ensure_lattice_tables() is idempotent (no re-allocation)
+PASS A12 a small ColorGradientSolver3D constructs through the lifecycle  0.14s, no solver kernel compiled
+PASS A13 the constructed instance carries its runtime parameters
+PASS A14 checkpoint meta round-trips the accepted format and shape  format=cg3d-ckpt-v1 shape=[8, 8, 8]
+PASS A15 restored psi and f match the saved state exactly
+PASS A16 checkpoint.read_meta() reads the same meta back
+REPRO A lifecycle: import->init_runtime=True/False->tables(missing=[], M@inv_M err=3.0e-08)->solver 8^3 in 0.14s->checkpoint round-trip exact
+REPRO B y+z wrapped edge conn=18 axes=(1,2): n=1 sizes=[2]
+PASS B1 y+z wrapped edge pair is ONE component of size 2 (conn=18)  n=1 sizes=[2]
+PASS B2 negative control axes=(1,): same pair stays split (required axis not periodic)  n=2
+PASS B2 negative control axes=(2,): same pair stays split (required axis not periodic)  n=2
+PASS B2 negative control axes=(): same pair stays split (required axis not periodic)  n=2
+[v1_integration] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+REPRO C run_hold (fake system, sat mode): reason=quasi-steady steps=9 termination={'process_completed': True, 'reason': 'quasi-steady', 'converged': True, 'step_limit_reached': False, 'safety_limit_triggered': False, 'qs_mode': 'sat'} health_finite=True health_samples=9
+PASS C1 legacy reason is still on the returned row  quasi-steady
+PASS C2 legacy convergence["exit"] is still present and agrees with the reason  {'mode': 'sat', 'reason': 'quasi-steady'}
+PASS C3 termination is present and consistent with the legacy reason
+PASS C4 numerical_health is present and finite for the all-finite case  []
+PASS C5 the returned row is strictly JSON-serializable  1206 bytes
+PASS D1 cg3d.init_runtime is the accepted runtime boundary
+PASS D2 cg3d.label_periodic is the accepted periodic labeller
+PASS D3 cg3d.protocol.run_hold is the accepted rung loop
+PASS D4 lbm_solver_cg3d.ColorGradientSolver3D is the accepted solver
+PASS D5 a fresh process with reverse import order reaches the same lifecycle  exit=0
+--- child stdout ---
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=x64
+CHILD_OK: reverse-order import reached the same lifecycle state
+integration wall time 1.7s
+ALL PASS

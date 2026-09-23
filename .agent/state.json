@@ -3,11 +3,11 @@
   "task_id": "CG3D-V1-INTEGRATION-004",
   "round": 1,
   "max_rounds": 3,
-  "revision": 24,
-  "status": "RUNNING",
-  "zcode_session_id": null,
-  "candidate_commit": "3e49087e195ac98b41000bc647b115c685daa71b",
-  "worker": "windows-zcode-01",
-  "updated_at": "2026-09-23T00:51:53Z",
+  "revision": 25,
+  "status": "AWAITING_REVIEW",
+  "zcode_session_id": "sess_59a7ace2-ae90-421b-846f-f073ef6a7db6",
+  "candidate_commit": "645479e00217b1b50f6cd4ae5d833eda1661e84c",
+  "worker": null,
+  "updated_at": "2026-09-23T00:58:47Z",
   "last_error": null
 }

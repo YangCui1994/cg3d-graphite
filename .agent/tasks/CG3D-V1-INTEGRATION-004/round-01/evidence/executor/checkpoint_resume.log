@@ -1,0 +1,39 @@
+# requested: LBM_ARCH=cpu python tests/test_checkpoint_resume.py
+# executed : "C:\Users\yangc\anaconda3\envs\lbm\python.exe" tests/test_checkpoint_resume.py
+# cwd      : D:\2026_agent_work\09_cg3d_controller\worktrees\CG3D-V1-INTEGRATION-004
+# env      : {"LBM_ARCH": "cpu"}
+
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[A] geo porosity (interior) 0.881
+[Taichi] Starting on arch=x64
+[A] post-equil max|v|=1.42e-02
+PASS A meta roundtrip
+[A] drive it=100 max|v|=4.39e-02
+PASS A trajectory stays finite
+[A] run-to-run jitter (atomics): f=2.09e-07, psi=6.14e-06, rho_r=2.98e-06, rho_b=3.07e-06, rho=4.77e-07, v=1.42e-07
+PASS A restore returns meta
+PASS A roundtrip fidelity f
+PASS A roundtrip fidelity counters
+PASS A trajectory f  |A-B|=1.19e-07 tol=1.00e-06 (jitter 2.09e-07)
+PASS A trajectory psi  |A-B|=3.58e-07 tol=1.84e-05 (jitter 6.14e-06)
+PASS A trajectory rho_r  |A-B|=3.58e-07 tol=8.94e-06 (jitter 2.98e-06)
+PASS A trajectory rho_b  |A-B|=3.58e-07 tol=9.21e-06 (jitter 3.07e-06)
+PASS A trajectory rho  |A-B|=3.58e-07 tol=1.43e-06 (jitter 4.77e-07)
+PASS A trajectory v  |A-B|=6.10e-08 tol=1.00e-06 (jitter 1.42e-07)
+PASS A counters continue  |A-B|=['1.45e-09', '3.36e-09', '3.63e-07'] jitter=['8.95e-09', '1.36e-09', '9.59e-07']
+PASS B full run exit 0
+PASS B rung00 ckpt exists  ['rung00_d0.0300_it0000140.npz']
+PASS B live ckpt exists
+PASS B resume exit 0
+PASS B resumed final psi matches  max|d|=4.47e-07
+PASS B ladder has 2 rows
+PASS B rung1 s_nw matches  |d|=0.00e+00
+PASS B resumed_from recorded
+PASS B2 live resume exit 0
+PASS B2 ladder has 2 rows
+PASS B2 final psi matches  max|d|=5.07e-07
+PASS C ir branch exit 0
+PASS C branch plan ran  ['drain', 'imbibe', 'imbibe']
+PASS C s_nr computed
+
+ALL PASS
