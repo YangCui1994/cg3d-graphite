@@ -43,6 +43,7 @@ TERMINAL_OR_WAITING_STATUSES = {
 }
 ALL_STATUSES = TERMINAL_OR_WAITING_STATUSES | {READY}
 TASK_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$")
+GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 PUBLISHED_EVIDENCE_DIR = "published_evidence"
 PUBLISHED_EVIDENCE_MAX_FILES = 20
 PUBLISHED_EVIDENCE_MAX_FILE_BYTES = 1024 * 1024
@@ -379,6 +380,7 @@ def validate_state(state: dict[str, Any], *, operational: bool = False) -> None:
         "status",
         "zcode_session_id",
         "candidate_commit",
+        "execution_base_commit",
         "worker",
         "updated_at",
         "last_error",
@@ -400,11 +402,21 @@ def validate_state(state: dict[str, Any], *, operational: bool = False) -> None:
         if state[field] is not None and not isinstance(state[field], str):
             raise ControllerError(f"{field} must be a string or null")
 
+    execution_base = state["execution_base_commit"]
+    if execution_base is not None and (
+        not isinstance(execution_base, str) or not GIT_SHA_RE.fullmatch(execution_base)
+    ):
+        raise ControllerError(
+            "execution_base_commit must be a full 40-character lowercase hex Git SHA or null"
+        )
+
     if operational or state["status"] != "DRAFT":
         if not isinstance(state["task_id"], str) or not TASK_ID_RE.fullmatch(state["task_id"]):
             raise ControllerError("task_id must use only letters, digits, dot, underscore, and hyphen")
         if state["round"] < 1:
             raise ControllerError("an active task must have round >= 1")
+        if execution_base is None:
+            raise ControllerError("an active task requires execution_base_commit")
     elif state["task_id"] is not None:
         if not isinstance(state["task_id"], str) or not TASK_ID_RE.fullmatch(state["task_id"]):
             raise ControllerError("draft task_id has an invalid format")
@@ -568,7 +580,30 @@ class Controller:
         )
         return sha
 
-    def _prepare_worktree(self, state: dict[str, Any], ready_sha: str) -> Path:
+    def _local_branch_sha(self, branch: str) -> str | None:
+        result = self._git("show-ref", "--verify", "--hash", f"refs/heads/{branch}", check=False)
+        if result.returncode != 0:
+            return None
+        return result.stdout.strip() or None
+
+    @staticmethod
+    def _round_start_head(state: dict[str, Any]) -> tuple[str, str]:
+        """Return the revision a round must start from plus the state field declaring it.
+
+        Round 1 starts exactly from the immutable parent-task execution base. Later
+        rounds continue from the latest reviewed candidate, not from that base.
+        """
+        if int(state["round"]) == 1:
+            base = state["execution_base_commit"]
+            if not isinstance(base, str) or not GIT_SHA_RE.fullmatch(base):
+                raise ControllerError("round 1 requires a valid execution_base_commit")
+            return base, "execution_base_commit"
+        candidate = state.get("candidate_commit")
+        if not isinstance(candidate, str) or not candidate:
+            raise ControllerError("rounds after Round 1 require the reviewed candidate_commit")
+        return candidate, "candidate_commit"
+
+    def _prepare_worktree(self, state: dict[str, Any]) -> Path:
         branch = task_branch(state, self.config.task_branch_prefix)
         if branch == self.config.control_branch:
             raise ControllerError("task branch must differ from the control branch")
@@ -576,22 +611,42 @@ class Controller:
         self.config.worktree_root.mkdir(parents=True, exist_ok=True)
         path = self.config.worktree_root / str(state["task_id"])
 
-        remote_sha = self._remote_branch_sha(branch)
+        round_number = int(state["round"])
+        expected_head, expected_field = self._round_start_head(state)
         expected_candidate = state.get("candidate_commit")
-        if remote_sha and not expected_candidate:
-            raise ControllerError(
-                f"remote task branch {branch!r} exists but state has no candidate_commit"
-            )
-        if remote_sha and remote_sha != expected_candidate:
-            raise ControllerError(
-                f"remote task branch {branch!r} is at {remote_sha}, expected candidate {expected_candidate}"
-            )
-        if expected_candidate and not remote_sha:
-            raise ControllerError(
-                f"state names candidate {expected_candidate}, but remote task branch {branch!r} is missing"
-            )
-        if state["round"] > 1 and not expected_candidate:
-            raise ControllerError("rounds after Round 1 require the reviewed candidate_commit")
+        remote_sha = self._remote_branch_sha(branch)
+        local_branch_sha = self._local_branch_sha(branch)
+
+        if round_number == 1:
+            # Round 1 starts from the declared execution base, never from the control
+            # ready_sha. An existing task branch must already be at that base and is
+            # never reset, rebased, or force-updated.
+            for location, sha in (("remote", remote_sha), ("local", local_branch_sha)):
+                if sha and sha != expected_head:
+                    raise ControllerError(
+                        f"{location} task branch {branch!r} is at {sha}, "
+                        f"but execution_base_commit is {expected_head}"
+                    )
+            if expected_candidate and expected_candidate != expected_head:
+                raise ControllerError(
+                    f"state names candidate {expected_candidate} for round 1, "
+                    f"but execution_base_commit is {expected_head}"
+                )
+            if expected_candidate and not remote_sha:
+                raise ControllerError(
+                    f"state names candidate {expected_candidate}, but remote task branch {branch!r} is missing"
+                )
+        else:
+            if not expected_candidate:
+                raise ControllerError("rounds after Round 1 require the reviewed candidate_commit")
+            if not remote_sha:
+                raise ControllerError(
+                    f"state names candidate {expected_candidate}, but remote task branch {branch!r} is missing"
+                )
+            if remote_sha != expected_candidate:
+                raise ControllerError(
+                    f"remote task branch {branch!r} is at {remote_sha}, expected candidate {expected_candidate}"
+                )
 
         if path.exists():
             if not (path / ".git").exists():
@@ -599,20 +654,18 @@ class Controller:
             current_branch = self._git("branch", "--show-current", cwd=path).stdout.strip()
             if current_branch != branch:
                 raise ControllerError(f"worktree {path} is on {current_branch!r}, expected {branch!r}")
-            local_sha = self._git("rev-parse", "HEAD", cwd=path).stdout.strip()
-            if remote_sha and local_sha != remote_sha:
+            worktree_head = self._git("rev-parse", "HEAD", cwd=path).stdout.strip()
+            if remote_sha and worktree_head != remote_sha:
                 raise ControllerError(
                     f"local task branch {branch!r} differs from remote; manual reconciliation is required"
                 )
+        elif local_branch_sha:
+            self._git("worktree", "add", str(path), branch)
+        elif remote_sha:
+            self._git("branch", branch, f"refs/remotes/{self.config.remote}/{branch}")
+            self._git("worktree", "add", str(path), branch)
         else:
-            local_branch = self._git("show-ref", "--verify", f"refs/heads/{branch}", check=False)
-            if local_branch.returncode == 0:
-                self._git("worktree", "add", str(path), branch)
-            elif remote_sha:
-                self._git("branch", branch, f"refs/remotes/{self.config.remote}/{branch}")
-                self._git("worktree", "add", str(path), branch)
-            else:
-                self._git("worktree", "add", "-b", branch, str(path), ready_sha)
+            self._git("worktree", "add", "-b", branch, str(path), expected_head)
 
         dirty = self._git("status", "--porcelain", cwd=path).stdout.strip()
         if dirty:
@@ -763,7 +816,15 @@ class Controller:
         path.mkdir(parents=True)
         return path
 
-    def _capture_process(self, result: ProcessResult, run_dir: Path, *, before_head: str, worktree: Path) -> None:
+    def _capture_process(
+        self,
+        result: ProcessResult,
+        run_dir: Path,
+        *,
+        before_head: str,
+        worktree: Path,
+        execution_base_commit: str | None,
+    ) -> None:
         (run_dir / "zcode.stdout.json").write_text(result.stdout, encoding="utf-8")
         (run_dir / "zcode.stderr.txt").write_text(result.stderr, encoding="utf-8")
         process = {
@@ -778,6 +839,7 @@ class Controller:
             "envelope_parsed": result.envelope is not None,
             "session_id": result.session_id,
             "before_head": before_head,
+            "execution_base_commit": execution_base_commit,
         }
         (run_dir / "process.json").write_text(
             json.dumps(process, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
@@ -869,6 +931,7 @@ class Controller:
                 "task_id": claimed["task_id"],
                 "round": claimed["round"],
                 "candidate_commit": candidate,
+                "execution_base_commit": claimed["execution_base_commit"],
                 "zcode_session_id": session_id,
                 "captured_at": utc_now(),
                 "worker": claimed["worker"],
@@ -955,7 +1018,7 @@ class Controller:
             f"published {claimed['task_id']} round {claimed['round']} as {final_state['status']}"
         )
 
-    def _execute_claimed(self, claimed: dict[str, Any], ready_sha: str) -> None:
+    def _execute_claimed(self, claimed: dict[str, Any]) -> None:
         run_dir = self._new_run_dir(claimed)
         worktree: Path | None = None
         report: Path | None = None
@@ -966,15 +1029,27 @@ class Controller:
         before_head = "UNKNOWN"
 
         try:
-            worktree = self._prepare_worktree(claimed, ready_sha)
+            worktree = self._prepare_worktree(claimed)
             self._materialize_task(claimed, worktree)
             before_head = self._git("rev-parse", "HEAD", cwd=worktree).stdout.strip()
+            expected_head, expected_field = self._round_start_head(claimed)
+            if before_head != expected_head:
+                raise ControllerError(
+                    f"round {claimed['round']} must start at {expected_field} {expected_head}, "
+                    f"but the task worktree is at {before_head}"
+                )
             (run_dir / "git-before.txt").write_text(
                 self._git("status", "--short", "--branch", cwd=worktree).stdout,
                 encoding="utf-8",
             )
             result = self._invoke_executor(claimed, worktree)
-            self._capture_process(result, run_dir, before_head=before_head, worktree=worktree)
+            self._capture_process(
+                result,
+                run_dir,
+                before_head=before_head,
+                worktree=worktree,
+                execution_base_commit=claimed["execution_base_commit"],
+            )
             session_id = result.session_id or session_id
             report = worktree / RUNTIME_DIR / "execution_report.md"
 
@@ -1058,7 +1133,7 @@ class Controller:
             return "STOPPED_MAX_ROUNDS"
 
         claimed = self._claim(remote_sha, state)
-        self._execute_claimed(claimed, remote_sha)
+        self._execute_claimed(claimed)
         return "EXECUTED"
 
     def run_forever(self) -> None:
