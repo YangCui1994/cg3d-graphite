@@ -1,0 +1,125 @@
+{
+ "n_samples": 240,
+ "window_valid": true,
+ "window_idx": [
+  71,
+  239
+ ],
+ "window_t": [
+  18000.0,
+  60000.0
+ ],
+ "window_x": [
+  94.37908153044872,
+  220.38040865384616
+ ],
+ "V_meas": 0.0030002088160309645,
+ "R2_x_linear": 0.9999971608841104,
+ "V_meas_secondary": 0.0030000099448063257,
+ "R2_x_secondary": 0.9999301301787404,
+ "monotonic_window": true,
+ "Pc_dynamic_median": 0.0030389306074283806,
+ "Pc_dynamic_mean": 0.0030319025432082314,
+ "n_window_probes": 55,
+ "jump_in_median": 0.0003150383511860144,
+ "jump_out_median": 0.0006451837605596644,
+ "dpdx_liq_median": -5.452141643847355e-06,
+ "dpdx_gas_median": -3.841232488498177e-06,
+ "V_hyd": 0.0035889536873193306,
+ "V_meas_over_V_hyd": 0.8359564032914248,
+ "Ca": 0.004941055362369837,
+ "G_poiseuille_analytic": 5.325814466327157e-06,
+ "dpdx_liq_over_G": 1.0237197856438505,
+ "dpdx_gas_over_G": 0.7212478979101966,
+ "jump_sum_over_Pc": 0.31597368804621795,
+ "rho_res_liq_dev_max": 0.0,
+ "rho_res_gas_dev_max": 0.0,
+ "closure_r_last": -32.13361179298954,
+ "closure_b_last": -13.652165081519342,
+ "u_band_max_max": 0.021509220823645592,
+ "u_band_ut_rms_max": 0.0040155695751309395,
+ "umax_peak_window": 0.024048136547207832,
+ "gates": {
+  "g1_no_nan": true,
+  "g2_umax_cap": true,
+  "g3_zero_dp": true,
+  "g4_monotonic": true,
+  "g5_window_valid": true,
+  "g6_r2": true,
+  "g7_vhyd": false,
+  "g8_poiseuille": false,
+  "g9_mass_closure": null,
+  "all_hard": false
+ },
+ "mode": "dynamic",
+ "tag": "dyn_h26_2L",
+ "layout": {
+  "nx": 500,
+  "hy": 26,
+  "nz": 6,
+  "L_slit": 472,
+  "x0": 42,
+  "wall_in": [
+   0,
+   3
+  ],
+  "liq_res": [
+   3,
+   11
+  ],
+  "mem_in": 11,
+  "in_buffer": [
+   12,
+   14
+  ],
+  "slit": [
+   14,
+   486
+  ],
+  "out_buffer": [
+   486,
+   488
+  ],
+  "mem_out": 488,
+  "gas_res": [
+   489,
+   497
+  ],
+  "wall_out": [
+   497,
+   500
+  ],
+  "L_hyd": 477.0,
+  "note": "membrane planes are ordinary fluid nodes outside both reservoir masks; buffers are same-cross-section fluid"
+ },
+ "steps_run": 60000,
+ "wall_s": 403.1237587928772,
+ "exit_reason": "steps_cap",
+ "nan_at": null,
+ "umax_break": null,
+ "x_stop": 474.0,
+ "T_TRANS": 5070,
+ "x_ic_exit": 94.0,
+ "sigma": 0.060719999999999996,
+ "capa": 0.06,
+ "nu": 0.1,
+ "mu": 0.1,
+ "psi_wall": -0.68,
+ "prov": {
+  "producer_script": "tests/levelc_v1b.py",
+  "producer_sha256": "f66aabb236281b00996b7894f7e8e06f27425ef67e3b2a624b2c676be5706f46",
+  "run_head": "da9a13d797150fcbd774242c5a10a7a50c4b83bd",
+  "worktree_dirty": true,
+  "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1b.py dynamic --hy 26 --L 472 --tag dyn_h26_2L",
+  "started_at": "2026-09-23T17:16:49Z",
+  "finished_at": null,
+  "exit_code": null
+ },
+ "m_r_final": 43170.82319008774,
+ "m_b_final": 33860.32339962961,
+ "inj_r_final": -27841.310421705246,
+ "inj_b_final": 27762.671234548092,
+ "closure_r_final": -32.13361179298954,
+ "closure_b_final": -13.652165081519342,
+ "INVALID_NEAR_INTERFACE_DIAGNOSTIC": null
+}

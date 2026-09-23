@@ -1,0 +1,28 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[static_h40] static slit nx=160 ny=42 nz=6 slab=[60,100)
+[static_h40]   2500 umax=2.53e-02 Pc=2.335171e-03
+[static_h40]   5000 umax=2.52e-02 Pc=2.282123e-03
+[static_h40]   7500 umax=2.55e-02 Pc=2.281070e-03
+[static_h40]  10000 umax=2.54e-02 Pc=2.282182e-03
+[static_h40]  12500 umax=2.53e-02 Pc=2.283514e-03
+[static_h40]  15000 umax=2.53e-02 Pc=2.284090e-03
+[static_h40]  17500 umax=2.53e-02 Pc=2.284447e-03
+[static_h40]  20000 umax=2.52e-02 Pc=2.284388e-03
+[static_h40]  22500 umax=2.52e-02 Pc=2.284646e-03
+[static_h40]  25000 umax=2.52e-02 Pc=2.284408e-03
+[static_h40]  27500 umax=2.52e-02 Pc=2.284507e-03
+[static_h40]  30000 umax=2.52e-02 Pc=2.284527e-03
+[static_h40]  32500 umax=2.53e-02 Pc=2.284586e-03
+[static_h40]  35000 umax=2.52e-02 Pc=2.284447e-03
+[static_h40]  37500 umax=2.52e-02 Pc=2.284348e-03
+[static_h40]  40000 umax=2.52e-02 Pc=2.284388e-03
+[static_h40]  42500 umax=2.52e-02 Pc=2.284368e-03
+[static_h40]  45000 umax=2.52e-02 Pc=2.284467e-03
+[static_h40]  47500 umax=2.52e-02 Pc=2.284626e-03
+[static_h40]  50000 umax=2.52e-02 Pc=2.284507e-03
+[static_h40]  52500 umax=2.52e-02 Pc=2.284408e-03
+[static_h40]  55000 umax=2.52e-02 Pc=2.284447e-03
+[static_h40]  57500 umax=2.52e-02 Pc=2.284308e-03
+[static_h40]  60000 umax=2.52e-02 Pc=2.284527e-03
+[static_h40] Pc_static=2.284527e-03 C=0.7525 theta_slit=41.19 deg (steps_cap)

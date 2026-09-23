@@ -1,0 +1,53 @@
+{
+ "mode": "static",
+ "tag": "static_h26",
+ "Pc_static": 0.00313164790471393,
+ "p_liq": 0.3324230710665385,
+ "p_gas": 0.33555471897125244,
+ "C_static": 0.6704779769644449,
+ "theta_static_slit_deg": 47.896033982735055,
+ "registry_theta_deg": 30.0,
+ "registry_C": 0.8660254037844387,
+ "C_static_over_registry": 0.7742012809722759,
+ "convergence": {
+  "exit_reason": "steps_cap",
+  "steps_run": 60000,
+  "umax_final": 0.021967846900224686,
+  "umax_min": 0.021690845489501953,
+  "Pc_last10_rel_drift": -6.344118971175904e-05,
+  "drift_tol": 0.001,
+  "umax_tol": 5e-06,
+  "note": "convergence judged on umax decay + Pc drift; process completion != convergence"
+ },
+ "layout": {
+  "nx": 160,
+  "ny": 28,
+  "nz": 6,
+  "hy": 26,
+  "slab": [
+   60,
+   100
+  ],
+  "core_liq": [
+   68,
+   92
+  ],
+  "core_gas": [
+   110,
+   150
+  ],
+  "boundary": "x periodic (lattice wrap), z periodic, y walls psi_solid=-0.68; no reservoirs/membranes/forcing"
+ },
+ "wall_s": 369.03059434890747,
+ "nan": false,
+ "prov": {
+  "producer_script": "tests/levelc_v1b.py",
+  "producer_sha256": "f66aabb236281b00996b7894f7e8e06f27425ef67e3b2a624b2c676be5706f46",
+  "run_head": "da9a13d797150fcbd774242c5a10a7a50c4b83bd",
+  "worktree_dirty": true,
+  "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1b.py static --hy 26 --tag static_h26",
+  "started_at": "2026-09-23T16:48:33Z",
+  "finished_at": null,
+  "exit_code": null
+ }
+}

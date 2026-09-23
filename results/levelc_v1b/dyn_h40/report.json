@@ -1,0 +1,125 @@
+{
+ "n_samples": 146,
+ "window_valid": true,
+ "window_idx": [
+  62,
+  144
+ ],
+ "window_t": [
+  15750.0,
+  36250.0
+ ],
+ "window_x": [
+  123.31761067708334,
+  237.75252278645834
+ ],
+ "V_meas": 0.005587779585649871,
+ "R2_x_linear": 0.9999995777969588,
+ "V_meas_secondary": 0.0055841484404517,
+ "R2_x_secondary": 0.9999267615227012,
+ "monotonic_window": true,
+ "Pc_dynamic_median": 0.0017969695049280254,
+ "Pc_dynamic_mean": 0.0018013204276016762,
+ "n_window_probes": 23,
+ "jump_in_median": 0.000508384536719475,
+ "jump_out_median": 0.00041509450225690747,
+ "dpdx_liq_median": -4.083555649946263e-06,
+ "dpdx_gas_median": -3.081223464267447e-06,
+ "V_hyd": 0.009941739999601799,
+ "V_meas_over_V_hyd": 0.5620524763143756,
+ "Ca": 0.009202535549489249,
+ "G_poiseuille_analytic": 4.1908346892374036e-06,
+ "dpdx_liq_over_G": 0.9744015101414889,
+ "dpdx_gas_over_G": 0.7352290635992922,
+ "jump_sum_over_Pc": 0.513909132260634,
+ "rho_res_liq_dev_max": 0.0,
+ "rho_res_gas_dev_max": 0.0,
+ "closure_r_last": -13.018344174517551,
+ "closure_b_last": -15.132968633144628,
+ "u_band_max_max": 0.01995283178985119,
+ "u_band_ut_rms_max": 0.0032891177106648684,
+ "umax_peak_window": 0.023608574643731117,
+ "gates": {
+  "g1_no_nan": true,
+  "g2_umax_cap": true,
+  "g3_zero_dp": true,
+  "g4_monotonic": true,
+  "g5_window_valid": true,
+  "g6_r2": true,
+  "g7_vhyd": false,
+  "g8_poiseuille": false,
+  "g9_mass_closure": null,
+  "all_hard": false
+ },
+ "mode": "dynamic",
+ "tag": "dyn_h40",
+ "layout": {
+  "nx": 264,
+  "hy": 40,
+  "nz": 6,
+  "L_slit": 236,
+  "x0": 42,
+  "wall_in": [
+   0,
+   3
+  ],
+  "liq_res": [
+   3,
+   11
+  ],
+  "mem_in": 11,
+  "in_buffer": [
+   12,
+   14
+  ],
+  "slit": [
+   14,
+   250
+  ],
+  "out_buffer": [
+   250,
+   252
+  ],
+  "mem_out": 252,
+  "gas_res": [
+   253,
+   261
+  ],
+  "wall_out": [
+   261,
+   264
+  ],
+  "L_hyd": 241.0,
+  "note": "membrane planes are ordinary fluid nodes outside both reservoir masks; buffers are same-cross-section fluid"
+ },
+ "steps_run": 36500,
+ "wall_s": 375.3507499694824,
+ "exit_reason": "front reached x_stop at step 36500",
+ "nan_at": null,
+ "umax_break": null,
+ "x_stop": 238.0,
+ "T_TRANS": 12000,
+ "x_ic_exit": 122.0,
+ "sigma": 0.060719999999999996,
+ "capa": 0.06,
+ "nu": 0.1,
+ "mu": 0.1,
+ "psi_wall": -0.68,
+ "prov": {
+  "producer_script": "tests/levelc_v1b.py",
+  "producer_sha256": "f66aabb236281b00996b7894f7e8e06f27425ef67e3b2a624b2c676be5706f46",
+  "run_head": "da9a13d797150fcbd774242c5a10a7a50c4b83bd",
+  "worktree_dirty": true,
+  "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1b.py dynamic --hy 40 --tag dyn_h40",
+  "started_at": "2026-09-23T17:10:30Z",
+  "finished_at": null,
+  "exit_code": null
+ },
+ "m_r_final": 5246.171667128518,
+ "m_b_final": 56554.59708320209,
+ "inj_r_final": -47327.07905060053,
+ "inj_b_final": 47177.47604197264,
+ "closure_r_final": -13.2507177290463,
+ "closure_b_final": -17.121041229453112,
+ "INVALID_NEAR_INTERFACE_DIAGNOSTIC": null
+}

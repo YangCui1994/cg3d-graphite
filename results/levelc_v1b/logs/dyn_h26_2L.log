@@ -1,0 +1,10 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[dyn_h26_2L] dynamic nx=500 ny=28 L_hyd=477 T_TRANS=5070 x_ic_exit=94 x_stop=474
+[dyn_h26_2L]  10000/60000 x_vol=  70.58 (360s, 28 st/s)
+[dyn_h26_2L]  20000/60000 x_vol= 100.34 (368s, 54 st/s)
+[dyn_h26_2L]  30000/60000 x_vol= 130.21 (377s, 80 st/s)
+[dyn_h26_2L]  40000/60000 x_vol= 160.18 (386s, 104 st/s)
+[dyn_h26_2L]  50000/60000 x_vol= 190.24 (394s, 127 st/s)
+[dyn_h26_2L]  60000/60000 x_vol= 220.38 (403s, 149 st/s)
+[dyn_h26_2L] steps_cap; V_meas=3.0002e-03 R2=1.00000
