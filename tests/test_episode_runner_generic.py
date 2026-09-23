@@ -24,6 +24,15 @@ review acceptance lists:
   frozen candidate without rerunning the executor (B13), worktree
   identity/expected-HEAD enforcement at attach (H4), persisted ERROR
   terminates run-episode deterministically (H5).
+
+  A0_EXTERNAL_REVIEW_R3.md — publication-safe promotion: a decided
+  round publishes BEFORE the PASS/promotion is applied, a publication
+  failure leaves ERROR/publish_pending with no promotion exposed, and
+  recovery re-publishes without rerunning sessions (B14); a valid
+  executor session that leaves a dirty tree is a terminal orphan whose
+  unreviewed state is never pushed (B15); approve-a0 freezes the
+  approved runner blob and every real entry point refuses a changed
+  runner (B16).
 """
 import json
 import os
@@ -206,12 +215,18 @@ class Harness:
         self.launcher = StubLauncher(self.wt)
         self.pub_calls = []
         self.prod_pushes = []      # (branch, expected_sha) per publication
+        self.fail_pub = set()      # {(stage, attempt)}: publication raises
+        self.fail_push = set()     # {(stage, attempt)}: product push fails
 
     def publisher(self, s, c, cs, a):
         self.pub_calls.append((cs['name'], a))
+        if (cs['name'], a) in self.fail_pub:
+            raise er.RunnerError('stub: control-side publication failure')
 
         def pp(cfg, expected):
             self.prod_pushes.append((cfg['branch'], expected))
+            if (cs['name'], a) in self.fail_push:
+                raise er.RunnerError('stub: product push rejected')
             return dict(branch=cfg['branch'], remote_ref=expected,
                         pushed_sha=expected, stub=True)
         return er.publish_round(s, c, cs, a, control_repo=self.control,
@@ -385,13 +400,9 @@ def scenario_failures():
           and h.state['stages']['SMOKE-1']['candidates'] == []
           and any(e['event'] == 'executor-session-invalid'
                   for e in h.state['history']))
-    h7 = failure_scenario('S7 dirty worktree after executor -> ERROR '
-                          'before review (retryable)',
-                          dict(dirty_extra=True),
-                          expect_event='dirty-worktree-before-review')
-    check('S7b dirty-worktree ERROR is executor-pending retryable',
-          h7.state['stages']['SMOKE-1']['error_phase']
-          == 'executor_pending')
+    h7 = failure_scenario('S7 executor wrote no session id -> ERROR, no '
+                          'advance', dict(no_session_id=True, skip_artifact=True),
+                          expect_event='executor-session-invalid')
     h8 = failure_scenario('S8 failed reviewer session -> ERROR review-'
                           'pending, executor candidate frozen intact',
                           dict(exit_code=3), role='reviewer',
@@ -691,6 +702,149 @@ def scenario_error_terminal():
                   for e in h.state['history']))
 
 
+# --------------------------- S19 publication-safe promotion (B14)
+def scenario_publication_failure():
+    # (a) product push fails on the round-2 PASS publication
+    h = Harness()
+    h.fail_push = {('SMOKE-1', 2)}
+    outcome = h.run_episode()
+    st1 = h.state['stages']['SMOKE-1']
+    n_after_fail = h.launcher.n
+    check('S19a product-push failure after PASS -> ERROR publish_pending, '
+          'NO promotion/decision applied, next stage stays LOCKED',
+          outcome == 'ERROR' and st1['status'] == 'ERROR'
+          and st1.get('error_phase') == 'publish_pending'
+          and [x['decision'] for x in st1['decisions']]
+          == ['CHANGES_REQUESTED']
+          and st1['pending']['decision'] == 'PASS'
+          and h.state['stages']['SMOKE-2']['status'] == 'LOCKED'
+          and h.state['current_stage'] == 'SMOKE-1'
+          and h.state['episode_status'] == 'RUNNING'
+          and any(e['event'] == 'publication-failed'
+                  for e in h.state['history']))
+    out2 = h.run_episode()
+    check('S19b persisted restart after a publication failure stops '
+          'deterministically (no silent continuation, no new sessions)',
+          out2 == 'ERROR' and h.launcher.n == n_after_fail)
+    h.fail_push = set()
+    outcome3 = er.run_round(h.state, h.cfg, 'SMOKE-1',
+                            launcher=h.launcher, publisher=h.publisher,
+                            save=h.save)
+    check('S19c retry re-publishes WITHOUT rerunning sessions, then '
+          'applies PASS + promotion',
+          outcome3 == 'PASS'
+          and h.launcher.n == n_after_fail
+          and h.state['stages']['SMOKE-1']['status'] == 'PASS'
+          and h.state['stages']['SMOKE-2']['status'] == 'READY'
+          and h.state['current_stage'] == 'SMOKE-2'
+          and [x['decision'] for x in
+               h.state['stages']['SMOKE-1']['decisions']]
+          == ['CHANGES_REQUESTED', 'PASS'])
+    # (d) total (control-side) publication failure — same guarantees
+    h2 = Harness()
+    h2.fail_pub = {('SMOKE-1', 2)}
+    outcome = h2.run_episode()
+    check('S19d control-publication failure after PASS -> same ERROR '
+          'publish_pending guarantees',
+          outcome == 'ERROR'
+          and h2.state['stages']['SMOKE-1'].get('error_phase')
+          == 'publish_pending'
+          and h2.state['stages']['SMOKE-2']['status'] == 'LOCKED'
+          and h2.state['episode_status'] == 'RUNNING')
+    # (e) terminal-stage PASS publication failure: no CHECKPOINT_READY
+    h3 = Harness()
+    h3.launcher.failures = [dict(_role='reviewer', decision='PASS')]
+    er.start_stage(h3.state, h3.cfg, 'SMOKE-1')
+    er.run_round(h3.state, h3.cfg, 'SMOKE-1', launcher=h3.launcher,
+                 publisher=h3.publisher, save=h3.save)
+    er.start_stage(h3.state, h3.cfg, 'SMOKE-2')
+    h3.fail_push = {('SMOKE-2', 1)}
+    outcome = er.run_round(h3.state, h3.cfg, 'SMOKE-2',
+                           launcher=h3.launcher, publisher=h3.publisher,
+                           save=h3.save)
+    check('S19e terminal-stage publication failure -> episode NOT '
+          'CHECKPOINT_READY',
+          outcome == 'ERROR'
+          and h3.state['episode_status'] == 'RUNNING'
+          and h3.state['stages']['SMOKE-2']['status'] == 'ERROR')
+
+
+# ------------------------- S20 valid-session dirty tree orphan (B15)
+def scenario_dirty_orphan():
+    h = Harness()
+    # executor COMMITS the candidate but leaves an extra dirty file
+    h.launcher.failures.append(dict(_role='executor', dirty_extra=True))
+    er.start_stage(h.state, h.cfg, 'SMOKE-1')
+    outcome = er.run_round(h.state, h.cfg, 'SMOKE-1',
+                           launcher=h.launcher, publisher=h.publisher,
+                           save=h.save)
+    st = h.state['stages']['SMOKE-1']
+    head_after = er.head_sha(h.wt)
+    check('S20a valid executor + dirty tree -> terminal orphan '
+          'HUMAN_REQUIRED, no candidate frozen (B15)',
+          outcome == 'HUMAN_REQUIRED'
+          and st['status'] == 'HUMAN_REQUIRED'
+          and h.state['episode_status'] == 'HUMAN_REQUIRED'
+          and st['candidates'] == [] and st['decisions'] == []
+          and st.get('orphan', {}).get('kind')
+          == 'dirty-worktree-before-review'
+          and st['orphan']['head'] == head_after
+          and any(e['event'] == 'orphan-dirty-worktree-before-review'
+                  for e in h.state['history']))
+    rec = json.loads(h.record_path('SMOKE-1').read_text(encoding='utf-8'))
+    check('S20b the unreviewed ambiguous product state is NOT pushed '
+          '(evidence-only publication)',
+          rec['product_push'] == dict(skipped=True,
+                                      reason='evidence-only')
+          and h.prod_pushes == [])
+    try:
+        er.run_round(h.state, h.cfg, 'SMOKE-1', launcher=h.launcher,
+                     publisher=h.publisher, save=h.save)
+        ok = False
+    except er.RunnerError:
+        ok = True
+    check('S20c retry refused: the unreviewed commit/dirty tree can '
+          'never silently become the next round base', ok)
+
+
+# ----------------------------- S21 approved-runner enforcement (B16)
+def scenario_runner_identity():
+    h = Harness()
+    h.cfg = dict(h.cfg, mode='real')
+    h.state['episode_status'] = 'A0_REVIEW'
+    h.state['smoke'] = dict(runner_commit=h.base)
+    er.approve_a0_from_text(h.state, f'candidate: {h.base}\n\n'
+                            f'Decision: PASS\n', 'fake.md')
+    ap = h.state['approved_runner']
+    # offline: the reviewed commit lives in the temp harness repo, so
+    # the identity pins the EXECUTING file (recorded as such)
+    check('S21a approve-a0 freezes the approved runner identity (B16)',
+          h.state['episode_status'] == 'A0_APPROVED'
+          and ap['commit'] == h.base
+          and ap['runner_blob'] == er._runner_blob_sha()
+          and ap['runner_blob_source'] == 'executing-file')
+    outcome = h.run_episode()
+    rec = json.loads(h.record_path('SMOKE-1').read_text(encoding='utf-8'))
+    check('S21b approved runner unchanged -> real loop allowed; stage '
+          'records carry the approved identity',
+          outcome == 'CHECKPOINT_READY'
+          and rec['approved_runner']['commit'] == h.base)
+    h2 = Harness()
+    h2.cfg = dict(h2.cfg, mode='real')
+    h2.state['episode_status'] = 'A0_REVIEW'
+    h2.state['smoke'] = dict(runner_commit=h2.base)
+    er.approve_a0_from_text(h2.state, f'candidate: {h2.base}\n\n'
+                            f'Decision: PASS\n', 'fake.md')
+    h2.state['approved_runner']['runner_blob'] = '0' * 40   # "changed"
+    try:
+        h2.run_episode()
+        check('S21c runner source changed after approval -> real loop '
+              'refused', False)
+    except er.RunnerError:
+        check('S21c runner source changed after approval -> real loop '
+              'refused', True)
+
+
 if __name__ == '__main__':
     scenario_happy_path()
     scenario_a0_gate()
@@ -704,5 +858,8 @@ if __name__ == '__main__':
     scenario_reviewer_retry()
     scenario_worktree_identity()
     scenario_error_terminal()
+    scenario_publication_failure()
+    scenario_dirty_orphan()
+    scenario_runner_identity()
     print(('ALL PASS' if not FAIL else f'FAILURES: {FAIL}'))
     sys.exit(1 if FAIL else 0)

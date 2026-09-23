@@ -1,4 +1,4 @@
-"""Bilateral-imbibition episode runner (A0 bootstrap + R1/R2 rework,
+"""Bilateral-imbibition episode runner (A0 bootstrap + R1/R2/R3 rework,
 BI-VALIDATION-001).
 
 One GENERIC orchestration engine drives every stage — the harmless A0
@@ -9,7 +9,7 @@ sessionId, --resume executor rework, timeout process-tree kill,
 GIT_TERMINAL_PROMPT=0).
 
 Engine guarantees (external reviews: R1 = B1-B8 + H1-H3,
-R2 = B9-B13 + H4-H5):
+R2 = B9-B13 + H4-H5, R3 = B14-B16):
   B1  rework increments the attempt number and binds to the immediately
       preceding round's review/candidate;
   B2  smoke and real stages share run_round()/run_episode()/publish();
@@ -74,7 +74,27 @@ R2 = B9-B13 + H4-H5):
       state-inconsistent worktree is refused;
   H5  a persisted ERROR stage is TERMINAL for `run-episode`
       (deterministic stop, never a busy loop); the explicit
-      same-attempt retry is the `run` command.
+      same-attempt retry is the `run` command;
+  B14 a decided round is TWO-PHASE: the review decision is persisted
+      as PUBLISH_PENDING, product + evidence publication runs FIRST,
+      and PASS/promotion/rework is applied only after publication
+      succeeded.  A publication failure leaves ERROR/publish_pending
+      with NO promotion exposed; recovery (the `run` command, or a
+      crash-resume of PUBLISH_PENDING) re-publishes the decided round
+      and NEVER reruns an executor/reviewer session for it;
+  B15 a VALID executor session that leaves a dirty tree is the same
+      kind of pre-review source ambiguity as B12: terminal
+      HUMAN_REQUIRED orphan (evidence-only publication — the
+      unreviewed product state is never pushed), never a silent
+      retry base;
+  B16 approve-a0 freezes the APPROVED runner implementation (its git
+      blob identity, resolved from the reviewed runner commit);
+      every real entry point (init-product / start-stage / run /
+      run-episode, including crash continuation) verifies the
+      EXECUTING episode_runner.py is identical to the approved blob
+      and refuses real execution otherwise (a changed runner requires
+      a new A0 smoke + external review); every real stage record
+      carries the approved runner identity.
 
 Commands (control checkout root):
   init | run-smoke [--reset] | approve-a0 --review <path>
@@ -108,7 +128,7 @@ EVIDENCE_ROOT = REPO_ROOT / ".agent" / "evidence" / "BI-VALIDATION-001"
 EPISODE_ID = "BI-VALIDATION-001"
 PRODUCT_BRANCH = "agent-episode/BI-VALIDATION-001"
 PRODUCT_BASE = "9ede55c8ef7589b61606e11c033c84d9bcd1de94"
-SMOKE_BRANCH = "agent-episode/BI-VALIDATION-001-smoke-r2"
+SMOKE_BRANCH = "agent-episode/BI-VALIDATION-001-smoke-r3"
 WORKTREE_ROOT = REPO_ROOT.parent / "cg3d-episode-worktrees"
 ZCODE = ["node", "C:/Program Files/ZCode/resources/glm/zcode.cjs"]
 ZCODE_MODE = "yolo"
@@ -167,7 +187,7 @@ def smoke_config() -> dict:
         state_path=SMOKE_STATE_PATH,
         branch=SMOKE_BRANCH,
         base=PRODUCT_BASE,
-        worktree=WORKTREE_ROOT / f"{EPISODE_ID}-smoke-r2",
+        worktree=WORKTREE_ROOT / f"{EPISODE_ID}-smoke-r3",
         stages=[
             dict(name="SMOKE-1",
                  contract=EPISODE_DIR / "runner" / "SMOKE_CONTRACT.md",
@@ -178,7 +198,7 @@ def smoke_config() -> dict:
                  / "SMOKE_VALIDATION_CONTRACT.md",
                  task="validation-only", validation_only=True),
         ],
-        evidence_subdir="A0_SMOKE_R2",
+        evidence_subdir="A0_SMOKE_R3",
         run_root=STATE_DIR,
         timeout_s=SMOKE_TIMEOUT_S,
     )
@@ -216,7 +236,7 @@ def fresh_state(cfg: dict, *, episode_id: str) -> dict:
             status="READY" if i == 0 else "LOCKED", attempts=0,
             executor_sessions=[], reviewer_sessions=[], candidates=[],
             decisions=[], contract_sha256=None, contract_snapshot=None,
-            round_bases={}) for i, s in
+            round_bases={}, pending=None) for i, s in
             enumerate(cfg["stages"])},
         runner_commit=None, a0_review=None,
         history=[],
@@ -406,6 +426,38 @@ def _expected_product_head(state: dict, cfg: dict) -> str:
         if st.get("candidates"):
             head = st["candidates"][-1]["sha"]
     return head
+
+
+# --------------------------------------------------- runner identity (B16)
+REL_RUNNER = Path(__file__).resolve().relative_to(REPO_ROOT).as_posix()
+
+
+def _runner_blob_sha(commit: str | None = None) -> str:
+    """B16: the git-blob identity of the runner implementation.  With
+    `commit`, resolves the committed runner blob (the approved
+    content); without, hashes the EXECUTING file the way git would
+    (clean-filter/EOL safe, so a CRLF checkout still matches its LF
+    blob)."""
+    if commit:
+        return _git(REPO_ROOT, "rev-parse", f"{commit}:{REL_RUNNER}")
+    return _git(REPO_ROOT, "hash-object", str(Path(__file__).resolve()))
+
+
+def _verify_approved_runner(state: dict) -> None:
+    """B16: real execution may only run on the A0-approved runner
+    implementation.  Evidence-only commits after approval are fine —
+    only the runner FILE content matters."""
+    ap = state.get("approved_runner")
+    if not ap:
+        return                     # no approval recorded: gate elsewhere
+    cur = _runner_blob_sha()
+    if cur != ap.get("runner_blob"):
+        raise RunnerError(
+            f"executing episode_runner.py (blob {cur[:12]}) differs "
+            f"from the A0-approved implementation (blob "
+            f"{(ap.get('runner_blob') or '?')[:12]}, commit "
+            f"{str(ap.get('commit', '?'))[:12]}) — a changed runner "
+            f"requires a new A0 smoke + external review")
 
 
 # -------------------------------------------------------------- prompts
@@ -643,6 +695,8 @@ def publish_round(state: dict, cfg: dict, cfg_stage: dict, attempt: int,
         contract_drift=drift,
         branch=cfg["branch"],
         product_push=push_rec,
+        pending=st.get("pending"),
+        approved_runner=state.get("approved_runner"),
         candidates=st["candidates"], decisions=st["decisions"],
         executor_sessions=st["executor_sessions"],
         reviewer_sessions=st["reviewer_sessions"],
@@ -672,8 +726,9 @@ def publish_round(state: dict, cfg: dict, cfg_stage: dict, attempt: int,
                       stage_dir.as_posix())
         if staged:
             _git(repo, "add", stage_dir.as_posix())
-            decision = (st["decisions"][-1]["decision"]
-                        if st["decisions"] else "ERROR")
+            decision = (st.get("pending", {}).get("decision")
+                        or (st["decisions"][-1]["decision"]
+                            if st["decisions"] else "ERROR"))
             _git(repo, "commit", "-m",
                  f"episode({cfg['mode']}): publish {cfg_stage['name']} "
                  f"record (attempt {attempt}, {decision})")
@@ -753,6 +808,71 @@ def _orphan_stop(state: dict, cfg: dict, cfg_stage: dict, st: dict,
     return "HUMAN_REQUIRED"
 
 
+def _finish_round(state: dict, cfg: dict, cfg_stage: dict, stage_name: str,
+                  attempt: int, *, publisher, save) -> str:
+    """B14 second phase: publish FIRST, apply the decision transition
+    only after publication succeeded.  Called with the stage in
+    PUBLISH_PENDING (decision persisted in st['pending']); on
+    publication failure the stage becomes ERROR/publish_pending with
+    NO transition applied (the next stage is never exposed), and the
+    retry path re-publishes without rerunning any session."""
+    st = state["stages"][stage_name]
+    pending = st.get("pending") or {}
+    decision = pending.get("decision")
+    if pending.get("attempt") != attempt or not decision:
+        raise RunnerError(f"{stage_name} round-{attempt:02d}: "
+                          f"PUBLISH_PENDING without a decision pending "
+                          f"for this attempt")
+    try:
+        publisher(state, cfg, cfg_stage, attempt)
+    except Exception as e:              # publication failure must gate
+        st["status"] = "ERROR"          # advancement (B14)
+        st["error_phase"] = "publish_pending"
+        st["error_stage_phase"] = "PUBLISH_PENDING"
+        record(state, "publication-failed", stage=stage_name,
+               attempt=attempt, decision=decision,
+               error=str(e)[:300])
+        save(state)
+        return "ERROR"
+    st["decisions"].append(dict(attempt=attempt, decision=decision,
+                                sha=pending["sha"],
+                                validation_only=pending[
+                                    "validation_only"]))
+    for k in ("error_phase", "error_stage_phase", "base_guard",
+              "pending"):
+        st.pop(k, None)
+    outcome = decision
+    if decision == "PASS":
+        st["status"] = "PASS"
+        names = [s["name"] for s in cfg["stages"]]
+        if names.index(stage_name) == len(names) - 1:
+            state["episode_status"] = "CHECKPOINT_READY"
+            record(state, "checkpoint-ready", stage=stage_name)
+        else:
+            nxt = names[names.index(stage_name) + 1]
+            state["stages"][nxt]["status"] = "READY"
+            state["current_stage"] = nxt
+            record(state, "promote", stage=stage_name, next_stage=nxt)
+    elif decision == "CHANGES_REQUESTED":
+        if st["attempts"] >= MAX_ATTEMPTS:
+            st["status"] = "HUMAN_REQUIRED"
+            state["episode_status"] = "HUMAN_REQUIRED"
+            outcome = "HUMAN_REQUIRED"
+            record(state, "attempt-limit", stage=stage_name,
+                   attempts=st["attempts"])
+        else:
+            st["attempts"] += 1            # B1: rework = NEW attempt no.
+            st["status"] = "REWORK"
+            record(state, "rework", stage=stage_name,
+                   next_attempt=st["attempts"])
+    else:
+        st["status"] = "HUMAN_REQUIRED"
+        state["episode_status"] = "HUMAN_REQUIRED"
+        record(state, "human-required", stage=stage_name)
+    save(state)
+    return outcome
+
+
 def run_round(state: dict, cfg: dict, stage_name: str, *,
               launcher=launch_session, publisher=publish_round,
               save=None) -> str:
@@ -773,7 +893,11 @@ def run_round(state: dict, cfg: dict, stage_name: str, *,
         # deterministic stop: the `run` command)
         stage_phase = st.pop("error_stage_phase", "EXECUTING")
         round_phase = st.pop("error_phase", "executor_pending")
-        if round_phase == "review_pending":
+        if round_phase == "publish_pending":
+            # B14: the round was DECIDED but its publication failed —
+            # restore the publish-pending phase (no session rerun)
+            st["status"] = "PUBLISH_PENDING"
+        elif round_phase == "review_pending":
             # B13: candidate already frozen — restore review-pending and
             # drop any stale/partial review (it is never parsed)
             st["status"] = "CANDIDATE_READY"
@@ -782,9 +906,47 @@ def run_round(state: dict, cfg: dict, stage_name: str, *,
             st["status"] = stage_phase
             for name in ("execution_report.md", "review.md"):
                 (d / name).unlink(missing_ok=True)
-    if st["status"] not in ("EXECUTING", "REWORK", "CANDIDATE_READY"):
+    if st["status"] not in ("EXECUTING", "REWORK", "CANDIDATE_READY",
+                            "PUBLISH_PENDING"):
         raise RunnerError(f"stage {stage_name} status {st['status']}: "
                           f"use start-stage / run-episode")
+
+    if st["status"] == "PUBLISH_PENDING":
+        # B14 recovery: a decided round whose publication failed (or
+        # whose publisher crashed).  Re-validate the frozen decision,
+        # re-publish, and only then apply the transition.  No executor
+        # or reviewer session is ever rerun for a decided round.
+        p = st.get("pending") or {}
+        rev = d / "review.md"
+        problems = []
+        if p.get("attempt") != attempt or not p.get("decision"):
+            problems.append("no decision pending for this attempt")
+        elif not st["candidates"] \
+                or st["candidates"][-1]["attempt"] != attempt \
+                or p.get("sha") != st["candidates"][-1]["sha"]:
+            problems.append("pending decision does not bind to this "
+                            "attempt's candidate")
+        elif not rev.exists():
+            problems.append("review.md missing")
+        else:
+            try:
+                decision, _ = parse_review(rev, stage_name, attempt,
+                                           p["sha"])
+            except RunnerError as e:
+                problems.append(f"review unparseable: {e}")
+            else:
+                if decision != p["decision"]:
+                    problems.append(f"review now decides {decision} "
+                                    f"(pending {p['decision']})")
+        if problems:
+            return _orphan_stop(
+                state, cfg, cfg_stage, st, stage_name, attempt,
+                kind="publish-pending-ambiguous",
+                base=p.get("sha", "?"), head=head_sha(cfg["worktree"]),
+                event="publish-pending-ambiguous",
+                save=save, publisher=publisher)
+        return _finish_round(state, cfg, cfg_stage, stage_name, attempt,
+                             publisher=publisher, save=save)
 
     # ------------------------------------------- executor part (B12)
     if st["status"] in ("EXECUTING", "REWORK"):
@@ -859,22 +1021,25 @@ def run_round(state: dict, cfg: dict, stage_name: str, *,
             publisher(state, cfg, cfg_stage, attempt)
             return "ERROR"
         csha = head_sha(cfg["worktree"])
+        if worktree_dirty(cfg["worktree"]):
+            # B15: a VALID session that left the tree dirty is pre-review
+            # source ambiguity — same terminal treatment as a B12
+            # orphan.  Never a silent retry base; the unreviewed product
+            # state is never pushed (evidence-only publication).
+            st["orphan_dirty"] = worktree_dirty(cfg["worktree"])
+            return _orphan_stop(
+                state, cfg, cfg_stage, st, stage_name, attempt,
+                kind="dirty-worktree-before-review", base=base,
+                head=csha, event="orphan-dirty-worktree-before-review",
+                save=save, publisher=publisher)
         validation_only = (csha == base)
         if validation_only and cfg_stage.get("validation_only") is False:
+            # head == base and tree clean: unambiguous, retryable
             st["error_phase"] = "executor_pending"
             st["error_stage_phase"] = phase_at_entry
             st["status"] = "ERROR"
             record(state, "no-candidate-where-commit-required",
                    stage=stage_name, attempt=attempt)
-            save(state)
-            publisher(state, cfg, cfg_stage, attempt)
-            return "ERROR"
-        if worktree_dirty(cfg["worktree"]):
-            st["error_phase"] = "executor_pending"
-            st["error_stage_phase"] = phase_at_entry
-            st["status"] = "ERROR"
-            record(state, "dirty-worktree-before-review", stage=stage_name,
-                   attempt=attempt, dirty=worktree_dirty(cfg["worktree"]))
             save(state)
             publisher(state, cfg, cfg_stage, attempt)
             return "ERROR"
@@ -953,45 +1118,18 @@ def run_round(state: dict, cfg: dict, stage_name: str, *,
             event="reviewer-modified-product", save=save,
             publisher=publisher)
     decision, _ = parse_review(rev, stage_name, attempt, csha)
-    st["decisions"].append(dict(attempt=attempt, decision=decision,
-                                sha=csha,
-                                validation_only=validation_only))
     record(state, "review-decision", stage=stage_name, attempt=attempt,
            decision=decision)
-
-    for k in ("error_phase", "error_stage_phase", "base_guard"):
-        st.pop(k, None)
-    outcome = decision
-    if decision == "PASS":
-        st["status"] = "PASS"
-        names = [s["name"] for s in cfg["stages"]]
-        if names.index(stage_name) == len(names) - 1:
-            state["episode_status"] = "CHECKPOINT_READY"
-            record(state, "checkpoint-ready", stage=stage_name)
-        else:
-            nxt = names[names.index(stage_name) + 1]
-            state["stages"][nxt]["status"] = "READY"
-            state["current_stage"] = nxt
-            record(state, "promote", stage=stage_name, next_stage=nxt)
-    elif decision == "CHANGES_REQUESTED":
-        if st["attempts"] >= MAX_ATTEMPTS:
-            st["status"] = "HUMAN_REQUIRED"
-            state["episode_status"] = "HUMAN_REQUIRED"
-            outcome = "HUMAN_REQUIRED"
-            record(state, "attempt-limit", stage=stage_name,
-                   attempts=st["attempts"])
-        else:
-            st["attempts"] += 1            # B1: rework = NEW attempt no.
-            st["status"] = "REWORK"
-            record(state, "rework", stage=stage_name,
-                   next_attempt=st["attempts"])
-    else:
-        st["status"] = "HUMAN_REQUIRED"
-        state["episode_status"] = "HUMAN_REQUIRED"
-        record(state, "human-required", stage=stage_name)
+    # B14 two-phase: persist the DECIDED state first, publish product +
+    # evidence, and apply PASS/promotion/rework only after publication
+    # succeeded.  A failure inside _finish_round leaves
+    # ERROR/publish_pending with no promotion exposed.
+    st["pending"] = dict(attempt=attempt, decision=decision, sha=csha,
+                         validation_only=validation_only)
+    st["status"] = "PUBLISH_PENDING"
     save(state)
-    publisher(state, cfg, cfg_stage, attempt)
-    return outcome
+    return _finish_round(state, cfg, cfg_stage, stage_name, attempt,
+                         publisher=publisher, save=save)
 
 
 def run_episode(state: dict, cfg: dict, *, launcher=launch_session,
@@ -1007,19 +1145,21 @@ def run_episode(state: dict, cfg: dict, *, launcher=launch_session,
     save = save or (lambda s: save_state_at(cfg["state_path"], s))
     if state["episode_status"] in ("HUMAN_REQUIRED", "CHECKPOINT_READY"):
         return state["episode_status"]
-    if cfg["mode"] == "real" and state["episode_status"] not in (
-            "A0_APPROVED", "RUNNING"):
-        raise RunnerError(
-            f"episode_status {state['episode_status']} does not "
-            f"authorize the real loop (approve-a0 with a PASS external "
-            f"review required)")
+    if cfg["mode"] == "real":
+        if state["episode_status"] not in ("A0_APPROVED", "RUNNING"):
+            raise RunnerError(
+                f"episode_status {state['episode_status']} does not "
+                f"authorize the real loop (approve-a0 with a PASS "
+                f"external review required)")
+        _verify_approved_runner(state)          # B16, incl. continuation
     while True:
         stage = state["current_stage"]
         st = state["stages"][stage]
         if st["status"] == "READY":
             start_stage(state, cfg, stage)
             save(state)
-        elif st["status"] in ("EXECUTING", "REWORK", "CANDIDATE_READY"):
+        elif st["status"] in ("EXECUTING", "REWORK", "CANDIDATE_READY",
+                              "PUBLISH_PENDING"):
             outcome = run_round(state, cfg, stage, launcher=launcher,
                                 publisher=publisher, save=save)
             if outcome == "ERROR":
@@ -1133,6 +1273,20 @@ def approve_a0_from_text(state: dict, text: str,
         raise RunnerError(f"review binds to candidate {cand[:12]} but the "
                           f"smoke ran runner commit "
                           f"{runner_commit[:12]}")
+    # B16: freeze the APPROVED runner implementation — the committed
+    # runner blob at the reviewed commit (EOL-safe git identity).  If
+    # that commit is unavailable in this checkout (offline harnesses),
+    # pin the executing file's blob and record that fact.
+    try:
+        runner_blob = _runner_blob_sha(runner_commit)
+        blob_src = "commit"
+    except RunnerError:
+        runner_blob = _runner_blob_sha()
+        blob_src = "executing-file"
+    state["approved_runner"] = dict(
+        commit=runner_commit, runner_blob=runner_blob,
+        runner_blob_source=blob_src, review=review_path,
+        approved_at=utc_now())
     state["episode_status"] = "A0_APPROVED"
     state["a0_review"] = dict(path=review_path, candidate=cand,
                               decision="PASS")
@@ -1151,11 +1305,12 @@ def cmd_approve_a0(args) -> None:
 
 
 def _require_real_ready(state: dict) -> None:
-    if state["episode_status"] != "A0_APPROVED":
+    if state["episode_status"] not in ("A0_APPROVED", "RUNNING"):
         raise RunnerError(
             f"episode_status {state['episode_status']}: real execution "
             f"requires explicit A0 approval (approve-a0 with a PASS "
             f"external review bound to the runner commit)")
+    _verify_approved_runner(state)      # B16: approved implementation only
 
 
 def cmd_init_product(args) -> None:
@@ -1186,6 +1341,7 @@ def cmd_start_stage(args) -> None:
 def cmd_run(args) -> None:
     main = load_state(STATE_PATH)
     cfg = real_config()
+    _require_real_ready(main)       # B16 + status gate on the retry path
     outcome = run_round(main, cfg, main["current_stage"])
     print(f"round outcome: {outcome}")
 
@@ -1197,6 +1353,8 @@ def cmd_run_episode(args) -> None:
         _require_real_ready(main)
         cmd_init_product(argparse.Namespace())
         main = load_state(STATE_PATH)
+    else:
+        _require_real_ready(main)     # B16 also on plain continuation
     outcome = run_episode(main, cfg)
     print(f"episode loop ended: {outcome}")
 
