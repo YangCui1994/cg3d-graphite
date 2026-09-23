@@ -1,0 +1,3 @@
+M	cg3d/diagnostics.py
+M	cg3d/protocol.py
+A	tests/test_termination_diagnostics.py
