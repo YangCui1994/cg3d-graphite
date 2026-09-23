@@ -1,9 +1,21 @@
 """cg3d.diagnostics — host-side measurement / post-processing (PR-1/PR-3
 instruments, moved here from run_common.py in PR-5; run_common re-exports
 for compatibility).
+
+CG3D-CONVERGENCE-DIAG-003 adds a reporting layer on top of the rung exit:
+`termination_record` (why the rung stopped, as three independent flags) and
+`NumericalHealthTracker` (observed finite/non-finite sampled diagnostics).
+Both are observational — they decide nothing, add no stop condition and no
+new threshold, and leave every existing convergence calculation untouched.
 """
+import math
+
 import numpy as np
 from scipy import ndimage
+
+QUASI_STEADY = 'quasi-steady'
+MAX_STEPS = 'max-steps'
+UMAX_CAP = 'umax-cap'
 
 _CONN_STRUCT = {6: ndimage.generate_binary_structure(3, 1),
                 18: ndimage.generate_binary_structure(3, 2),
@@ -136,6 +148,105 @@ def eval_convergence(win, pore_cells, qs_tol, pc_drift_tol=0.01,
     if out['u_rms_rel'] < u_rel_tol:
         out['criteria_passed'].append('kinetic')
     return out
+
+
+def termination_record(reason, qs_mode):
+    """Additive termination record for a normal `run_hold` return
+    (CG3D-CONVERGENCE-DIAG-003).  Splits the single legacy `reason`
+    string into the three independent statements it conflates, without
+    touching any stopping rule: `converged` is true only for the
+    configured quasi-steady exit, `step_limit_reached` only for the
+    step-budget exit, `safety_limit_triggered` only for the umax-cap
+    exit.  All three flags are read off `reason`; nothing is recomputed
+    and no decision is taken here.
+
+    `process_completed` is always True by construction: this record is
+    built only where `run_hold` returned normally.  Abnormal process
+    exits (exception, interrupt, external stop) never reach it and are
+    deliberately outside the record.  `reason` is echoed verbatim, so an
+    unrecognised future reason reports three False flags instead of
+    raising inside a running simulation.
+
+    \"converged\" here means only that the configured numerical stopping
+    criteria were satisfied; it is not a claim of physical equilibrium.
+    """
+    return dict(process_completed=True,
+                reason=str(reason),
+                converged=reason == QUASI_STEADY,
+                step_limit_reached=reason == MAX_STEPS,
+                safety_limit_triggered=reason == UMAX_CAP,
+                qs_mode=str(qs_mode))
+
+
+def _finite_or_none(value):
+    """float(value) for a real scalar, else None (value unavailable).
+
+    None, strings and anything that is not castable to a single real
+    number (e.g. a multi-element array) count as unavailable and are
+    ignored rather than reported as non-finite.
+    """
+    if value is None or isinstance(value, str):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+class NumericalHealthTracker:
+    """Observed finite/non-finite state of the sampled diagnostics
+    (CG3D-CONVERGENCE-DIAG-003).  Purely observational: it holds no
+    threshold, adds no stop condition, and cannot alter the trajectory —
+    a large but finite umax is finite here, and its umax-cap exit is a
+    safety limit, not a numerical failure.
+
+    `observe(step, sample)` takes one `OpenSystem.measure()` dict and
+    records every scalar field observed as NaN/Inf.  `record()` returns a
+    JSON-ready dict: `finite` is true only when no observed scalar was
+    non-finite (vacuously true when nothing was sampled, with
+    `sample_count = 0` recording that fact), `nonfinite_fields` lists the
+    offending field names sorted, `first_nonfinite_step` is the first
+    sampled step carrying any of them, and `first_nonfinite_fields` says
+    which fields were already bad at that step.
+    """
+
+    def __init__(self):
+        self.sample_count = 0
+        self.fields_observed = set()
+        self.nonfinite_counts = {}
+        self.first_nonfinite_step = None
+        self.first_nonfinite_fields = []
+
+    def observe(self, step, sample):
+        """One sampling point.  Never raises on odd values: a field that
+        is not a real scalar is skipped, not failed."""
+        self.sample_count += 1
+        if not isinstance(sample, dict):
+            return
+        first_here = []
+        for name, value in sample.items():
+            v = _finite_or_none(value)
+            if v is None:
+                continue
+            key = str(name)
+            self.fields_observed.add(key)
+            if math.isfinite(v):
+                continue
+            self.nonfinite_counts[key] = self.nonfinite_counts.get(key, 0) + 1
+            first_here.append(key)
+        if first_here and self.first_nonfinite_step is None:
+            self.first_nonfinite_step = int(step)
+            self.first_nonfinite_fields = first_here
+
+    def record(self):
+        return dict(finite=not self.nonfinite_counts,
+                    nonfinite_fields=sorted(self.nonfinite_counts),
+                    first_nonfinite_step=self.first_nonfinite_step,
+                    sample_count=int(self.sample_count),
+                    nonfinite_counts={k: self.nonfinite_counts[k]
+                                      for k in sorted(self.nonfinite_counts)},
+                    first_nonfinite_fields=list(self.first_nonfinite_fields),
+                    fields_observed=sorted(self.fields_observed))
 
 
 def region_stats(rho, psi, v, mask):

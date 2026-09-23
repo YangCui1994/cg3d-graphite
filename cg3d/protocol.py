@@ -13,7 +13,8 @@ import time
 
 import numpy as np
 
-from .diagnostics import region_stats, eval_convergence
+from .diagnostics import (region_stats, eval_convergence,
+                          termination_record, NumericalHealthTracker)
 
 
 class OpenSystem:
@@ -127,12 +128,22 @@ def run_hold(ns, sys_, d, label, phase=None, dump_frame=None,
     dump_frame/live_ckpt so frames keep unique global names in a
     resumed output dir; `live_ckpt(it_global)` is called at sampling
     points whenever `ckpt_every` (multiple of ns.every) divides the
-    global step.  Returns the ladder row dict."""
+    global step.  Returns the ladder row dict.
+
+    The row carries two additive reporting records alongside the legacy
+    fields (CG3D-CONVERGENCE-DIAG-003): `termination` states process
+    completion, the reason, and the converged / step-limit / safety-limit
+    flags separately, and `numerical_health` reports which sampled
+    diagnostics were ever non-finite.  Both are observational — the
+    stopping rules, thresholds, window rules and loop order are
+    unchanged, and `row["reason"]` / `row["convergence"]` keep their
+    existing meaning."""
     s = sys_.s
     sys_.set_ladder(d)
     t0 = time.time()
     hist = []      # (it, s_nw): quasi-steady slope
     samples = []   # (it, full diagnostic dict): rung-tail means
+    health = NumericalHealthTracker()   # observe-only, decides nothing
     it = it_start
     reason = 'max-steps'
     while it < ns.max_steps:
@@ -145,6 +156,7 @@ def run_hold(ns, sys_, d, label, phase=None, dump_frame=None,
                     and (it + it_offset) % ckpt_every == 0):
                 live_ckpt(it + it_offset)
             m = sys_.measure()
+            health.observe(it, m)
             hist.append((it, m['s_nw']))
             samples.append((it, m))
             w = [(i, sv) for i, sv in hist
@@ -199,6 +211,8 @@ def run_hold(ns, sys_, d, label, phase=None, dump_frame=None,
                s_nw=float(np.mean(tail)) if tail else None,
                s_nw_binary=tmean('s_nw_binary'),
                convergence=conv,
+               termination=termination_record(reason, ns.qs_mode),
+               numerical_health=health.record(),
                umax_last=m_last.get('umax'),
                wall_s=round(time.time() - t0, 1))
     if phase is not None:
