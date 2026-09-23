@@ -129,10 +129,10 @@ def main():
               f'rel {rel*100:.2f}%), R2={r2:.5f}, intercept={b:.5f}')
         ok_all &= (rel < 0.03) and (r2 >= 0.999)
 
-    np.save(os.path.join(OUTROOT, 'laplace_data.npz'),
-            rows=np.array(rows, dtype=object),
-            sigma=np.array([results[c]['sigma'] for c in capas]),
-            capa=np.array(capas))
+    np.savez(os.path.join(OUTROOT, 'laplace_data.npz'),
+             rows=np.array(rows, dtype=object),
+             sigma=np.array([results[c]['sigma'] for c in capas]),
+             capa=np.array(capas))
     if not ok_all:
         print('FAIL: sigma deviates >3% from 1.012*CapA or R2 < 0.999')
         sys.exit(1)
