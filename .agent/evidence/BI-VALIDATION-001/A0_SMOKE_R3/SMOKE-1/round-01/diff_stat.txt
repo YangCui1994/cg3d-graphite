@@ -1,0 +1,3 @@
+0e176e5 smoke(SMOKE-1 r1): add candidate marker file for runner isolation test
+ smoke/marker.md | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
