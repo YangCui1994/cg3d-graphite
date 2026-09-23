@@ -1,13 +1,14 @@
 {
   "schema_version": "v1-alpha",
-  "task_id": "CG3D-V1-INTEGRATION-004",
+  "task_id": "ADS-EXECUTION-BASE-005",
   "round": 1,
   "max_rounds": 3,
-  "revision": 26,
-  "status": "CLOSED",
-  "zcode_session_id": "sess_59a7ace2-ae90-421b-846f-f073ef6a7db6",
-  "candidate_commit": "645479e00217b1b50f6cd4ae5d833eda1661e84c",
+  "revision": 27,
+  "status": "READY_FOR_EXECUTION",
+  "execution_base_commit": "dbecc71898131cc6545bf314dc2f7ba56d1df337",
+  "zcode_session_id": null,
+  "candidate_commit": "dbecc71898131cc6545bf314dc2f7ba56d1df337",
   "worker": null,
-  "updated_at": "2026-09-23T01:08:00Z",
+  "updated_at": "2026-09-23T02:12:00Z",
   "last_error": null
 }
