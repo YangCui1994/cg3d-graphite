@@ -123,7 +123,7 @@ def prov(cmd_argv):
         producer_sha256=psha,
         run_head=gitq('rev-parse', 'HEAD'),
         worktree_dirty=bool(gitq('status', '--porcelain')),
-        command=' '.join(['python'] + list(cmd_argv)),
+        command=' '.join([sys.executable] + list(cmd_argv)),
         started_at=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
         finished_at=None, exit_code=None)
 
