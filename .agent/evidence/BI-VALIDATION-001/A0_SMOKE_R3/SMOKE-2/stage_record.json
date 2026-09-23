@@ -1,0 +1,51 @@
+{
+ "stage": "SMOKE-2",
+ "attempt": 1,
+ "contract_sha256": "81c50c7b39a10ff769c8b7fd24134c45807a4a57e6a86572eb8b4808ca5942b1",
+ "contract_snapshot": "D:/2026_agent_work/01_GLM_LBM3D_porous_media/cg3d-graphite/.agent_runtime/episodes/BI-VALIDATION-001/smoke/SMOKE-2/contract_snapshot.md",
+ "contract_drift": null,
+ "branch": "agent-episode/BI-VALIDATION-001-smoke-r3",
+ "product_push": {
+  "branch": "agent-episode/BI-VALIDATION-001-smoke-r3",
+  "remote_ref": "aed0fdeeb00563a49c036b286a27f28a48c721d9",
+  "pushed_sha": "aed0fdeeb00563a49c036b286a27f28a48c721d9",
+  "verified_at": "2026-09-23T12:29:59Z"
+ },
+ "pending": {
+  "attempt": 1,
+  "decision": "PASS",
+  "sha": "aed0fdeeb00563a49c036b286a27f28a48c721d9",
+  "validation_only": true
+ },
+ "approved_runner": null,
+ "candidates": [
+  {
+   "attempt": 1,
+   "sha": "aed0fdeeb00563a49c036b286a27f28a48c721d9",
+   "base": "aed0fdeeb00563a49c036b286a27f28a48c721d9",
+   "validation_only": true
+  }
+ ],
+ "decisions": [],
+ "executor_sessions": [
+  {
+   "attempt": 1,
+   "session_id": "sess_531f708f-4575-456b-951f-eb6a9b013ac9",
+   "exit_code": 0,
+   "timed_out": false,
+   "resumed_from": null
+  }
+ ],
+ "reviewer_sessions": [
+  {
+   "attempt": 1,
+   "session_id": "sess_d6327b69-1edf-4750-ac68-55d57f42d284",
+   "exit_code": 0,
+   "timed_out": false,
+   "resumed_from": null
+  }
+ ],
+ "runner_commit": "83577f0d670958c7550227d6a0682ccce80a9852",
+ "episode_status": "RUNNING",
+ "published_at": "2026-09-23T12:29:59Z"
+}
