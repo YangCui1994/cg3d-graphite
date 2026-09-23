@@ -1,5 +1,7 @@
 # Smoke Marker — BI-VALIDATION-001 / SMOKE-1
 
+SMOKE-PASS-TOKEN-7f3a
+
 Infrastructure rehearsal marker for the ZCode executor/reviewer orchestration
 loop. This file carries no scientific content and is not part of the solver,
 tests, or product documentation.
