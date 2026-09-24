@@ -1552,3 +1552,85 @@ Core CG-LBM
 当前研发重点：
 
 > **继续把 boundary / finite-resolution / measurement effects 与 core solver accuracy 分离，而不是通过调参让某一个 absolute speed gate 通过。**
+
+
+## 21.7 V2 external scientific review — PASS；V3 前置 conservation hold
+
+External contract-owner review 对 candidate
+\`5e679d8d99d338f9ab28565c636f021a0f9211b2\` 作出最终裁决：
+
+**V2 bilateral symmetry / topology mechanism = PASS。**
+
+### g3 最终语义
+
+weak-compressibility hard guardrail
+
+\[
+0.89\le\rho\le1.11
+\]
+
+正式限定于 bulk-phase / trapped-pocket 节点（当前 operational selector：
+\(|\psi|>0.9\)）。
+
+diffuse-interface all-fluid extrema继续逐样本报告，但不单独作为 bulk EOS
+失效判据。V2 bulk range [0.935, 1.008]，因此 g3 PASS。
+
+### g6 最终语义
+
+原始 \(5\times10^{-4}\) per-colour hard cutoff 低于已接受 V1c 的实际
+60k-step numerical floor，因此不再作为 V2 mechanism 的 binary cutoff。
+
+V2 qualitative mechanism certification 使用校准 drift envelope：
+
+\[
+r_M\le2\times10^{-8}/step
+\]
+
+且 60k-step total-normalised drift：
+
+\[
+|\Delta M|/M_0\le10^{-3}.
+\]
+
+V2 的 blue sentinel、total-colour sentinel 与独立 population channel
+均满足此 envelope。
+
+这不代表 solver 已达到严格 conservation。
+
+### 为什么 conservation 仍然必须进入算法任务
+
+V2 trapped-pocket mean rho 的物理/numerical signal 约 +0.42%，而已测得
+global mass drift 为约 0.055–0.092%，相当于该 signal 的约 13–22%。
+
+因此 V2 的 symmetry/topology 结论不受阻，但 V3 若要比较 pocket rho/p、
+trapped volume 或 buffer-size dependence，必须先完成独立的
+**SOLVER conservation audit**。
+
+audit 首先只加 instrumentation，不改 physics，逐 kernel 比较：
+
+\[
+M_f=\sum f_i,\qquad
+M_c=\sum(\rho_r+\rho_b),\qquad
+M_\rho=\sum\rho
+\]
+
+并通过 periodic single-phase / periodic two-phase / wall single-phase /
+wall two-phase 四级 case 分离：
+
+- floating-point accumulation；
+- bounce-back bookkeeping；
+- recoloring；
+- total-distribution / colour-population mismatch。
+
+### V2 最终状态
+
+\`\`\`text
+V2 scientific benchmark: PASS
+V3 authorization: HOLD
+reason: pre-V3 solver conservation audit + V3 contract rewrite
+\`\`\`
+
+旧 V3 中“later isolation time / pre-isolation trajectory”已由 V2 证明不适用于
+当前 closed trapped-pocket geometry：gas pocket 从 t=0 即 trapped。
+V3 必须改成 buffer-size 对 stall displacement、G_bulk、outer-wall reflection、
+topology 和（守恒不确定性闭合后的）pocket rho/p 的 sensitivity test。
