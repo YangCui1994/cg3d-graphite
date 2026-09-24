@@ -1352,7 +1352,110 @@ External review 建议 V2 primary slit 使用 **h=40**：
 V1c PASS 仅授权进入**修订后的 V2 bilateral verification**，不授权 V3 或真实 porous-media / graphite / separator / PCS 工作。
 
 
-# 21. 后续每一步算法变动的固定记录模板
+# 21. V2 — 双侧对称 trapped-pocket 验证（2026-09-24，BI-V2-BILATERAL-001）
+
+## 21.0 记录头（契约 F 第 1 项）
+
+```text
+Stage / Task ID: BI-V2-BILATERAL-001（修订版 V2 契约）
+Base SHA:        2b82f9a5f448e756b5d5903b0df37f9a3b11d804
+Candidate SHA:   5e679d8d99d338f9ab28565c636f021a0f9211b2
+Branch:          agent-task/BI-V2-BILATERAL-001（已推送，远端 = 候选）
+Reviewer:        fresh session sess_cb89ddea-76ab-46f2-a66a-e8c43fc03262
+Decision:        HUMAN_REQUIRED（g6 守恒 gate 超限由契约所有者裁决；
+                 全部科学 gate 以 3–4 个量级余量通过，物理结论被独立确认）
+```
+
+## 21.1 物理模型与公式（契约第 2 项）
+
+闭域镜像系统：`wall[0,3) | liquid[3,83) | gas[83,243) | liquid[243,323) | wall[323,326)`，h=40、B=80、G0=160、nx=326、ny=42、nz=6（z 周期），无 reservoir/膜/外力；psi_solid=-0.68 全域。锋面观测（契约 8.1）：
+
+phi_l(x) = <(1-psi)/2>_{y,z fluid}；x_left/x_right 为 phi_l=0.5 的插值交点；x_right* = 325 - x_right；e_x = |x_left - x_right*|；gate e_x <= max(2, 0.02 d)。bulk/mixed 列规则（0.9/0.95 阈值）给出 G_bulk 与 INTERACTION_ONSET（首次无 bulk-gas 列；本运行 NOT_REACHED，契约允许）。聚类：6 邻接、仅 z 周期合并；t=0 恰一个 38 400 节点被囚气团。闭域守恒 gate：max_t(eps_{r,b}) <= 5e-4。
+
+物理预期（V1c 外审 §4.1 预言并兑现）：Pc≈2.4e-3 对气团刚度 rho*cs^2=1/3 → 锋面在 O(1 lu) 内失速；本运行 d=-0.84 lu（弯月面成形）、G_bulk 160(t=0)→146、气团均值 rho 1.0000→1.0041（较 IC +0.42%）、速率对比 NOT_DISCRIMINATING（0.09 lu 窗口位移 < 2 lu，契约允许）。
+
+## 21.2 关键实现摘录（契约第 4 项，`tests/levelc_v2_bilateral.py`）
+
+程序化对称验证（t=0 硬失败）：
+
+```python
+checks = dict(
+    solid_mirror=bool((solid == solid[::-1, :, :]).all()),
+    psi0_mirror=bool((psi0 == psi0[::-1, :, :]).all()),
+    psi_solid_mirror=bool((psi_solid == psi_solid[::-1, :, :]).all()),
+    buffers_equal=..., gas_centred=..., ...)
+```
+
+锋面插值交点：
+
+```python
+def _cross_down(phi, a, b):          # 左锋面：phi 从 >=0.5 降到 <0.5
+    for i in range(a, b - 1):
+        if phi[i] >= 0.5 > phi[i + 1]:
+            return i + (phi[i] - 0.5) / (phi[i] - phi[i + 1])
+```
+
+z 周期聚类合并（scipy 6 邻接 + wrap 面并查集）：
+
+```python
+lab, n = ndimage.label(mask, structure=ndimage.generate_binary_structure(3, 1))
+for i, j in zip(*np.nonzero(mask[:, :, 0] & mask[:, :, NZ - 1])):
+    union(int(lab[i, j, 0]), int(lab[i, j, NZ - 1]))   # 仅 z 向 wrap
+```
+
+INTERACTION_ONSET 判定：
+
+```python
+gas_cols = (psi[:, y0:y1, :] > +0.9).mean(axis=(1, 2)) >= 0.95
+g_bulk = longest contiguous gas_cols run
+onset = 首个 g_bulk == 0 的采样（本运行 NOT_REACHED）
+```
+
+## 21.3 结果（契约第 5/6/7/8 项；评审修正后基线）
+
+| 指标 | 值 | gate |
+|---|---|---|
+| max e_x / RMS | **0.0013 / 0.0010 lu** | g5 PASS |
+| full-field E_psi max | 8.3e-5 | 诊断 |
+| 速率对称 | NOT_DISCRIMINATING（0.09 lu < 2 lu） | 契约允许 |
+| eps_r / eps_b max | 4.2e-4 / **6.73e-4** | **g6 字面 FAIL**（见 21.5） |
+| u_max（post-equil） | 0.0254 | g2 PASS |
+| bulk rho（post-equil） | [0.935, 1.008] | g3 PASS（语义待批准，见 21.5） |
+| 全流体 per-node rho min | 0.8851→0.8909（界面结构、衰减中） | 诊断 |
+| 二字气体积 | 38 400(t=0)→38 304(t=1000)→38 400（恢复） | 诊断 |
+| 气团均值 rho/p | 1.0000→1.0041（+0.42% vs IC）/ p→0.33470 | 诊断 |
+| 聚类数 | 1 全程（初始=终态） | g7/g8 PASS |
+| INTERACTION_ONSET | NOT_REACHED（G_bulk 160→146） | 契约允许 |
+| 缓冲区气占位 | 288/侧，59/60 采样相等（t=32k 一次 12 节点闪烁） | 诊断 |
+
+![V2 fronts + mirror error](figures/fig_v2_fronts_mirror.svg)
+
+![V2 trapped pocket + mass drift](figures/fig_v2_pocket_mass.svg)
+
+## 21.4 与 V1c 单锋基线对比（契约第 9 项）
+
+| 维度 | V1c 单锋（开域） | V2 双侧（闭域） |
+|---|---|---|
+| 驱动 | reservoir/膜，等压两浴 | 纯毛细 + 气团反压，无外部边界 |
+| 锋面行为 | 常速 generalized-Washburn（R2≈1） | 弯月面成形后失速（d=-0.84 lu），速率对比无判别力 |
+| 对称性 | N/A | 镜像误差 0.0013 lu / 场级 8.3e-5 |
+| 拓扑 | 锋面推进无拓扑事件 | 单一被囚气团全程保持、无碎裂 |
+| 守恒 | closure 4.9e-4–6.8e-4（报告不 gate） | 6.73e-4（同一量级；V2 契约 5e-4 硬 gate 首次将其置于裁决位） |
+| 密度界面欠冲 | dyn_h26_s 0.880460 / dyn_h40_s 0.887740 / static_h40 0.888573 / static_h26 0.893018 | 0.8851→0.8909（同族结构） |
+
+## 21.5 g6/g3 裁决状态与分层声明（契约第 10 项）
+
+- **g6（评审 B1，决定项）**：eps_b=6.73e-4 > 5e-4，单调缓增（约 1.1e-5/千步）；评审独立测得 population 通道 +9.2e-4（两通道差 3.7e-4）。漂移为 solver 级系统性（与被外部接受的 V1c 基线同族：5.95e-4/6.82e-4@60k 同样超此 gate）。裁决选项（评审 next-action）：(a) 契约所有者重定标 gate（per-step 率 ~1–1.5e-8/step 或总质量归一界 ≤1e-3/60k，五条冻结 solver 运行全部满足）；(b) 授权 solver 守恒工作项（诊断入口：Σ_fluid rho 与 Σ(rho_r+rho_b) 差 28.7@60k、界面带 -74.5/气团 +161/内部 +71.8 预算）。
+- **g3（评审 B2）**：executor 声明的 bulk 节点（|psi|>0.9）语义获评审实质审计支持（欠冲界面局域、V1c 已接受运行更深、气团在界内、衰减恢复），但硬 gate 范围需契约所有者正式批准。
+- 分层变动：SOLVER 无；BC 无（新几何为 V2 专属构建）；VAL 新增镜像/拓扑/闭域守恒 gate 集；DIAG 新增 E_psi、bulk/mixed 列、z-wrap 聚类、缓冲占位；HARNESS `tests/levelc_v2_bilateral.py` + 单元检验。
+
+## 21.6 证据路径与评审决策（契约第 11 项）
+
+产品证据：`agent-task/BI-V2-BILATERAL-001` 的 `results/levelc_v2/v2_primary/`（EXECUTION_REPORT、PROVENANCE、MANIFEST、front/gas/mass 三序列 CSV、初始/中/终场 npz+切片、symmetry_check、topology_t0、日志与退出码）。控制面：`.agent/evidence/BI-V2-BILATERAL-001/`（REVIEW_REQUEST、REVIEW、REVIEW_SESSION、SUMMARY）。评审非阻断发现 N1–N9（含 d(t) 恒等式缺陷与基线数字修正）记录于 REVIEW.md，待候选下次触碰时修复——本次文档数字已采用评审修正值。
+
+---
+
+# 22. 后续每一步算法变动的固定记录模板
 
 \`\`\`text
 Stage / Task ID:
@@ -1410,7 +1513,7 @@ Evidence paths:
 
 ---
 
-# 22. 当前总体状态
+# 23. 当前总体状态
 
 \`\`\`text
 Core CG-LBM
@@ -1431,9 +1534,16 @@ Core CG-LBM
           ├─ V1c differential a26=1.0436 / a40=1.0699 (both PASS)
           └─ localized open-boundary intercept L0(h) documented
                      ↓
-        V1c external scientific review PASS
-        ↓
-        revised V2 bilateral verification authorized
+        bilateral trapped-pocket (V2, candidate 5e679d8)
+          ├─ mirror error 0.0013 lu / E_psi 8.3e-5
+          ├─ single trapped cluster, no fragmentation
+          ├─ fronts stall (closed-system physics), NOT_REACHED
+          ├─ scientific gates PASS by 3-4 orders of margin
+          └─ HUMAN_REQUIRED: g6 conservation gate vs solver f32
+            floor (accepted V1c baseline exceeds it too) + g3 scope
+            ratification — contract-owner decision
+                     ↓
+        owner decision: gate re-scope vs solver conservation item
         (V3 / porous-media remain unauthorized)
 \`\`\`
 
