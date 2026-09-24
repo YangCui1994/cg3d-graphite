@@ -151,13 +151,15 @@
    "T3C1s": "PASS"
   },
   "contact_angle": {
-   "T0_theta": 30.8,
+   "T0_theta": 34.0,
    "T3C1s_theta": 27.3,
-   "band": "30+-6"
+   "band": "30+-6",
+   "note": "committed final-batch logs; T0 spread 30.8-34.0 deg across batches; pair not fix-attributable"
   },
   "laplace": {
-   "T0_sigma_rel": 0.0026,
-   "T3C1s_sigma_rel": 0.0035
+   "T0_sigma_rel": 0.0042,
+   "T3C1s_sigma_rel": 0.0035,
+   "note": "committed final-batch logs; T0 run-to-run spread 0.26-0.42% (first batch overwritten, documented in attempt-1 review); pair not fix-attributable"
   },
   "levelA": {
    "T0": "ALL PASS",

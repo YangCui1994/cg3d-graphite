@@ -32,7 +32,7 @@ solver (D2Q9) carries the same defect class** (`colsum[0]-1 = +7.45e-9`
 = 2^-27); Dubois/Philippi projection papers are name-similar but
 mechanistically unrelated (0 precision/conservation content); C2
 (search-derived candidate) = none, justified. Key sources downloaded to
-`literature/` (arXiv 2412.17426, 2202.05643); paywalled DOIs recorded.
+`literature/` (arXiv 2412.17426, 2112.08926); paywalled DOIs recorded.
 
 ## Candidates and comparison (contract sections 5–7, 15)
 

@@ -1,8 +1,8 @@
 {
  "base": "1f5ee76fa183b42dd0ffcb291f389c3f1974a147",
  "files": {
-  "CANDIDATE_COMPARISON.md": "a7750cba735b803331e1b6097c03fe321cad114f7055e63b481012d0c4eb8403",
-  "EXECUTION_REPORT.md": "b68fb64ff38c98267786ea50dccbb6741b5fd34b078aaf358c3aed54311bf25c",
+  "CANDIDATE_COMPARISON.md": "e36771c67de63f71b3c9aedccbf6583a479a72d6d2d73da76947f883857e8c0b",
+  "EXECUTION_REPORT.md": "fc0fbc5eccccf6b20981013e21d23d980af2337effe45e9acf61d851a2269cd0",
   "LITERATURE_AND_IMPLEMENTATION_SEARCH.md": "b05d0b9e4cef7bb0b083a158b1d2e58cc5e9933421501ccf7547eedbb2f598dc",
   "PROVENANCE.md": "762e0b7a9a6643b58b7a64ce8c287bbc6c8fd54bd95e4d7bb904db04599b2801",
   "a2_isolation.json": "3c19894144d55d2ae98df35a9b59b15f10ec7eed1d68f5f616d21fad19d03d99",
@@ -198,7 +198,7 @@
   "run_f1_batch.sh": "ffd0f3c1a5914386f96f1b1cf7cfe6bd74be0bdfa9ea64295e771a9e9d1b8f93",
   "run_final_batch.sh": "eab81a751d0e571568c39c6435512b0761644cb71257152526be6f08cfdf24d9",
   "run_regressions.sh": "5f763231ce4c050f07d26f3a70b42aabbc5abc0cab138533d0809e0363a6955a",
-  "summary.json": "144f3f7c283b1ef27ced323addfae1bef8ed79fa97afbe06c8347fd0e94f0b74"
+  "summary.json": "6e04ba80734373a301a77a8ff669766e5fc83969d887573824090816605fc525"
  },
  "solver": "lbm_solver_cg3d.py sha256 d359fd036085096fbc47e275098b2cba2af8c15b3c42c2b35c84d4ec152b7fe2",
  "task": "BI-SOLVER-CONSERVATION-FIX-001"

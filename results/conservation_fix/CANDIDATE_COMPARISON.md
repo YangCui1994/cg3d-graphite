@@ -73,7 +73,9 @@ with the audit's feq-pair attribution); recoloring ~2 orders smaller
 | T1+C1 | 20k | +5.74e-12 | 0.030 | -1.58e-09 | 0.998 | total = no trend (rejected by A2, see below) |
 | T0+C0 | 60k | +1.552e-08 | 1.0000 | +6.76e-09 | 0.996 | 60k total 9.3e-4 (== V2 production) |
 | T3+C0 | 60k | +1.17e-11 | 0.35 | +6.77e-09 | 0.996 | reference floor |
-| **T1+C1** | **60k** | **+2.87e-11** | **0.81** | **-1.30e-09** | 0.997 | **selected**: total 541x better; colour within 2e-9 target |
+| T1+C1 | 60k | +2.87e-11 | 0.81 | -1.30e-09 | 0.997 | initial selection, **rejected by A2** (kept for history) |
+| **T3+C1s** | **60k** | **+1.19e-11** | **0.81** | **-6.43e-10** | 0.983 | **SELECTED**: total ~1300x; colour 10.5x, within 2e-9 |
+| T3+C1s (CPU) | 20k | -3.30e-11 | 0.85 | -6.85e-11 | 0.795 | selected, backend check (colour at noise) |
 | T1+C1 (CPU) | 20k | +8.13e-11 | 0.84 | -7.80e-10 | 0.993 | backend-consistent |
 
 Colour-channel floor justification (restated per attempt-1 review B3):
@@ -116,9 +118,11 @@ The unchanged V0 suite gate A2 ("uniform phase stationary",
 drift metrics cannot see: under T0 the uniform single-phase state is a
 **bit-exact frozen fixed point** (velocity stays exactly 0.0).
 All nine combos re-run with the committed generator
-`a2_isolation_check.py` -> `a2_isolation.json` (revision 2; the
-original isolation runs were console-only, attempt-1 review minor
-item):
+`a2_isolation_check.py` -> `a2_isolation.json` (grid N=24, 200 steps;
+the production gate in `run_level_a.py` uses its own N and the full
+suite; C1 rows in the committed generator run under the CURRENT
+scoped code — the pre-scoping unscoped variants failed identically,
+see `logs/f2_levelA_T1C1.log`):
 
 | combo | max\|v\| | A2 |
 |---|---|---|
@@ -127,9 +131,9 @@ item):
 | T1+C0 | 4.463e-06 | FAIL |
 | T2+C0 | 4.463e-06 | FAIL |
 | T4+C0 | 3.103e-06 | FAIL |
-| T0+C1 (unscoped) | 4.463e-06 | FAIL |
-| T1+C1 (unscoped) | 4.463e-06 | FAIL (observed in the full F2 suite run) |
-| T2+C1 (scoped) | 4.463e-06 | FAIL |
+| T0+C1 (scoped, committed) | 4.463e-06 | FAIL |
+| T1+C1 (scoped, committed; unscoped variant failed identically in the F2 suite log) | 4.463e-06 | FAIL |
+| T2+C1 (scoped, committed) | 4.463e-06 | FAIL |
 | **T3+C1 (scoped)** | **0.0** | **PASS** |
 
 Any f32-path perturbation of the kernel arithmetic (table reshaping,
@@ -165,7 +169,9 @@ simultaneously.
 2. invariant is exact in real arithmetic (f64 roundtrip removes the
    stored-matrix representation defect rather than compensating it);
 3. cost measured: ~4-5% steady throughput (2347-2423 vs 2465 steps/s on
-   C3), one 19x19 f64 table, no new per-node fields; JIT one-time;
+   C3), one 19x19 f64 table, plus the 11 unconditional per-node f64
+   probe fields (~3 MB on C3, ~7 MB on V2; writes compiled out when
+   dbg off); JIT one-time;
 4. performance may not override conservation/physics gates (contract
    section 10); among gate-passing candidates it is the only one.
 
@@ -175,8 +181,11 @@ All gates pass with thresholds unchanged (details in
 `EXECUTION_REPORT.md`):
 
 - **F2 V0 suite**: Level A ALL PASS (A2 max|v| = 0.00 exact), Compute_C,
-  Poiseuille (eff 0.9933 -> 1.0010), Laplace (0.26% -> 0.35% rel),
-  contact angle (30.8 -> 27.3 deg, band 30+-6), postprocessing ALL PASS.
+  Poiseuille (eff 0.9933 -> 1.0010), Laplace (0.42% -> 0.35% rel;
+  committed-log pair; T0 run-to-run spread 0.26-0.42%, not
+  fix-attributable), contact angle (34.0 -> 27.3 deg, band 30+-6;
+  T0 spread 30.8-34.0 deg across the two T0 batches, not
+  fix-attributable), postprocessing ALL PASS.
 - **F3 V1c**: static C = 0.7902/0.7513/0.8070/0.7834 (baseline
   0.7902/0.7511/0.8067/0.7795); differential a26 = 1.0389 /
   a40 = 1.0581 — both |a-1| <= 0.10 PASS (baseline 1.0436/1.0699).
