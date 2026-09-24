@@ -1,0 +1,12 @@
+{
+ "producer_script": "tests/levelc_v1c.py",
+ "producer_sha256": "5b4eea59718e53718d27df4106434eb3a7453759628591b4011cc97e2de9543c",
+ "run_head": "5f18caa0fe6e569102cc85b184e6b025abb7e5f4",
+ "worktree_dirty": true,
+ "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py collect",
+ "started_at": "2026-09-24T02:11:08Z",
+ "finished_at": null,
+ "exit_code": null,
+ "artifact": "differential_table.csv",
+ "artifact_sha256": "2ee874bc7138a76e79d4b0390853375441027c90ce4cb5fe0ca08b76f176d932"
+}
