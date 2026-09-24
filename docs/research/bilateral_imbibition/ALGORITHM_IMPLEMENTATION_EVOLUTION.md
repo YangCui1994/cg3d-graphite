@@ -1926,3 +1926,77 @@ task。V3 contract 仍需重写 + external authorization（§21.7）。
   `results/conservation_audit/**` @ `agent-task/BI-CONSERVATION-AUDIT-001`
   （`1f5ee76`，93-artifact SHA256 MANIFEST）；
 - 本评审**不授权** solver fix，也**不授权** V3；均待 owner 决定。
+
+
+## 24.11 External owner review — solver-fix authorized；V3 继续 HOLD
+
+External review：
+\`.agent/evidence/BI-CONSERVATION-AUDIT-001/CONSERVATION_EXTERNAL_REVIEW_PASS.md\`
+
+最终裁决：
+
+\`\`\`text
+Conservation audit: PASS_DIAGNOSIS_READY_FOR_FIX
+Solver-fix task: AUTHORIZED
+V3: HOLD until solver-fix regression + external review
+\`\`\`
+
+术语做一项收紧：
+
+> 当前不再表述为“一个 inv_M bug 解释全部漂移”，而表述为
+> **collision 内两个 zeroth-moment closure defect，共同具有 f32
+> precision origin**。
+
+其中：
+
+1. **total-distribution channel**
+   \[
+   F\rightarrow M F\rightarrow m^\*\rightarrow inv_M\,m^\*
+   \]
+   的主要系统偏置来自 stored f32 \`inv_M\` 未严格满足 zeroth-column
+   conservation identity；
+
+2. **colour channel**
+   \[
+   \rho_r,\rho_b\rightarrow g_r^{eq},g_b^{eq}\rightarrow recolor
+   \rightarrow rhor,rhob
+   \]
+   独立存在 zeroth-moment closure 偏置，现有证据表明 equilibrium
+   distribution pair/sum rounding 为主导，recoloring 算术为小项。
+
+因此 solver-fix 必须同时验证：
+
+\[
+\sum_q f_q^{post}=m_0^{pre}
+\]
+
+以及：
+
+\[
+\sum_q g_{r,q}^{post}=\rho_r^{pre},
+\qquad
+\sum_q g_{b,q}^{post}=\rho_b^{pre}.
+\]
+
+External review 推荐比较三类 total-channel 方案：
+
+- stored-matrix mass projection；
+- local zeroth-moment projection；
+- full-f64 moment roundtrip（reference）。
+
+colour channel 则独立测试 local mass projection；不能仅修
+\`inv_M\` 后就宣告 conservation problem 已闭合。
+
+solver-fix 的最终验收必须重新覆盖：
+
+\`\`\`text
+local zeroth identity
+→ long-horizon C3 conservation
+→ V0 regression suite
+→ V1c hydraulic/wetting
+→ V2 symmetry/topology
+\`\`\`
+
+并要求 conservation drift 至少比当前约
+\(1.56\times10^{-8}/step\) 改善一个数量级，目标工程水平约
+\(2\times10^{-9}/step\) 或更低，且不得通过放宽已有 physics gates 实现。
