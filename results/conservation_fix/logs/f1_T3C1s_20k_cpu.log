@@ -1,0 +1,3 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=x64
+[f1_T3C1s_20k_cpu] slopes: Mff -3.303e-11 (R2 0.8474) Mc -6.853e-11 (R2 0.7951) Mrho -3.299e-11 (R2 0.8456) | jit 316.7s steady 315 steps/s (9.1 MLUPS)

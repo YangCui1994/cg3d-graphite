@@ -1,0 +1,7 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+A  pure red  rho=0.89 next to solid: |C| = 0.000e+00  (expect 0)
+B  pure red  rho=1.00 next to solid: |C| = 0.000e+00  (expect 0)
+C  psi=+0.2  rho=1.00 next to solid: |C| = 2.500e-01  (expect > 0)
+D  psi=+0.2  rho=1.10 next to solid: |C| = 2.500e-01  (expect > 0)
+PASS: bulk suppression is density-independent; interface behaviour unchanged

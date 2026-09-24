@@ -1,9 +1,9 @@
 [Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
 [Taichi] Starting on arch=cuda
 [static_h40] static slit nx=240 ny=42 slab=[90,150)
-[static_h40]   2500 umax=2.53e-02 Pc=2.262503e-03 mixed=22
-[static_h40]   5000 umax=2.53e-02 Pc=2.288342e-03 mixed=22
-[static_h40]   7500 umax=2.53e-02 Pc=2.273440e-03 mixed=22
-[static_h40]  10000 umax=2.54e-02 Pc=2.277076e-03 mixed=22
-[static_h40]  12500 umax=2.53e-02 Pc=2.280444e-03 mixed=22
-[static_h40] Pc_static=2.280831e-03 C=0.7513 theta=41.30 (Pc stationary at 13250 (rel drift 9.1e-04 < 0.001 over last 10 blocks; umax floor 2.53e-02 recorded separately, not gated))
+[static_h40]   2500 umax=2.52e-02 Pc=2.263546e-03 mixed=22
+[static_h40]   5000 umax=2.53e-02 Pc=2.285898e-03 mixed=22
+[static_h40]   7500 umax=2.53e-02 Pc=2.273768e-03 mixed=22
+[static_h40]  10000 umax=2.52e-02 Pc=2.277762e-03 mixed=22
+[static_h40]  12500 umax=2.52e-02 Pc=2.280712e-03 mixed=22
+[static_h40] Pc_static=2.280921e-03 C=0.7513 theta=41.30 (Pc stationary at 12750 (rel drift 9.4e-04 < 0.001 over last 10 blocks; umax floor 2.51e-02 recorded separately, not gated))

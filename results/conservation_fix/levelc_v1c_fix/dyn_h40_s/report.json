@@ -1,0 +1,168 @@
+{
+ "n_samples": 146,
+ "window_valid": true,
+ "window_idx": [
+  62,
+  144
+ ],
+ "window_t": [
+  15750.0,
+  36250.0
+ ],
+ "window_x": [
+  123.3485595703125,
+  237.74777018229167
+ ],
+ "V_meas": 0.005585985166575489,
+ "R2_x_linear": 0.9999996417745071,
+ "V_meas_secondary": 0.00558196549263255,
+ "R2_x_secondary": 0.9999261694845805,
+ "front_speed_rel_diff": 0.0007195998240367985,
+ "monotonic_window": true,
+ "validity_variants": {
+  "V0_base_12col": {
+   "n": 24,
+   "median": 0.001778059809220106,
+   "mean": 0.001750311741574628
+  },
+  "V1_window_x": {
+   "n": 20,
+   "median": 0.001766720808025285,
+   "mean": 0.0017359053192259027
+  },
+  "V2_positional": {
+   "n": 18,
+   "median": 0.001773751276431229,
+   "mean": 0.0017644874740495803
+  },
+  "V3_gradient": {
+   "n": 13,
+   "median": 0.0017926861586119447,
+   "mean": 0.0017776846479737789
+  },
+  "V3_r2_090": {
+   "n": 2,
+   "median": 0.0018113830347749882,
+   "mean": 0.0018113830347749882
+  },
+  "counts": {
+   "windowed_t": 25,
+   "base": 24,
+   "window_x": 20,
+   "positional": 18,
+   "full": 13,
+   "r2_variant": 2
+  }
+ },
+ "n_window_probes": 25,
+ "n_window_probes_valid": 13,
+ "n_window_probes_base": 24,
+ "Pc_dynamic_median": 0.0017926861586119447,
+ "Pc_dynamic_mean": 0.0017776846479737789,
+ "Pc_dynamic_median_thr085": 0.0017926861586119447,
+ "Pc_dynamic_median_thr095": 0.0017967491881527575,
+ "jump_in_median": 0.0004891753196716309,
+ "jump_out_median": 0.00038185715675354004,
+ "dpdx_liq_median": -4.208318888071605e-06,
+ "dpdx_gas_median": -3.360317363791317e-06,
+ "r2_liq_min": 0.9748882270908651,
+ "r2_gas_min": 0.24277393235699207,
+ "band_valid_frac": 0.52,
+ "band_valid_frac_base": 0.96,
+ "L_eff": 427.90092350852836,
+ "L_hyd": 241.0,
+ "L0_raw": 186.90092350852836,
+ "L0_raw_over_h": 4.672523087713209,
+ "Ca": 0.009199580313859503,
+ "G_poiseuille_analytic": 4.189488874931618e-06,
+ "dpdx_liq_over_G": 1.0044945848293472,
+ "dpdx_gas_over_G": 0.8020828946218803,
+ "rho_res_liq_dev_max": 0.0,
+ "rho_res_gas_dev_max": 0.0,
+ "closure_r_last": 1.2031401837448357,
+ "closure_b_last": 1.2780040526922676,
+ "u_band_ut_rms_max": 0.003179189981892705,
+ "umax_peak_window": 0.023423444479703903,
+ "gates": {
+  "g1_no_nan": true,
+  "g2_umax_cap": true,
+  "g3_zero_dp": true,
+  "g4_monotonic": true,
+  "g5_window_valid": true,
+  "g6_r2": true,
+  "g7_front_agreement": true,
+  "g8_band_valid_frac": true,
+  "g9_mass_closure": null,
+  "all_hard": true
+ },
+ "mode": "dynamic",
+ "tag": "dyn_h40_s",
+ "layout": {
+  "nx": 264,
+  "hy": 40,
+  "nz": 6,
+  "L_slit": 236,
+  "x0": 42,
+  "wall_in": [
+   0,
+   3
+  ],
+  "liq_res": [
+   3,
+   11
+  ],
+  "mem_in": 11,
+  "in_buffer": [
+   12,
+   14
+  ],
+  "slit": [
+   14,
+   250
+  ],
+  "out_buffer": [
+   250,
+   252
+  ],
+  "mem_out": 252,
+  "gas_res": [
+   253,
+   261
+  ],
+  "wall_out": [
+   261,
+   264
+  ],
+  "L_hyd": 241.0,
+  "note": "V1b separated topology unchanged; fit region [12, buf0=14+L) = open buffers + slit"
+ },
+ "steps_run": 36500,
+ "wall_s": 324.168749332428,
+ "exit_reason": "front reached x_stop at step 36500",
+ "nan_at": null,
+ "umax_break": null,
+ "x_stop": 238.0,
+ "T_TRANS": 12000,
+ "x_ic_exit": 122.0,
+ "sigma": 0.060719999999999996,
+ "capa": 0.06,
+ "nu": 0.1,
+ "mu": 0.1,
+ "psi_wall": -0.68,
+ "prov": {
+  "producer_script": "tests/levelc_v1c.py",
+  "producer_sha256": "57155f48ae9f5c1ee451044ca2f95ec717fe33e27860ada512892db8c21259b8",
+  "run_head": "e3d5a93e397fd0d636c0caa945cc59fdc4adb6a2",
+  "worktree_dirty": true,
+  "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py dynamic --hy 40 --tag dyn_h40_s",
+  "started_at": "2026-09-24T19:24:00Z",
+  "finished_at": null,
+  "exit_code": null
+ },
+ "m_r_final": 5247.485180936674,
+ "m_b_final": 56551.38654498138,
+ "inj_r_final": -47311.3184556365,
+ "inj_b_final": 47192.97827208042,
+ "closure_r_final": 1.1963634268249734,
+ "closure_b_final": 1.5917270990394172
+}

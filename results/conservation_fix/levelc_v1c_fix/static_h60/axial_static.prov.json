@@ -1,0 +1,12 @@
+{
+ "producer_script": "tests/levelc_v1c.py",
+ "producer_sha256": "57155f48ae9f5c1ee451044ca2f95ec717fe33e27860ada512892db8c21259b8",
+ "run_head": "e3d5a93e397fd0d636c0caa945cc59fdc4adb6a2",
+ "worktree_dirty": true,
+ "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py static --hy 60 --tag static_h60",
+ "started_at": "2026-09-24T19:07:59Z",
+ "finished_at": null,
+ "exit_code": null,
+ "artifact": "axial_static.csv",
+ "artifact_sha256": "9657a67c87ea756dc386b44df4f9c061564b4575fcff510a3608693b24b9afaa"
+}

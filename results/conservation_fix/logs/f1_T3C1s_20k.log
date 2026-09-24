@@ -1,0 +1,3 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[f1_T3C1s_20k] slopes: Mff 1.586e-11 (R2 0.5251) Mc -8.942e-10 (R2 0.9895) Mrho 1.548e-11 (R2 0.5224) | jit 316.4s steady 2475 steps/s (71.3 MLUPS)

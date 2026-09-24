@@ -96,30 +96,79 @@ cold/warm cache states; per-run detail in `f1_*/f1_report.json`.
 
 ## Selection
 
-**T1 + C1** (production default since commit `46be3f2`):
+**REVISED after the F2 A2 gate (see "A2 stationarity finding" below):
+T3 + C1-scoped is the production default** (commit `e3d5a93`; initial
+selection `46be3f2` was T1+C1 and is retained in history as the
+rejected first choice).
 
-1. smallest solver change: T1 touches only the module-level table
-   construction (~25 host lines, zero kernel arithmetic change); C1 is
-   one static block in `collision()`;
-2. simplest invariant: exact algebraic constraints (`1^T inv_M =
-   e_0^T`; per-colour zeroth-moment equality) rather than per-step
-   corrections (T2) or precision promotion (T3);
-3. lowest cost: no extra fields, no f64 ops, steady rate == baseline;
-4. best measured closure among f32 candidates (total = no-trend noise;
-   colour at floor).
+### A2 stationarity finding (drives the reselection)
 
-T2 is honestly rejected: unbiased local closure (F0 -3.5e-10, 0.52) but
-a persistent monotone global bias (-2.76e-9, R2 0.9998) — the
-w-distributed correction interacts with the downstream on-device f32
-zeroth-moment sums; this is precisely the "global improvement while
-leaving a systematic local/global closure bias" pattern the contract
-forbids selecting.  T3 rejected for production (reference only):
-correctness equal to T1 within noise but f64 machinery + ~4-5% cost and
-no additional closure benefit on the acceptance metrics.  T4 rejected
-at F0 (negative control confirmed: f64 accumulation does not repair the
-stored-matrix identity defect).
+The unchanged V0 suite gate A2 ("uniform phase stationary",
+`max|v| < 1e-6` after 200 steps) exposes a structural property the F1
+drift metrics cannot see: under T0 the uniform single-phase state is a
+**bit-exact frozen fixed point** (velocity stays exactly 0.0).  Isolated
+200-step A2 runs:
 
-## F2/F3/F4 — physics regressions (selected fix)
+| combo | max\|v\| | A2 |
+|---|---|---|
+| T0+C0 | 0.0 | PASS (bit-frozen) |
+| T3+C0 | 0.0 | PASS (f64 roundtrip preserves the frozen point exactly) |
+| T1+C0 | 4.463e-06 | FAIL |
+| T0+C1 (unscoped) | 4.463e-06 | FAIL |
+| T2+C0 | 4.463e-06 | FAIL |
+| T1+C1 (unscoped) | 4.463e-06 | FAIL (observed in the full F2 suite run) |
+| T2+C1 (scoped) | 4.463e-06 | FAIL |
+| **T3+C1 (scoped)** | **0.0** | **PASS** |
 
-See `EXECUTION_REPORT.md` (before/after tables) — populated from
-`logs/f2_*.log`, `levelc_v1c_fix/`, `levelc_v2_fix/`.
+Any f32-path perturbation of the kernel arithmetic (table reshaping,
+per-step corrections) breaks the frozen point; the state then migrates
+to a common nearby attractor with `max|v| = 4.46e-6` — four orders
+below operational velocities and with `psi_dev = 0.0` exactly (no
+physical phase error), but above the 1e-6 gate, which may not be
+weakened.  Only the f64 roundtrip (T3) preserves the frozen point
+bit-exactly.  C1 was additionally **scoped to interface nodes
+(`cc > 0`)**: the audit measured the colour leak to exist only at
+diffuse interfaces (J7 exactly 0 in single-phase/wall-only cases), so
+bulk corrections were both unnecessary and stationarity-breaking.  This
+is defect-scoped correction, not gate tuning.
+
+Consequences: T1 (identical drift quality to T3, zero cost) is
+eliminated by A2; T2 additionally fails the F1 >=10x gate; the selection
+is forced to T3+C1(scoped) — the only candidate passing F0, F1 and A2
+simultaneously.
+
+### Rejected-candidate evidence retained
+
+- T1+C1 full F2 suite ran before the reselection
+  (`logs/f2_*_T1C1.log`): all parts PASS except A2 (FAIL, the trigger);
+  its F1 numbers stay in the table above.
+- T2's F0-pass-but-F1-fail pattern (unbiased local closure, monotone
+  global -2.76e-9) is preserved evidence that local identities alone
+  are insufficient for selection.
+
+### Final selection rationale (T3 + scoped C1)
+
+1. only candidate passing every unchanged gate (F0 both channels, F1
+   drift targets, A2 exact stationarity);
+2. invariant is exact in real arithmetic (f64 roundtrip removes the
+   stored-matrix representation defect rather than compensating it);
+3. cost measured: ~4-5% steady throughput (2347-2423 vs 2465 steps/s on
+   C3), one 19x19 f64 table, no new per-node fields; JIT one-time;
+4. performance may not override conservation/physics gates (contract
+   section 10); among gate-passing candidates it is the only one.
+
+## F2/F3/F4 — physics regressions (selected fix: T3 + scoped C1)
+
+All gates pass with thresholds unchanged (details in
+`EXECUTION_REPORT.md`):
+
+- **F2 V0 suite**: Level A ALL PASS (A2 max|v| = 0.00 exact), Compute_C,
+  Poiseuille (eff 0.9933 -> 1.0010), Laplace (0.26% -> 0.35% rel),
+  contact angle (30.8 -> 27.3 deg, band 30+-6), postprocessing ALL PASS.
+- **F3 V1c**: static C = 0.7902/0.7513/0.8070/0.7834 (baseline
+  0.7902/0.7511/0.8067/0.7795); differential a26 = 1.0389 /
+  a40 = 1.0581 — both |a-1| <= 0.10 PASS (baseline 1.0436/1.0699).
+- **F4 V2**: mirror error 4.96e-4 lu (baseline 1.297e-3, 2.6x better);
+  eps_r/eps_b max 7.49e-5 / **1.98e-4** (baseline 4.21e-4 / 6.73e-4 —
+  3.4x better, now inside the original 5e-4 g6 value); single trapped
+  cluster, NOT_REACHED, bulk rho [0.9350, 1.0074] unchanged.
