@@ -869,7 +869,7 @@ def collect(args):
     # estimator sensitivity (B1-iv): a_h under every validity variant
     # x estimator, from the per-run published variant aggregates
     VAR = ('V0_base_12col', 'V1_window_x', 'V2_positional',
-           'V3_linearity')
+           'V3_gradient', 'V3_r2_090')
 
     def a_of(pc1, pc2, hy, v1, v2):
         le1 = pc1 * hy * hy / (12.0 * MU * v1)
