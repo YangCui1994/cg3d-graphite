@@ -1,0 +1,5 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[C2_gpu] M0=7680 nfluid=7680 init+first-compile 1.6s
+[C2_gpu] run done 344.8s (29 steps/s)
+[C2_gpu] FINAL rel: d_fc=0.000e+00 d_frho=0.000e+00 d_crho=0.000e+00 | slopes: Mff 1.530e-26 (R2 1.0000) Mc 1.530e-26 (R2 1.0000) Mrho 1.530e-26 (R2 1.0000)

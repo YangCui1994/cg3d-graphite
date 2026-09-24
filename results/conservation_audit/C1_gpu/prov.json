@@ -1,0 +1,27 @@
+{
+ "argv": [
+  "tests/conservation_audit.py",
+  "run",
+  "--tag",
+  "C1_gpu",
+  "--case",
+  "C1",
+  "--arch",
+  "gpu"
+ ],
+ "cwd": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-CONSERVATION-AUDIT-001",
+ "env_arch": "gpu",
+ "git": {
+  "branch": "agent-task/BI-CONSERVATION-AUDIT-001",
+  "dirty": "?? results/conservation_audit/\n?? run_conservation_audit_batch.sh\n?? tests/conservation_audit.py",
+  "head": "5e679d8d99d338f9ab28565c636f021a0f9211b2"
+ },
+ "numpy": "2.2.6",
+ "python": "3.10.21",
+ "started": "2026-09-24T18:05:45",
+ "taichi": [
+  1,
+  7,
+  4
+ ]
+}

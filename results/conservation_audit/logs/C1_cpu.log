@@ -1,0 +1,5 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=x64
+[C1_cpu] M0=36864 nfluid=36864 init+first-compile 1.5s
+[C1_cpu] run done 413.7s (12 steps/s)
+[C1_cpu] FINAL rel: d_fc=1.261e-05 d_frho=1.354e-09 d_crho=-1.261e-05 | slopes: Mff 6.650e-09 (R2 0.8001) Mc 4.067e-09 (R2 0.7555) Mrho 6.649e-09 (R2 0.8001)
