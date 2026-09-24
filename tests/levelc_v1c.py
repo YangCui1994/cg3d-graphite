@@ -23,16 +23,29 @@ reservoirs, V1b membrane/reservoir/buffer topology UNCHANGED.
 
 BULK-COLUMN PRESSURE RULE (contract section B, replaces fixed bands)
 ----------------------------------------------------------------------
-For every pressure probe, over the fit region [12, 16+L) (open buffers
+For every pressure probe, over the fit region [12, buf0) (open buffers
 + slit, same cross-section, no reservoirs/membranes):
   liquid-bulk column : >= 95% of cross-section nodes psi < -0.90
   gas-bulk column    : >= 95% of nodes psi > +0.90
   mixed columns excluded, plus >= 2 extra columns each side of the
   mixed envelope; contiguous fit bands need >= 12 columns or the probe
-  is marked INVALID (never silently falls back).
+  is marked invalid (never silently falls back).
+
+PER-PROBE VALIDITY before any aggregate (V1c review attempt-1 findings
+B1/B2; applied identically by run-time analysis and `reanalyze`):
+  V0 base        : band_valid (12-column rule) and t inside the window
+  V1 window-x    : V0 and x_ic_exit <= x_m(t_probe) <= x_stop
+  V2 positional  : V1 and gas-band width >= 3h and x_m <= buf0-4h
+                   (clears the meniscus/distortion envelope and the
+                   slit exit by declared positional margins)
+  V3 linearity   : V2 and r2_liq >= 0.995 and r2_gas >= 0.995
+  V3 (full validity) defines the PRIMARY aggregate; median AND mean
+  under every variant are published as a first-class estimator
+  sensitivity table.  A probe failing validity is excluded explicitly
+  (counted per variant), never silently repaired.
 p_l(x), p_g(x) linear fits over the bulk bands, extrapolated to the
-meniscus reference x_m = x_vol (primary front).  Band sensitivity for
-thresholds 0.85/0.90/0.95 is reported as a diagnostic.
+meniscus reference x_m = x_vol (primary front).  Band threshold
+sensitivity 0.85/0.90/0.95 is reported as a diagnostic.
 The same rule (full-domain columns) measures the static Pc.
 
 STATIC SETUP: liquid plug [90,150) in a fully periodic slit (x periodic
@@ -200,7 +213,7 @@ def layout(L, hy, x0):
         gas_res=[gas0, gas1], wall_out=[gas1, nx],
         L_hyd=float(x_mem_out - X_MEM_IN),
         note='V1b separated topology unchanged; fit region '
-             '[12,16+L) = open buffers + slit')
+             '[12, buf0=14+L) = open buffers + slit')
 
 
 def t_trans(hy):
@@ -528,7 +541,7 @@ def run_dynamic(args):
 
     a = analyze_dynamic(np.array(t_s, float), np.array(xv_s, float),
                         np.array(xc_s, float), probe_s, hy, L_hyd,
-                        t_tr, x_ic_exit, x_stop)
+                        t_tr, x_ic_exit, x_stop, buf0=buf0)
     a.update(mode='dynamic', tag=args.tag, layout=lay, steps_run=it,
              wall_s=wall, exit_reason=exit_reason, nan_at=nan_at,
              umax_break=umax_break, x_stop=x_stop, T_TRANS=t_tr,
@@ -550,7 +563,12 @@ def run_dynamic(args):
 
 
 def analyze_dynamic(t, xv, xc, probes, hy, L_hyd, t_tr, x_ic_exit,
-                    x_stop):
+                    x_stop, buf0=None):
+    """Declared mechanical rule with the per-probe validity ladder
+    (V0 base -> V1 window-x -> V2 positional -> V3 linearity).  V3
+    defines the PRIMARY aggregate; median and mean are published for
+    every variant (estimator sensitivity).  Explicit failure when the
+    window or the fully-valid probe set is empty."""
     res = dict(n_samples=len(t))
     win = np.where((t >= t_tr) & (xv >= x_ic_exit) & (xv <= x_stop))[0]
     if len(win) < 20:
@@ -585,17 +603,47 @@ def analyze_dynamic(t, xv, xc, probes, hy, L_hyd, t_tr, x_ic_exit,
     res['monotonic_window'] = bool(
         np.all(np.diff(xv[i0:i_hi + 1]) >= -0.5))
 
-    wp_all = [r for r in probes
-              if t_tr <= r['t'] <= t[i_hi]]
-    wp = [r for r in wp_all if r.get('band_valid')]
-    res['n_window_probes'] = len(wp_all)
-    res['n_window_probes_valid'] = len(wp)
-    if not wp:
+    # ---- per-probe validity ladder (B1/B2) -------------------------
+    for r in probes:
+        r['_x'] = float(np.interp(r['t'], t, xv))
+    w_t = [r for r in probes if t_tr <= r['t'] <= t[i_hi]]
+    v0 = [r for r in w_t if r.get('band_valid')]
+    v1 = [r for r in v0 if x_ic_exit <= r['_x'] <= x_stop]
+    v2 = [r for r in v1
+          if buf0 is not None
+          and (r['gas_band'][1] - r['gas_band'][0]) >= 3.0 * hy
+          and r['_x'] <= buf0 - 4.0 * hy]
+    v3 = [r for r in v2
+          if r.get('r2_liq') is not None and r.get('r2_gas') is not None
+          and r['r2_liq'] >= 0.995 and r['r2_gas'] >= 0.995]
+
+    def agg(sel):
+        pcs = [r['Pc_dynamic'] for r in sel]
+        return dict(n=len(pcs),
+                    median=float(np.median(pcs)) if pcs else None,
+                    mean=float(np.mean(pcs)) if pcs else None)
+
+    res['validity_variants'] = dict(
+        V0_base_12col=agg(v0), V1_window_x=agg(v1),
+        V2_positional=agg(v2), V3_linearity=agg(v3),
+        counts=dict(windowed_t=len(w_t), base=len(v0), window_x=len(v1),
+                    positional=len(v2), full=len(v3)))
+    res['n_window_probes'] = len(w_t)
+    res['n_window_probes_valid'] = len(v3)
+    res['n_window_probes_base'] = len(v0)
+    if not v3:
         res['window_valid'] = False
         res['window_fail_reason'] = (
-            'no VALID bulk-band pressure probes inside window '
-            '(bulk-column rule found no >=12-column bands)')
+            f'no probe passes FULL validity (V3): windowed={len(w_t)}, '
+            f'base={len(v0)}, window_x={len(v1)}, positional={len(v2)}, '
+            f'full={len(v3)} -- explicit FAIL, no silent fallback')
+        res['gates'] = dict(g1_no_nan=None, g2_umax_cap=None,
+                            g3_zero_dp=None, g4_monotonic=None,
+                            g5_window_valid=False, g6_r2=None,
+                            g7_front_agreement=None,
+                            g8_band_valid_frac=None)
         return res
+    wp = v3                                   # PRIMARY = full validity
     pc_med = float(np.median([r['Pc_dynamic'] for r in wp]))
     res['Pc_dynamic_median'] = pc_med
     res['Pc_dynamic_mean'] = float(np.mean([r['Pc_dynamic'] for r in wp]))
@@ -611,7 +659,10 @@ def analyze_dynamic(t, xv, xc, probes, hy, L_hyd, t_tr, x_ic_exit,
         np.median([r['dpdx_liq'] for r in wp]))
     res['dpdx_gas_median'] = float(
         np.median([r['dpdx_gas'] for r in wp]))
-    res['band_valid_frac'] = float(len(wp) / max(len(wp_all), 1))
+    res['r2_liq_min'] = float(min(r['r2_liq'] for r in wp))
+    res['r2_gas_min'] = float(min(r['r2_gas'] for r in wp))
+    res['band_valid_frac'] = float(len(v3) / max(len(w_t), 1))
+    res['band_valid_frac_base'] = float(len(v0) / max(len(w_t), 1))
 
     l_eff = pc_med * hy * hy / (12.0 * MU * v_meas)
     res['L_eff'] = float(l_eff)
@@ -644,7 +695,7 @@ def analyze_dynamic(t, xv, xc, probes, hy, L_hyd, t_tr, x_ic_exit,
         g5_window_valid=True,
         g6_r2=float(r2) >= 0.995,
         g7_front_agreement=res['front_speed_rel_diff'] <= 0.02,
-        g8_band_valid_frac=res['band_valid_frac'] >= 0.8,
+        g8_band_valid_frac=res['band_valid_frac_base'] >= 0.8,
         g9_mass_closure=None,
     )
     res['gates']['all_hard'] = all(
@@ -658,6 +709,67 @@ def _r2(x, y, g, c):
     ss = float(((y - pred) ** 2).sum())
     tot = float(((y - y.mean()) ** 2).sum())
     return 1.0 - ss / tot if tot > 0 else float('nan')
+
+
+# ------------------------------------------------------- reanalyze (no GPU)
+def reanalyze(args):
+    """Re-run the PRODUCTION aggregation (same analyze_dynamic code
+    path) on an existing run's committed front.csv/probes.csv — the
+    review-prescribed correction route when validity logic changes:
+    no GPU rerun, no solver change, per-probe evidence unchanged."""
+    p = prov(sys.argv)
+    d = os.path.join(OUTROOT, args.tag)
+    with open(os.path.join(d, 'front.csv'), newline='') as f:
+        rows = list(csv.DictReader(f))
+    t = np.array([float(r['t']) for r in rows])
+    xv = np.array([float(r['x_vol']) for r in rows])
+    xc = np.array([float(r['x_cross']) for r in rows])
+
+    def _num(x):
+        return None if x in ('', 'None') else float(x)
+
+    probes = []
+    with open(os.path.join(d, 'probes.csv'), newline='') as f:
+        for row in csv.DictReader(f):
+            r = dict(t=float(row['t']),
+                     band_valid=int(float(row['band_valid'])),
+                     umax=_num(row['umax']))
+            for k in ('liq_band', 'gas_band'):
+                r[k] = (json.loads(row[k])
+                        if row[k] not in ('', 'None') else None)
+            for k in ('Pc_dynamic', 'Pc_dynamic_thr085',
+                      'Pc_dynamic_thr095', 'jump_in', 'jump_out',
+                      'dpdx_liq', 'dpdx_gas', 'r2_liq', 'r2_gas',
+                      'rho_res_liq', 'rho_res_gas', 'u_band_ut_rms'):
+                r[k] = _num(row[k])
+            probes.append(r)
+
+    rp = os.path.join(d, 'report.json')
+    rep = json.load(open(rp))
+    lay = rep['layout']
+    a = analyze_dynamic(t, xv, xc, probes, lay['hy'], lay['L_hyd'],
+                        rep['T_TRANS'], rep['x_ic_exit'],
+                        rep['x_stop'], buf0=lay['out_buffer'][0])
+    stale = [k for k in rep
+             if k not in a and k in (
+                 'Pc_dynamic_mean', 'band_valid_frac',
+                 'n_window_probes_valid')]
+    for k in stale:
+        rep.pop(k)
+    rep.update(a)
+    prov_finish(p, 0)
+    rep['prov_reanalysis'] = p
+    rep['reanalysis_note'] = ('aggregation recomputed from the '
+                              'unchanged committed front.csv/probes.csv '
+                              'by the same analyze_dynamic path; '
+                              'simulation data untouched')
+    write_json(rp, rep)
+    print(f'[{args.tag}] reanalyzed: V_meas={a.get("V_meas")} '
+          f'Pc_med={a.get("Pc_dynamic_median")} full-valid '
+          f'{a["validity_variants"]["counts"]["full"]}'
+          f'/{a["validity_variants"]["counts"]["windowed_t"]}',
+          flush=True)
+    return 0
 
 
 # ---------------------------------------------------------------- collect
@@ -728,6 +840,51 @@ def collect(args):
 
     d26 = drow('dyn_h26_s', 'dyn_h26_2L', 26)
     d40 = drow('dyn_h40_s', 'dyn_h40_2L', 40)
+
+    # estimator sensitivity (B1-iv): a_h under every validity variant
+    # x estimator, from the per-run published variant aggregates
+    VAR = ('V0_base_12col', 'V1_window_x', 'V2_positional',
+           'V3_linearity')
+
+    def a_of(pc1, pc2, hy, v1, v2):
+        le1 = pc1 * hy * hy / (12.0 * MU * v1)
+        le2 = pc2 * hy * hy / (12.0 * MU * v2)
+        return (le2 - le1) / (d26['L2'] - d26['L1'])
+
+    sens_rows = []
+    sens = {}
+    for hy, short, long in ((26, 'dyn_h26_s', 'dyn_h26_2L'),
+                            (40, 'dyn_h40_s', 'dyn_h40_2L')):
+        rs, rl = reps[short], reps[long]
+        v1_, v2_ = rs['V_meas'], rl['V_meas']
+        for var in VAR:
+            for est in ('median', 'mean'):
+                pc1 = rs['validity_variants'][var][est]
+                pc2 = rl['validity_variants'][var][est]
+                ah = (a_of(pc1, pc2, hy, v1_, v2_)
+                      if pc1 is not None and pc2 is not None else None)
+                sens_rows.append([hy, var, est, pc1, pc2, ah,
+                                  None if ah is None
+                                  else abs(ah - 1.0) <= 0.10])
+                sens.setdefault(f'h{hy}', {})[f'{var}_{est}'] = ah
+    write_csv(os.path.join(OUTROOT, 'estimator_sensitivity.csv'),
+              ['h', 'validity_variant', 'estimator', 'Pc_short',
+               'Pc_long', 'a_h', 'gate_|a-1|<=0.10'], sens_rows, p)
+
+    # mass accounting (non-blocking completeness): reconstruct total
+    # colour-mass drift from committed closure/inj finals
+    mass = {}
+    for t in dy_tags:
+        r = reps[t]
+        mr, mb = r['m_r_final'], r['m_b_final']
+        ir, ib = r['inj_r_final'], r['inj_b_final']
+        cr, cb = r['closure_r_final'], r['closure_b_final']
+        m0 = (mr - ir + cr) + (mb - ib + cb)
+        mass[t] = dict(m_final=mr + mb, inj_total=ir + ib,
+                       closure_sum=cr + cb,
+                       closure_rel=abs(cr + cb) / max(m0, 1e-30),
+                       m0_total_reconstructed=m0)
+
     drows = []
     for d in (d26, d40):
         drows.append([d['h'], d['L1'], d['L2'], d['V1'], d['V2'],
@@ -750,7 +907,10 @@ def collect(args):
                     C_h26_over_h40=float(cs[0] / cs[1])),
         differential=dict(h26=d26, h40=d40,
                           gates=dict(a26=abs(d26['a_h'] - 1.0) <= 0.10,
-                                     a40=abs(d40['a_h'] - 1.0) <= 0.10)),
+                                     a40=abs(d40['a_h'] - 1.0) <= 0.10),
+                          estimator_sensitivity=sens,
+                          primary='V3_linearity median'),
+        mass_accounting=mass,
         dynamic={t: dict(
             L_hyd=reps[t]['layout']['L_hyd'],
             V_meas=reps[t]['V_meas'], R2=reps[t]['R2_x_linear'],
@@ -798,6 +958,15 @@ def collect(args):
                      producer_sha256=rp['producer_sha256'],
                      started_at=rp['started_at'],
                      exit_code=rp['exit_code'])
+        pra = reps[tag].get('prov_reanalysis')
+        if pra:
+            entry['reanalysis'] = dict(
+                command=pra['command'], run_head=pra['run_head'],
+                producer_sha256=pra['producer_sha256'],
+                started_at=pra['started_at'],
+                exit_code=pra['exit_code'],
+                note='aggregation rerun on unchanged committed '
+                     'front.csv/probes.csv; simulation untouched')
         lg = os.path.join(OUTROOT, 'logs', tag + '.log')
         ex = os.path.join(OUTROOT, 'logs', tag + '.exit')
         if os.path.exists(ex):
@@ -834,11 +1003,13 @@ def main():
     pd.add_argument('--every', type=int, default=250)
     pd.add_argument('--every-v', dest='every_v', type=int, default=1000)
     pd.add_argument('--tag', default='dyn_h26_s')
+    pr = sub.add_parser('reanalyze')
+    pr.add_argument('--tag', required=True)
     sub.add_parser('collect')
     args = ap.parse_args()
     os.makedirs(os.path.join(OUTROOT, 'logs'), exist_ok=True)
     rc = dict(static=run_static, dynamic=run_dynamic,
-              collect=collect)[args.mode](args)
+              reanalyze=reanalyze, collect=collect)[args.mode](args)
     sys.exit(rc)
 
 
