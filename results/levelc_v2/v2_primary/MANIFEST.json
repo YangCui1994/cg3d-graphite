@@ -1,0 +1,38 @@
+{
+ "producer": "tests/levelc_v2_bilateral.py",
+ "producer_sha256": "3b618e2a6fc1b6fca8423d0204df9c037a89ccad21d0aa684728ba9516f5ccd3",
+ "runs": {
+  "v2_primary": {
+   "command": "C:/Users/yangc/anaconda3/envs/lbm/python.exe tests/levelc_v2_bilateral.py --tag v2_primary",
+   "run_head": "052ab97",
+   "shell_exit_code": 0,
+   "console_log": "results/levelc_v2/logs/v2_primary.log",
+   "artifacts": {
+    "EXECUTION_REPORT.md": "ac62ebe656e543c1efdab4ed7c09e3c6c7e93ce1508d03d349b6565d05a85d4d",
+    "fields_final.npz": "5cd74ea974b59889ac276f1e3ba30a1ae3ce50151593be0068933d9fd2a692a7",
+    "fields_initial.npz": "8290597a13853f53422aef8cff77801c0333197bb99f0b96a66c34d454167ec0",
+    "fields_mid.npz": "0b163fcf2cf7d90fd065872e90a7e91624b4085607d1d23d6213a47c64d8027e",
+    "front_series.csv": "dd7e63189caede1ace8d671e46bdfc4ef26205984a26dff6c56ec273e3186043",
+    "front_series.prov.json": "d372b30d2ce53caa4f5f0c2a4ee6872a970551794a22ed588495478a7cf7fc7f",
+    "gas_series.csv": "a95fb2a0b80f8104bacd791e0bacf3f3874c25b6b0ce4a08777ffdf118d02572",
+    "gas_series.prov.json": "90c22c4ca7e2fe92dfa792e4ffb2f2c331d8169ce35631753ee393bc23918956",
+    "mass_stability_series.csv": "b9c25373778bf8acbbbae6abe2406b68a5425f9fb6262ea1920312d3d19432f2",
+    "mass_stability_series.prov.json": "7703a9d8cfd7a90fa3e73c5516135009fa770a8d611080dd530f1030c555f2f4",
+    "report.json": "d89466b58d0862d201c8eca64c36368d9d1e0a26b2749cabc2ad7597c3946b5b",
+    "slice_final.csv": "b06f4f09981c5377e0e90b7265de10548fabff2764b337ea32f89eced398636e",
+    "slice_final.prov.json": "e242a16c2dd9a4228960c7aaf25dd110aab8c8ce1489e8a7d419ff7cb69bb4ed",
+    "slice_initial.csv": "4d5465b60f95899e5ef479d70dcca506f09c7e3b5249d420f70cb3fd7529824e",
+    "slice_initial.prov.json": "80f3e3af05ce348de42bc73ec9b51b4f221bf9693b72b89e3b5458be7f435e78",
+    "slice_mid.csv": "7c45c24b70528f938e6894946bf7fdd5304ed9e7b2202d28897ffba4c160daca",
+    "slice_mid.prov.json": "463256cc52f932994256853c1933eeacd42047ccdfab6a652ea5300b87aa27aa",
+    "symmetry_check.json": "12dd55261d641ff34058b2b611d721fd906a39e6c919e8a5e0b809c636cfb0bc",
+    "topology_t0.json": "7ad12ec830b4a9ba2d7b7f3d309a752ecdb048776c08d954265b70f01e2ffb62"
+   },
+   "aborted_attempts": [
+    "attempt-1: rho per-node guardrail stop at t=1000 (d689526)",
+    "attempt-2: same at t=6000 pre-bulk-semantics (9ed4bcb)"
+   ],
+   "note": "single continuous 60000-step run; earlier aborted attempts not used as evidence"
+  }
+ }
+}
