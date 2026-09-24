@@ -1153,6 +1153,16 @@ Product branch `agent-task/BI-CONSERVATION-AUDIT-001`（candidate
   SUMMARY.md）；
 - control review mandate: `.agent/evidence/BI-V2-BILATERAL-001/`
   `V2_EXTERNAL_SCIENTIFIC_REVIEW_PASS.md`（R-V2-3）。
+## Solver conservation fix（BI-SOLVER-CONSERVATION-FIX-001）
+
+Product branch `agent-task/BI-SOLVER-CONSERVATION-FIX-001`（candidate
+`e256b48`，fresh review attempt-4 PASS）：
+
+- product evidence: `results/conservation_fix/**`（F0/F1 候选矩阵、
+  V0/V1c/V2 回归、文献检索、CANDIDATE_COMPARISON、198-file MANIFEST）；
+- reviews: `.agent/evidence/BI-SOLVER-CONSERVATION-FIX-001/`（4 轮
+  REVIEW + SESSION + SUMMARY）；
+- 记录章节：本文档 §25。
 
 ---
 
@@ -1582,14 +1592,22 @@ Core CG-LBM
           ├─ <= 1.56e-8/step => <= 0.093%/60k, inside owner envelope
           └─ PASS_DIAGNOSIS_READY_FOR_FIX (fix = separate owner task)
                      ↓
-        owner decision: solver-fix task vs envelope-based V3 rewrite
+        solver conservation fix (BI-SOLVER-CONSERVATION-FIX-001, e256b48)
+          ├─ T3 f64 moment roundtrip + scoped C1 selected (A2-forced)
+          ├─ C3 60k: total 1.55e-8 -> 1.19e-11/step (~1300x)
+          │  colour -> -6.4e-10 (10.5x, target met, sign disclosed)
+          ├─ V0/V1c/V2 regressions all PASS, thresholds unchanged
+          │  (a26=1.0389 / a40=1.0581; V2 eps_b 1.98e-4 < original 5e-4)
+          └─ fresh review PASS (attempt 4; attempts 1-3 = documentation)
+                     ↓
+        external scientific review of the fix package
         (V3 / porous-media remain unauthorized; V3 contract rewrite
         still required before execution)
 \`\`\`
 
-audit 之后，"是否修改 core solver"第一次有了**具体的、定位到 kernel 与
-常数**的证据基础（见 §24）：修复 scope 明确、可单独授权；在此之前 core
-solver 保持 frozen。
+fix 之后，core solver 的守恒缺陷已按审计定位修复且全回归链保持
+（见 §25）；"是否进一步动 core solver"恢复为默认不动，除非外审
+提出新证据。
 
 当前研发重点：
 
@@ -2000,3 +2018,175 @@ local zeroth identity
 并要求 conservation drift 至少比当前约
 \(1.56\times10^{-8}/step\) 改善一个数量级，目标工程水平约
 \(2\times10^{-9}/step\) 或更低，且不得通过放宽已有 physics gates 实现。
+
+---
+
+# 25. SOLVER Conservation Fix — BI-SOLVER-CONSERVATION-FIX-001（2026-09-25）
+
+> 本节是 **SOLVER 层变更记录**（本 episode 首次授权的 core solver 修改）。
+> 变更分类：**SOLVER = 有**（moment 逆变换 f64 化 + colour 零阶矩投影）；
+> BC/物理参数/门槛：**无变更**。四轮 fresh review（1–3 轮纯文档返工，
+> 第 4 轮 **PASS**），候选 `e256b48`。
+
+## 25.0 记录头（契约第 11 项）
+
+- **Task ID:** BI-SOLVER-CONSERVATION-FIX-001；授权链 = §24 审计外审
+  PASS（§6–7 fix-before-V3）+ 独立复核。
+- **Base:** `1f5ee76`（审计 attempt-2 候选）→ 候选链 `503f474` →
+  `9bd922d` → `46be3f2`（首选 T1+C1，被 A2 淘汰，保留历史）→
+  `e3d5a93`（终选 T3+scoped-C1）→ 证据包 → **`e256b48`**（PASS）。
+- **Reviewer sessions:** 4 个 fresh 无 resume 会话
+  （`REVIEW_SESSION.json`）；决策链 CHANGES_REQUESTED ×3 → **PASS**。
+- 求解器 blob `38bf419e` 四轮不变（评审核实）。
+
+## 25.1 文献/实现检索结论（契约第 1 项）
+
+`results/conservation_fix/LITERATURE_AND_IMPLEMENTATION_SEARCH.md`：
+双通道检索在改码**之前**完成。**未找到**直接记载 f32 `inv_M`
+列和缺陷的文献（不主张先例）；新实现层发现：**2D canonical
+（D2Q9）同缺陷家族**（colsum[0]−1 = +7.45e-9 = 2^-27，2D 线冻结、
+本任务不处理）；Dubois/Philippi 2024/2025 "projection" 系列名称
+相似但机制无关（全文 0 precision/conservation 内容）；C2 = 无
+（无可适用且机制不同的候选）。下载源：arXiv 2412.17426 与
+**2112.08926**（Lehmann 2022；初版误下 2202.05643——attempt-1
+review B1 抓出并替换，附录教训）。
+
+## 25.2 根因公式与修复恒等式（契约第 2 项）
+
+总通道（§24 根因）：
+
+\[
+\textstyle\sum_s \mathrm{inv\_M}_{f32}[s,0] = 1 + 2^{-26}
+\;\Rightarrow\;
+M_f(t) \approx M_0\,(1+2^{-26})^{t}.
+\]
+
+修复后恒等式（F0 验收对象，per-node、device 算术）：
+
+\[
+R_f=\sum_q f_q^{\rm post}-m_0^{\rm pre}\to \mathcal O(10^{-12}),
+\qquad
+R_{r/b}=\sum_q g^{r/b}_q-\rho^{r/b,\rm pre}\to \mathcal O(10^{-10}).
+\]
+
+colour 三段分解：equilibrium-sum 残差主导（+6.45e-9）→ recoloring
+小两个量级 → C1 后 ~1e-10。
+
+## 25.3 候选矩阵与关键实现摘录（契约第 3 项）
+
+候选开关为构造参数（`total_fix` T0–T4 / `colour_fix` C0–C1，
+env 可覆盖；生产默认 **T3/C1**）。最终生产代码（`lbm_solver_cg3d.py`
+collision 内）：
+
+```python
+if ti.static(self.total_fix in ('T3', 'T4')):
+    for s in ti.static(range(19)):
+        acc = ti.cast(0.0, ti.f64)
+        for l in ti.static(range(19)):
+            if ti.static(self.total_fix == 'T3'):
+                acc += inv_M_f64[s, l] * ti.cast(m_temp[l], ti.f64)
+            else:
+                acc += ti.cast(inv_M[s, l], ti.f64) * ti.cast(m_temp[l], ti.f64)
+        self.f[i, j, k, s] = ti.cast(acc, ti.f32)
+```
+
+C1（scoped 到界面节点；bulk 的 J7 恒为 0，校正既无必要又破坏
+平稳性）：
+
+```python
+if ti.static(self.colour_fix == 'C1'):
+    if cc > 0:
+        sr = 0.0; sb = 0.0
+        for s in ti.static(range(19)):
+            sr += g_r[s]; sb += g_b[s]
+        dr_loc = self.rho_r[i, j, k] - sr
+        db_loc = self.rho_b[i, j, k] - sb
+        for s in ti.static(range(19)):
+            g_r[s] += w[s] * dr_loc
+            g_b[s] += w[s] * db_loc
+```
+
+候选对比全表见 `results/conservation_fix/CANDIDATE_COMPARISON.md`：
+T4 负对照坐实（R_f +1.494e-8、frac_pos 0.94）；T2 局部闭合但全局
+−2.76e-9/step 单调（10× 门不过）；T1 漂移与 T3 同级且零开销，
+但被 **A2 平稳性门强制淘汰**——T0 下均匀单相是 bit-exact frozen
+不动点，任何 f32 路径扰动都迁移到共同吸引子 4.46e-6 > 1e-6，
+且 T1 另有 −1.5e-8 x/y 系统性局部动量缺陷（attempt-1 review 独立
+复现）；**只有 T3 保持不动点（max|v| = 0.0）**。选型因此被门
+强制为 T3+C1(scoped)。
+
+## 25.4 局部恒等式与 A2 定位图（契约第 4 项）
+
+![F0 and A2](figures/fig_cf_f0_a2.svg)
+
+（a）F0 局部闭合：T4 负对照 vs T1/T2/T3 闭合、选定 T3+C1s 无偏；
+（b）A2 平稳性门（未改动）：仅 T0/T3 系组合精确 0.0。
+候选 `e256b48`；数据源 `f0_*/`、`a2_isolation.json`。
+
+## 25.5 长时程漂移对比图（契约第 5 项）
+
+![drift comparison](figures/fig_cf_drift_comparison.svg)
+
+C3 60k：baseline +1.552e-8/step（R²=1.0000）→ 选定 T3+C1s
++1.19e-11（R²=0.62，无趋势，≈1300×）；colour +6.76e-9 → −6.43e-10
+（10.5×，≤2e-9 达标；**有界单向（负）floor，符号如实披露**——
+attempt-1 review B3 修正口径；CPU 一致）。被拒候选 T2+C1 的单调
+负漂移作对照保留。数据源 `f1_*/long_horizon_mass.csv`。
+
+## 25.6 性能对比（契约第 6 项）
+
+C3 稳态：T0 2465 → T3+C1s **2479 steps/s**（净零开销；unscoped
+C1 曾为 2347）；JIT 一次性 ~300 s/新 kernel 变体（缓存暖 6.8 s）；
+新增 = 一个 19×19 f64 表 + 10 个 per-node f64 探针场（12 f64
+值/节点，dbg 关闭时写入编译剔除；~3 MB @C3 / ~7 MB @V2）。
+F10 明细见 `CANDIDATE_COMPARISON.md`。
+
+## 25.7 V0/V1c/V2 回归 before/after（契约第 7 项）
+
+F2（门槛未动，全部 PASS）：Level A ALL PASS（**A2 精确 0.0**）、
+Compute_C、Poiseuille eff 0.9933→1.0010、Laplace 0.42%→0.35% 与
+contact 34.0°→27.3°（T0 两批间 run-to-run spread 0.26–0.42% /
+30.8–34.0° **大于** before/after 差 → 标注为非 fix 归因）、
+postprocessing ALL PASS。
+
+F3：static C = 0.7902/0.7513/0.8070/0.7834（V1c 基线
+0.7902/0.7511/0.8067/0.7795，平台保持）；differential
+**a26 = 1.0389 / a40 = 1.0581**（|a−1|≤0.10 双 PASS，基线
+1.0436/1.0699）；L0/h 3.05/4.32（基线 3.0220/4.2489）。
+
+F4（V2 60k 重跑）：
+
+![v2 regression](figures/fig_cf_v2_regression.svg)
+
+镜像误差 1.297e-3 → **4.96e-4 lu**（2.6×）；max ε_r/ε_b
+4.21e-4/6.73e-4 → 7.49e-5/**1.98e-4**（3.4×，**回到原 g6 值 5e-4
+之内**——V2 评审开启的问题就此闭环）；单一被囚气团、
+NOT_REACHED、bulk ρ 界 [0.9350,1.0074] 不变；定性物理无变化。
+
+## 25.8 最终生产代码与变更分类（契约第 8 项）
+
+- SOLVER：**变更**（如上三处：`inv_M_f64` 表 + T3 f64 逆变换路径
+  + C1 scoped 投影块；候选开关保留，`T0/C0` 可复现修复前算术）；
+- BC：无；物理参数：无（CapA=0.06、ψ_solid=−0.68 等全部不动）；
+- VAL/DIAG：新增 F0/F1 审计驱动与探针（task-local）；
+- HARNESS：无 runner 变更；V1c/V2 驱动仅获 `LBM_OUTROOT` env 钩子
+  （默认不变）。
+
+## 25.9 评审与证据绑定（契约第 9–10 项）
+
+- 4 轮 fresh review（无 self-review）：1–3 轮 CHANGES_REQUESTED
+  均为**文档包缺陷**（错误文献源、与 CSV 矛盾的表述、手抄数字），
+  科学结论每轮都被独立复现且无争议；第 4 轮 **PASS**。评审过程
+  教训（已采纳）：派生表格数字应从 committed JSON 脚本生成，杜绝
+  手抄（attempt-3/4 review 的 process note）。
+- 证据：`.agent/evidence/BI-SOLVER-CONSERVATION-FIX-001/`
+  （REVIEW ×4 + REQUEST + SESSION + SUMMARY）；产品证据
+  `results/conservation_fix/**` @ `agent-task/BI-SOLVER-CONSERVATION-FIX-001`
+  （`e256b48`，198-file SHA256 MANIFEST）。
+
+## 25.10 对 V3 的影响（契约第 10 项续）
+
+守恒前置条件实质达成（总通道闭合、colour 在契约目标内且符号
+披露）。**V3 仍 HOLD**：唯一解除路径 = owner 组织的外部科学评审
+接受本包 + V3 contract 重写（旧 isolation-time gate 已废）。
+本评审不授权 V3、不构成 fix 的对外晋升。
