@@ -1285,6 +1285,73 @@ g8 为 **base-band 有效率**（V0 口径 ≥0.8），与全有效性（V3）�
 
 ---
 
+
+## 20.9 V1c external scientific review — PASS
+
+External review:
+
+\`.agent/evidence/BI-V1C-CLOSURE-001/V1C_EXTERNAL_SCIENTIFIC_REVIEW_PASS.md\`
+
+Binding candidate:
+
+\`2b82f9a5f448e756b5d5903b0df37f9a3b11d804\`
+
+External decision:
+
+**PASS — single-front closure accepted.**
+
+主要依据：
+
+- static slit calibration 在 h=26/40/60/80 上形成
+  \`C_static = 0.7819 ± 0.0308\` 的可复现 plateau；
+- h26 differential hydraulic slope：
+  \`a26 = 1.0436\`，误差 4.4%；
+- h40 differential hydraulic slope：
+  \`a40 = 1.0699\`，误差 7.0%；
+- differential PASS 不依赖最终 gradient-validity rung 才成立；
+- front kinematics 稳定，\`R²[x,t]\` 接近 1；
+- 无 solver modification 或 parameter tuning。
+
+### V2 前必须修正的两个旧 contract 假设
+
+1. **不再使用 \`x²(t)\` 作为 bilateral pre-interaction 的主要物理观测量。**
+
+   matched-viscosity simple-channel baseline 应继续使用：
+
+   \[
+   x(t)\approx x_0+Vt
+   \]
+
+   V2 主要比较左右 front 的线性速度、镜像误差和 symmetry。
+
+2. **删除“中央气相后来才失去与两侧 liquid buffer 连通性”的 hard gate。**
+
+   对于：
+
+   \`\`\`text
+   liquid buffer | central gas | liquid buffer
+   \`\`\`
+
+   且两端 outer wall 封闭、没有 vent/bypass 的 straight slit，中央气相从初始时刻即为 trapped pocket。
+
+   V2 应跟踪：
+
+   - initial trapped-gas topology；
+   - central gas volume / mass proxy / mean rho / p；
+   - minimum gas-gap thickness；
+   - front interaction / interface-overlap event；
+   - gas cluster 是否保持单一、fragment 或 numerical disappearance。
+
+External review 建议 V2 primary slit 使用 **h=40**：
+
+- 已有 static slit calibration；
+- 已有 short/2L differential hydraulic validation；
+- resolution 明显高于 h26；
+- 成本仍低于 h60/h80。
+
+V1c PASS 仅授权进入**修订后的 V2 bilateral verification**，不授权 V3 或真实 porous-media / graphite / separator / PCS 工作。
+
+
 # 21. 后续每一步算法变动的固定记录模板
 
 \`\`\`text
@@ -1364,8 +1431,10 @@ Core CG-LBM
           ├─ V1c differential a26=1.0436 / a40=1.0699 (both PASS)
           └─ localized open-boundary intercept L0(h) documented
                      ↓
-        external scientific review of BI-V1C-CLOSURE-001
-        (V2/V3 remain unauthorized until then)
+        V1c external scientific review PASS
+        ↓
+        revised V2 bilateral verification authorized
+        (V3 / porous-media remain unauthorized)
 \`\`\`
 
 当前没有证据要求修改 core solver。
