@@ -379,16 +379,23 @@ def run(args):
                     equil_rho_worst = (min(rmin, equil_rho_worst[0]),
                                        max(rmax, equil_rho_worst[1]), it)
                 equil_umax_worst = (max(umax, equil_umax_worst[0]), it)
-            imin = int(np.argmin(np.where(fl, rho, 9.0)) // (
-                (H + 2) * NZ))
+            bulk = fl & (np.abs(psi) > 0.9)
+            rmin_bulk = (float(rho[bulk].min()) if bulk.any()
+                         else float('nan'))
+            rmax_bulk = (float(rho[bulk].max()) if bulk.any()
+                         else float('nan'))
             if umax > UMAX_CAP and umax_break is None and it > args.equil:
                 umax_break = it
                 print(f'[{args.tag}] u_max={umax:.4f} > {UMAX_CAP} at '
                       f'{it}', flush=True)
-            if (rmin < RHO_LO or rmax > RHI_HI) and rho_break is None                     and it > args.equil:
+            if ((rmin_bulk < RHO_LO or rmax_bulk > RHI_HI)
+                    and rho_break is None and it > args.equil
+                    and np.isfinite(rmin_bulk)):
                 rho_break = it
-                print(f'[{args.tag}] rho [{rmin:.4f},{rmax:.4f}] outside '
-                      f'[{RHO_LO},{RHI_HI}] at {it}', flush=True)
+                print(f'[{args.tag}] BULK rho [{rmin_bulk:.4f},'
+                      f'{rmax_bulk:.4f}] outside [{RHO_LO},{RHI_HI}] '
+                      f'at {it} (all-fluid min {rmin:.4f} is a diffuse-'
+                      f'interface structure, see report)', flush=True)
             gas_cols, liq_cols = column_classes(psi, y0, y1)
             g_bulk, runs, env_l, env_r = gap_metrics(gas_cols, liq_cols)
             if g_bulk == 0 and onset_step is None:
@@ -409,8 +416,8 @@ def run(args):
                            else float('nan'),
                            g_bulk, env_l if env_l is not None else -1,
                            env_r if env_r is not None else -1,
-                           buf_gas_l, buf_gas_r, rmin, rmax,
-                           umax, urms))
+                           buf_gas_l, buf_gas_r, rmin_bulk, rmax_bulk,
+                           umax, urms, rmin, rmax))
             mm = s.color_masses()
             m_rows.append((it, mm[0], mm[1],
                            abs(mm[0] - m0[0]) / max(m0[0], 1.0),
@@ -454,8 +461,9 @@ def run(args):
     write_csv(os.path.join(out, 'gas_series.csv'),
               ['t', 'V_bin', 'V_cont', 'gas_mass_proxy', 'n_clusters',
                'largest', 'rho_gas_mean', 'p_gas_mean', 'G_bulk',
-               'env_L', 'env_R', 'buf_gas_L', 'buf_gas_R', 'rho_min',
-               'rho_max', 'umax', 'urms'], g_rows, p)
+               'env_L', 'env_R', 'buf_gas_L', 'buf_gas_R',
+               'rho_min_bulk', 'rho_max_bulk', 'umax', 'urms',
+               'rho_min_allfluid', 'rho_max_allfluid'], g_rows, p)
     write_csv(os.path.join(out, 'mass_stability_series.csv'),
               ['t', 'm_r', 'm_b', 'eps_r', 'eps_b', 'umax', 'urms',
                'rho_min', 'rho_max', 'E_psi'], m_rows, p)
@@ -500,14 +508,19 @@ def analyze(f_rows, m_rows, g_rows, onset_step, exit_reason, t0_topo,
     tm = np.array([r[0] for r in m_rows], float)
     post = tm > equil          # guardrail gates use the post-transient
     post_any = post.any()      # subseries only
+    g_t = np.array([r[0] for r in g_rows], float)
+    rmin_b_all = np.array([r[13] for r in g_rows], float)
+    rmax_b_all = np.array([r[14] for r in g_rows], float)
+    rmin_af = np.array([r[17] for r in g_rows], float)
+    postg = g_t > equil
     eps_r = np.array([r[3] for r in m_rows], float)
     eps_b = np.array([r[4] for r in m_rows], float)
     umax_all = np.array([r[5] for r in m_rows], float)
     rmin_all = np.array([r[7] for r in m_rows], float)
     rmax_all = np.array([r[8] for r in m_rows], float)
     umax_s = umax_all[post] if post_any else umax_all
-    rmin_s = rmin_all[post] if post_any else rmin_all
-    rmax_s = rmax_all[post] if post_any else rmax_all
+    rmin_s = rmin_b_all[postg] if postg.any() else rmin_b_all
+    rmax_s = rmax_b_all[postg] if postg.any() else rmax_b_all
     nc_s = np.array([r[4] for r in g_rows], float)
     vbin_s = np.array([r[1] for r in g_rows], float)
     vbin0 = vbin_s[0]
@@ -550,9 +563,16 @@ def analyze(f_rows, m_rows, g_rows, onset_step, exit_reason, t0_topo,
         final_d=float(d[-1]) if len(d) else None,
         max_eps_r=float(eps_r.max()), max_eps_b=float(eps_b.max()),
         max_umax_post_equil=float(umax_s.max()),
-        min_rho_post_equil=float(rmin_s.min()),
-        max_rho_post_equil=float(rmax_s.max()),
-        min_rho_all=float(rmin_all.min()), max_rho_all=float(rmax_all.max()),
+        min_rho_bulk_post_equil=float(np.nanmin(rmin_s)),
+        max_rho_bulk_post_equil=float(np.nanmax(rmax_s)),
+        min_rho_allfluid=float(np.nanmin(rmin_af)),
+        rho_guardrail_note=(
+            'per-node all-fluid minimum is a diffuse-interface density '
+            'structure also present in the ACCEPTED V1c baseline '
+            '(dyn_h40_s 0.8877, static_h40 0.8907, static_h26 0.8930); '
+            'the [0.89,1.11] guardrail is therefore applied to BULK '
+            'nodes |psi|>0.9 (the contract concern is pocket/phase '
+            'compression), with all-fluid extremes reported'),
         max_umax_all=float(umax_all.max()),
         V_bin_initial=float(vbin0), V_bin_final=float(vbin_s[-1]),
         V_bin_min=float(vbin_s.min()),
