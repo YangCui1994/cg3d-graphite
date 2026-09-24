@@ -261,19 +261,19 @@ class ColorGradientSolver3D:
                  psi_z_left=1.0, psi_z_right=1.0,
                  total_fix=None, colour_fix=None, dbg_local=False):
         # BI-SOLVER-CONSERVATION-FIX-001 candidate switches (compile-time).
-        # total_fix: 'T0' baseline | 'T1' projected f32 inv_M (module table
-        #   mutation; one fix mode per process) | 'T2' local post-
-        #   reconstruction zeroth-moment correction (w-distributed) |
-        #   'T3' f64 matrix + f64 accumulator roundtrip | 'T4' f64
-        #   accumulator + unchanged f32 matrix (negative control).
-        # colour_fix: 'C0' baseline | 'C1' per-colour local zeroth-moment
-        #   projection after equilibrium/recoloring.
-        # LBM_TOTAL_FIX / LBM_COLOUR_FIX env vars override the 'T0'/'C0'
-        # defaults so unchanged drivers can run any candidate.
+        # PRODUCTION DEFAULT since BI-SOLVER-CONSERVATION-FIX-001:
+        # total_fix='T1' (stored-f32 inv_M column-sum projection) +
+        # colour_fix='C1' (per-colour zeroth-moment projection).  Selected
+        # over T0 baseline (C3 total drift 1.55e-8/step -> 2.9e-11),
+        # T2 (global -2.76e-9 monotone despite unbiased local closure),
+        # T3 (reference quality but f64 storage/ops), T4 (negative
+        # control: f64 accumulator + f32 matrix keeps the bias).
+        # LBM_TOTAL_FIX / LBM_COLOUR_FIX env vars can force any candidate
+        # (regression A/B); 'T0'/'C0' reproduce the pre-fix arithmetic.
         self.total_fix = total_fix if total_fix is not None else \
-            os.environ.get('LBM_TOTAL_FIX', 'T0')
+            os.environ.get('LBM_TOTAL_FIX', 'T1')
         self.colour_fix = colour_fix if colour_fix is not None else \
-            os.environ.get('LBM_COLOUR_FIX', 'C0')
+            os.environ.get('LBM_COLOUR_FIX', 'C1')
         assert self.total_fix in ('T0', 'T1', 'T2', 'T3', 'T4')
         assert self.colour_fix in ('C0', 'C1')
         if self.total_fix == 'T1':
