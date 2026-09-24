@@ -74,7 +74,7 @@ with the audit's feq-pair attribution); recoloring ~2 orders smaller
 | T0+C0 | 60k | +1.552e-08 | 1.0000 | +6.76e-09 | 0.996 | 60k total 9.3e-4 (== V2 production) |
 | T3+C0 | 60k | +1.17e-11 | 0.35 | +6.77e-09 | 0.996 | reference floor |
 | T1+C1 | 60k | +2.87e-11 | 0.81 | -1.30e-09 | 0.997 | initial selection, **rejected by A2** (kept for history) |
-| **T3+C1s** | **60k** | **+1.19e-11** | **0.81** | **-6.43e-10** | 0.983 | **SELECTED**: total ~1300x; colour 10.5x, within 2e-9 |
+| **T3+C1s** | **60k** | **+1.19e-11** | **0.62** | **-6.43e-10** | 0.983 | **SELECTED**: total ~1300x; colour 10.5x, within 2e-9 |
 | T3+C1s (CPU) | 20k | -3.30e-11 | 0.85 | -6.85e-11 | 0.795 | selected, backend check (colour at noise) |
 | T1+C1 (CPU) | 20k | +8.13e-11 | 0.84 | -7.80e-10 | 0.993 | backend-consistent |
 
@@ -119,7 +119,7 @@ drift metrics cannot see: under T0 the uniform single-phase state is a
 **bit-exact frozen fixed point** (velocity stays exactly 0.0).
 All nine combos re-run with the committed generator
 `a2_isolation_check.py` -> `a2_isolation.json` (grid N=24, 200 steps;
-the production gate in `run_level_a.py` uses its own N and the full
+the production gate in `run_level_a.py` uses N=32 and the full
 suite; C1 rows in the committed generator run under the CURRENT
 scoped code — the pre-scoping unscoped variants failed identically,
 see `logs/f2_levelA_T1C1.log`):
@@ -169,9 +169,9 @@ simultaneously.
 2. invariant is exact in real arithmetic (f64 roundtrip removes the
    stored-matrix representation defect rather than compensating it);
 3. cost measured: ~4-5% steady throughput (2347-2423 vs 2465 steps/s on
-   C3), one 19x19 f64 table, plus the 11 unconditional per-node f64
-   probe fields (~3 MB on C3, ~7 MB on V2; writes compiled out when
-   dbg off); JIT one-time;
+   C3), one 19x19 f64 table, plus the 10 unconditional per-node f64
+   probe fields (12 f64 values per node incl. the 3-component momentum;
+   ~3 MB on C3, ~7 MB on V2; writes compiled out when dbg off); JIT one-time;
 4. performance may not override conservation/physics gates (contract
    section 10); among gate-passing candidates it is the only one.
 

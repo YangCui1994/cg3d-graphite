@@ -106,8 +106,8 @@ C3 steady: T3+C1s **2479 steps/s (71.4 MLUPS)** vs T0 2465 (71.0) —
 net zero cost after C1 scoping (unscoped T3+C1: 2347; T3+C0: 2355-2423).
 JIT one-time ~300 s per new kernel variant (cache-warm 6.8 s); one
 19x19 f64 table added (2.9 KB). Storage correction (attempt-1 review):
-the constructor also allocates **11 per-node f64 probe fields
-unconditionally** (~3 MB on C3, ~7 MB on V2); their writes are
+the constructor also allocates **10 per-node f64 probe fields
+(12 f64 values per node) unconditionally** (~3 MB on C3, ~7 MB on V2); their writes are
 statically compiled out when `dbg_local` is off, so the timing claims
 stand, but they are a real allocation (candidates for a later
 lazy-allocation cleanup, out of this task's scope).
