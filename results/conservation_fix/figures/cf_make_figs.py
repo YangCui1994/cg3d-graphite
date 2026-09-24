@@ -85,7 +85,7 @@ a1.set_xticklabels(cands, fontsize=7, rotation=20)
 a1.set_title('(a) F0 local closure (C3; T4 = negative control)', fontsize=9)
 a1.legend(fontsize=8)
 a1.grid(alpha=0.3, axis='y', which='both')
-a2v = [0.0, 4.463e-6, 4.463e-6, 0.0, 4.463e-6, 0.0]
+a2v = [0.0, 4.463e-6, 4.463e-6, 0.0, 3.103e-6, 0.0]
 cols = ['tab:blue' if v < 1e-6 else 'tab:red' for v in a2v]
 a2.bar(x, a2v, 0.5, color=cols)
 a2.axhline(1e-6, color='r', ls='--', lw=1, label='A2 gate 1e-6')

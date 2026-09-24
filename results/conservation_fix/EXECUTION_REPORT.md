@@ -64,20 +64,40 @@ Highlights:
 
 C3 geometry, device arithmetic, window after 1500 steps:
 R_f mean −8.35e-12 (frac_pos 0.47), R_r +9.8e-11 (0.51), R_b +2.0e-10
-(0.49) — no one-sided bias, at the representation floor; momentum
-residuals ≤ 2.2e-8 per node (f32 floor; all candidates equal).
+(0.49) — no one-sided bias, at the representation floor.
+Momentum (full-collision change `sum_q e_q (f_post - F_pre)`, from the
+committed F0 CSVs): selected T3+C1s mean ~1e-12, max 1.30e-8 per node
+(f32 floor, negligible vs rho*u); T0/T2+C0 max 2.79e-8; T1+C1 max
+4.28e-8 — and **T1 additionally carries a systematic per-axis momentum
+mean of −1.5e-8 in x/y** (attempt-1 review's independent reproduction:
+with the projected table `sum_q e_q delta_f_q = (−1.49e-8, −1.49e-8, ~0)`
+per node, i.e. T1 trades the zeroth-moment table defect for a local
+momentum defect of the same magnitude — a further reason it cannot be
+selected; the selected candidate is unaffected).
 Colour three-stage split: equilibrium-sum residual dominates
-(+4.4e-9 mean), recoloring ~2 orders smaller, post-C1 ~1e-10.
+(+6.45e-9 mean), recoloring ~2 orders smaller (−1.1e-10), post-C1
+~1e-10. Correction-specific momentum residual exactly zero
+(`sum_q w_q e_q = 0` verified host-side f64, attempt-1 review).
 Full table: `f0_T3C1s/f0_local_identities.csv` (+ all other candidates).
+Revision-2 note: F0 records per-node statistics (mean/std/frac_pos/max
+over fluid nodes x 40 steps) rather than literal per-node before/after
+rows; the probe fields hold the raw per-node values in-run.
 
 ## F1 — long-horizon conservation (selected)
 
-C3, 60k steps, GPU: total **+1.19e-11/step** (R2 0.62 — no trend;
-baseline T0 +1.552e-8, R2 1.0000 → **~1300x**, 60k total drift 9.3e-4 →
-~7e-7); colour **−6.43e-10/step** (R2 0.98; baseline +6.76e-9 →
-**10.5x**, meets both the >=10x gate and the ≤2e-9 target). CPU 20k:
-total −3.3e-11, colour −6.9e-11 (backend-consistent, CPU colour at
-noise). No abrupt jumps; no monotone bias from the correction itself.
+C3, 60k steps, GPU: total **+1.19e-11/step** (R2 0.62 — no trend,
+52.7% positive increments; baseline T0 +1.552e-8, R2 1.0000 → **~1300x**,
+60k total drift 9.3e-4 → ~7e-7). Colour **−6.43e-10/step** (R2 0.98;
+baseline +6.76e-9 → **10.5x**, meets both the >=10x gate and the <=2e-9
+target) — restated per attempt-1 review B3: the colour residual is a
+**bounded, one-sided (negative) floor**, 299/300 checkpoints negative,
+−4.05e-5 over 60k (sign-flipped vs the baseline's +4.2e-4, 100%
+positive); the scoped-C1 correction removes ~90% of the pre-fix absolute
+colour leak (6.09e-9/node x 28800 = 1.75e-4/step vs baseline 1.95e-4/step,
+reviewer-derived), and the leftover varies 6.9e-11–1.6e-9 across C1
+variants and backends (ordering-dependent, floor-consistent). CPU 20k:
+total −3.3e-11, colour −6.9e-11 (backend-consistent; CPU colour at
+noise). No abrupt jumps (max |delta drift| 1.89e-7 vs baseline 3.17e-6).
 Raw series: `f1_T3C1s_60k/long_horizon_mass.csv` etc.
 
 ## F10 — performance
@@ -85,17 +105,30 @@ Raw series: `f1_T3C1s_60k/long_horizon_mass.csv` etc.
 C3 steady: T3+C1s **2479 steps/s (71.4 MLUPS)** vs T0 2465 (71.0) —
 net zero cost after C1 scoping (unscoped T3+C1: 2347; T3+C0: 2355-2423).
 JIT one-time ~300 s per new kernel variant (cache-warm 6.8 s); one
-19x19 f64 table added (2.9 KB); no new per-node fields.
+19x19 f64 table added (2.9 KB). Storage correction (attempt-1 review):
+the constructor also allocates **11 per-node f64 probe fields
+unconditionally** (~3 MB on C3, ~7 MB on V2); their writes are
+statically compiled out when `dbg_local` is off, so the timing claims
+stand, but they are a real allocation (candidates for a later
+lazy-allocation cleanup, out of this task's scope).
 
 ## F2 — V0 regression suite (before/after, thresholds unchanged)
 
-| suite | T0 (before) | T3+C1s (after) |
+Before-values are from the **committed** final-batch T0 logs
+(`logs/f2_*_T0.log`). The first (superseded) T0 batch measured Laplace
+0.26% and contact 30.8° on identical code — i.e. the T0 metrics carry a
+run-to-run spread (Laplace 0.26–0.42%, contact 30.8–34.0°) **larger
+than the reported before/after differences**; the Laplace/contact pairs
+below therefore must not be read as fix-attributable changes — both
+sides sit inside the historical bands and the suite gates.
+
+| suite | T0 (committed before) | T3+C1s (after) |
 |---|---|---|
 | Level A | ALL PASS | **ALL PASS** (A2 max\|v\| = 0.00 exact) |
 | Compute_C bulk suppression | PASS | PASS |
 | Poiseuille | eff = 0.9933 PASS | eff = 1.0010 PASS |
-| Laplace sigma | 0.26% rel PASS | 0.35% rel PASS |
-| Contact angle theta(-0.68) | 30.8° PASS | 27.3° PASS (band 30±6) |
+| Laplace sigma | 0.42% rel PASS | 0.35% rel PASS |
+| Contact angle theta(-0.68) | 34.0° PASS | 27.3° PASS (band 30±6) |
 | Postprocessing | ALL PASS | ALL PASS |
 
 ## F3 — V1c scientific regressions (selected fix)
@@ -107,7 +140,7 @@ JIT one-time ~300 s per new kernel variant (cache-warm 6.8 s); one
 - Differential hydraulics (4 dynamic runs rerun, 60k, production
   driver): **a26 = 1.0389, a40 = 1.0581** — gates |a−1| ≤ 0.10 both
   **PASS** (baseline 1.0436 / 1.0699; deltas 0.005 / 0.012).
-  L0/h = 3.05 / 4.32 (baseline 3.00 / 3.94). Outputs:
+  L0/h = 3.05 / 4.32 (baseline 3.0220 / 4.2489). Outputs:
   `levelc_v1c_fix/` (incl. `collect` report with per-case gates
   all_hard = true).
 - No pressure bands or geometry tuned.
@@ -168,3 +201,16 @@ code untouched. Candidate history: `503f474` (implementation),
 Per the authorizing reviews: this fix **does not** authorize V3. V3
 remains HOLD pending external scientific review of this task and the
 V3 contract rewrite (old isolation-time gates obsolete).
+
+## Living technical document (contract section 17 — route record)
+
+`docs/research/bilateral_imbibition/ALGORITHM_IMPLEMENTATION_EVOLUTION.md`
+lives on the **control/integration branch** (`agent-dev/bilateral-episode-v0.1`),
+not on this product branch (it does not exist in this branch's tree).
+Per the controller-issued `START_CONSERVATION_FIX.md` section 8 and the
+episode's established flow (V1c §20, V2 §21/§24 precedents), the
+mandatory solver-fix document section (with the committed figures from
+`results/conservation_fix/figures/`) is published on the control branch
+immediately after this fresh review accepts the candidate. This record
+resolves the attempt-1 review's B5 explicitly rather than silently
+skipping section 17.

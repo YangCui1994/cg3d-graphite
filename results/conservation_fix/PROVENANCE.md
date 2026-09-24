@@ -49,6 +49,11 @@
 
 ## Runs (all logs + exit codes in `logs/`; machine data per run dir)
 
+Revision 2 adds: `logs/final_batch_exit_codes.log` (all 47 batch-member
+exit codes of the final batch) and the committed A2 isolation generator
+`a2_isolation_check.py` -> `a2_isolation.json` (9 combos; the original
+isolation runs had been console-only — attempt-1 review minor item).
+
 | group | runs | notes |
 |---|---|---|
 | diagnosis | `diag_C3_gpu` (audit driver, 4k) + `inv_m_colsum_check` | contract section 4 reproduction |

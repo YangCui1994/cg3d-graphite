@@ -54,15 +54,23 @@ Queries (exact strings):
   - Downloaded: `literature/dubois2024_mrt_projection_arxiv2412.17426.pdf`
     (source https://arxiv.org/pdf/2412.17426, accessed 2026-09-24).
 
-- **Lehmann et al. 2022** (PRE 106, 015308; arXiv:2202.05643), as in the
-  control memo.
+- **Lehmann et al. 2022** (PRE 106, 015308; **arXiv:2112.08926**), as in
+  the control memo.
   - Supports: FP32 is not inherently disqualified for LBM accuracy in
     benchmarked cases; precision choice is an engineering decision.
   - Does NOT support: any statement about MRT inverse-matrix closure or
     deterministic drift; benchmarks macroscopic accuracy, not
     conservation-identity closure.
-  - Downloaded: `literature/lehmann2022_f32_lb_arxiv2202.05643.pdf`
-    (accessed 2026-09-24).
+  - Downloaded: `literature/lehmann2022_f32_lb_arxiv2112.08926.pdf`
+    (accessed 2026-09-25; title page verified "On the accuracy and
+    performance of the lattice Boltzmann method with 64-bit, 32-bit and
+    novel 16-bit number formats").
+  - Erratum (attempt-1 review B1): the initial revision downloaded
+    arXiv:2202.05643 under this filename — that identifier is an
+    unrelated gravitational-wave paper (Nagar et al.) and the "%PDF
+    verified" note below originally referred to it; the file was
+    replaced and every claim above is re-verified against the correct
+    source.
 
 - **Latva-Kokko & Rothman 2005** (PRE 71, 056702), **Leclaire et al.
   2012 recoloring operators** (Appl. Math. Modelling 36, 2237),
@@ -165,7 +173,7 @@ accumulation closure — contract section 5 T1 note) and warns that the
 | source | retrieval | status |
 |---|---|---|
 | arXiv 2412.17426 (Dubois & Philippi 2024) | arxiv.org/pdf | downloaded, verified title |
-| arXiv 2202.05643 (Lehmann et al. 2022) | arxiv.org/pdf | downloaded, %PDF-1.5 verified |
+| arXiv **2112.08926** (Lehmann et al. 2022) | arxiv.org/pdf | downloaded (revision 2), title + 47 "lattice Boltzmann" full-text hits verified; **erratum**: revision 1 had fetched arXiv 2202.05643 (unrelated) under this name — replaced (attempt-1 review B1) |
 | MDPI Fluids 10(1):18 (Zahid 2025) | mdpi.com pdf | blocked (403/HTML); DOI recorded |
 | HAL search API | api.archives-ouvertes.fr | used to identify preprint |
 | PRE 71,056702 / PRE 86 / AMM 36 / SSRN 7211143 | — | paywalled; DOIs recorded in control memo |

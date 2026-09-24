@@ -46,14 +46,20 @@ per contract section 7 (early elimination by failed local invariant).
 | T1+C1 | +8.67e-11 | 0.448 | -1.68e-10 | 0.518 | -5.64e-10 | both channels closed |
 | T2+C1 | -2.62e-10 | 0.521 | -1.55e-10 | 0.518 | -4.69e-10 | both channels closed |
 
-Momentum (full-collision change `sum_q e_q (f_post - F_pre)`, max over
-probe window): all candidates <= 2.2e-08 absolute per node (f32 floor;
-pre-correction momentum scale rho*u ~ 1e-2..1e0).  Correction-specific
-momentum residuals (`delta*sum w_q e_q`, `(dr+db)*sum w_q e_q`): <= 3e-9.
-Colour three-stage split (C1 runs): equilibrium-sum residual dominates
-(+4.4e-9..+6.5e-9 mean, sign-consistent with the audit's feq-pair
-attribution); recoloring contribution ~2 orders smaller; post-C1
-residual at the ~1e-10 floor.
+Momentum (full-collision change `sum_q e_q (f_post - F_pre)`, committed
+F0 CSVs): selected T3+C1s mean ~1e-12 / max 1.30e-8 per node (f32
+floor); T0/T2+C0 max 2.79e-8; T1+C1 max 4.28e-8 — and T1 carries a
+**systematic per-axis momentum mean of −1.5e-8 in x/y** (attempt-1
+review independent reproduction: the projected table trades the
+zeroth-moment defect for a local momentum defect
+`sum_q e_q delta_f_q = (−1.49e-8, −1.49e-8, ~0)` per node; further
+grounds for T1's rejection — disclosed per review B2).
+Correction-specific momentum residuals (`delta*sum w_q e_q`,
+`(dr+db)*sum w_q e_q`): `sum_q w_q e_q = 0` exactly (host f64),
+so zero by construction. Colour three-stage split (C1 runs):
+equilibrium-sum residual dominates (+6.45e-9 mean, sign-consistent
+with the audit's feq-pair attribution); recoloring ~2 orders smaller
+(−1.1e-10); post-C1 residual ~1e-10.
 
 ## F1 — long-horizon C3 drift (linear fits, relative per step)
 
@@ -64,21 +70,23 @@ residual at the ~1e-10 floor.
 | T2+C0 | 20k | **-2.76e-09** | **0.9998** | +8.37e-09 | 0.994 | **fails >=10x gate** (5.6x; monotone negative) |
 | T3+C0 | 20k | -6.40e-11 | 0.77 | +8.24e-09 | 0.992 | reference (non-monotone) |
 | T2+C1 | 20k | -2.74e-09 | 0.9999 | -1.59e-09 | 0.998 | T2 global bias persists |
-| T1+C1 | 20k | +5.74e-12 | 0.030 | -1.58e-09 | 0.998 | total = no trend |
+| T1+C1 | 20k | +5.74e-12 | 0.030 | -1.58e-09 | 0.998 | total = no trend (rejected by A2, see below) |
 | T0+C0 | 60k | +1.552e-08 | 1.0000 | +6.76e-09 | 0.996 | 60k total 9.3e-4 (== V2 production) |
 | T3+C0 | 60k | +1.17e-11 | 0.35 | +6.77e-09 | 0.996 | reference floor |
 | **T1+C1** | **60k** | **+2.87e-11** | **0.81** | **-1.30e-09** | 0.997 | **selected**: total 541x better; colour within 2e-9 target |
 | T1+C1 (CPU) | 20k | +8.13e-11 | 0.84 | -7.80e-10 | 0.993 | backend-consistent |
 
-Colour-channel floor justification: after C1 the colour residual
-(-1.3e-9..-1.6e-9/step, sign flipped from C0's +8e-9) is the measured
-f32 arithmetic floor of the 19-way colour-transport accumulation itself
-(the equilibrium-sum bias C1 removes is the dominant pre-fix term); the
-remaining term is common to every candidate and meets the engineering
-target `|r_M,colour| <= 2e-9`.  Total-channel 10x gate: met with 541x;
-colour improvement is 6.4x (8.31e-9 -> 1.30e-9 at 60k) — within target,
-floor-documented, submitted for review per contract section 9's
-"defensible arithmetic floor" clause.
+Colour-channel floor justification (restated per attempt-1 review B3):
+after C1 the colour residual is a **bounded one-sided (negative) floor**
+— 299/300 checkpoints negative, −4.05e-5 over 60k, sign-flipped from
+C0's positive leak; the scoped correction removes ~90% of the pre-fix
+absolute colour leak (6.09e-9/node x 28800 = 1.75e-4/step vs baseline
+1.95e-4/step), and the leftover varies 6.9e-11–1.6e-9 across C1
+variants and backends (ordering-dependent, floor-consistent).  It meets
+the engineering target `|r_M,colour| <= 2e-9` and the >=10x gate
+(10.5x); the surviving one-sided sign is stated for external review
+rather than claimed away.  Total-channel 10x gate: met with ~1300x
+(+1.19e-11/step, no trend, 52.7% positive increments).
 
 ## F10 — performance (C3 grid, same horizon)
 
@@ -106,16 +114,20 @@ rejected first choice).
 The unchanged V0 suite gate A2 ("uniform phase stationary",
 `max|v| < 1e-6` after 200 steps) exposes a structural property the F1
 drift metrics cannot see: under T0 the uniform single-phase state is a
-**bit-exact frozen fixed point** (velocity stays exactly 0.0).  Isolated
-200-step A2 runs:
+**bit-exact frozen fixed point** (velocity stays exactly 0.0).
+All nine combos re-run with the committed generator
+`a2_isolation_check.py` -> `a2_isolation.json` (revision 2; the
+original isolation runs were console-only, attempt-1 review minor
+item):
 
 | combo | max\|v\| | A2 |
 |---|---|---|
 | T0+C0 | 0.0 | PASS (bit-frozen) |
 | T3+C0 | 0.0 | PASS (f64 roundtrip preserves the frozen point exactly) |
 | T1+C0 | 4.463e-06 | FAIL |
-| T0+C1 (unscoped) | 4.463e-06 | FAIL |
 | T2+C0 | 4.463e-06 | FAIL |
+| T4+C0 | 3.103e-06 | FAIL |
+| T0+C1 (unscoped) | 4.463e-06 | FAIL |
 | T1+C1 (unscoped) | 4.463e-06 | FAIL (observed in the full F2 suite run) |
 | T2+C1 (scoped) | 4.463e-06 | FAIL |
 | **T3+C1 (scoped)** | **0.0** | **PASS** |
