@@ -1,0 +1,4 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[f0_T4C0/C3] R_f mean +1.494e-08 frac_pos 0.940 | R_r mean +6.517e-09 fp 0.543 | R_b mean +5.012e-09 fp 0.424
+[f0_T4C0/C1] R_f mean +1.497e-08 frac_pos 0.941 | R_r mean +4.643e-09 fp 0.804 | R_b mean +4.692e-09 fp 0.802

@@ -63,7 +63,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 from lbm_solver_cg3d import ColorGradientSolver3D   # noqa: E402
 
-OUTROOT = os.path.join(REPO, 'results', 'levelc_v2')
+OUTROOT = os.environ.get('LBM_OUTROOT', os.path.join(REPO, 'results', 'levelc_v2'))
 
 CAPA = 0.06
 SIGMA = 1.012 * CAPA
