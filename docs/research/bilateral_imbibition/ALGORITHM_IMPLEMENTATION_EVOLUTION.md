@@ -1014,6 +1014,20 @@ V1 → V1b：
 
 状态：**boundary artifact retained as diagnostic limitation**
 
+## 16.7 Intrinsic closed-system mass conservation
+
+BI-CONSERVATION-AUDIT-001（§24）在封闭系统上定量刻画了这一层：
+f32 精度下的 collision kernel 每步对 total-distribution 通道有
+**确定性 +1.49e-8 相对膨胀**（来自 stored f32 `inv_M` 零列和
+`sum_s inv_M[s,0]=1+2^-26`），colour 通道在同 kernel 内以约一半速率
+独立泄漏（`feq` pair sum 主导）；只要 non-equilibrium 持续，漂移
+linear-in-T、无上界（C3 GPU/CPU 均 100% 符号偏置）。walls /
+bounce-back 与 uniform bulk 在该层**精确无罪**（C0/C2 bit-exact
+零漂移，仅 2 步 IC transient 内一次性有界偏移 +3.427267e-07）。
+60k 步外推总漂移 ~9.3e-4，与 V1c/V2 实测一致。该层是独立的
+accuracy 层：不随 boundary / finite-resolution / measurement 层
+改变，修复方案与回归清单见 §24（未实施）。
+
 ---
 
 # 17. 当前不能声称的内容
@@ -1122,7 +1136,23 @@ Product evidence:
 
 External review：
 
-\`.agent/evidence/BI-V1B-DIAGNOSTIC-001/V1B_EXTERNAL_SCIENTIFIC_REVIEW.md\`
+`.agent/evidence/BI-V1B-DIAGNOSTIC-001/V1B_EXTERNAL_SCIENTIFIC_REVIEW.md`
+
+## Conservation audit（BI-CONSERVATION-AUDIT-001）
+
+Product branch `agent-task/BI-CONSERVATION-AUDIT-001`（candidate
+`1f5ee76`）：
+
+- product evidence: `results/conservation_audit/**`（10 runs ×
+  substep/horizon/budget CSV，`summary.json`，93-artifact
+  `MANIFEST.json`，SHA256-bound generators，figures）；
+- executor report: `results/conservation_audit/EXECUTION_REPORT.md`；
+- fresh reviews（no self-review）: `.agent/evidence/`
+  `BI-CONSERVATION-AUDIT-001/`（attempt 1 CHANGES_REQUESTED +
+  attempt 2 PASS_DIAGNOSIS_READY_FOR_FIX + REVIEW_SESSION.json +
+  SUMMARY.md）；
+- control review mandate: `.agent/evidence/BI-V2-BILATERAL-001/`
+  `V2_EXTERNAL_SCIENTIFIC_REVIEW_PASS.md`（R-V2-3）。
 
 ---
 
@@ -1539,15 +1569,27 @@ Core CG-LBM
           ├─ single trapped cluster, no fragmentation
           ├─ fronts stall (closed-system physics), NOT_REACHED
           ├─ scientific gates PASS by 3-4 orders of margin
-          └─ HUMAN_REQUIRED: g6 conservation gate vs solver f32
-            floor (accepted V1c baseline exceeds it too) + g3 scope
-            ratification — contract-owner decision
+          └─ external review PASS (R-V2-1 g3 bulk semantics ratified,
+            R-V2-2 calibrated drift envelope, R-V2-3 conservation audit
+            mandated before V3) — see §21.7
                      ↓
-        owner decision: gate re-scope vs solver conservation item
-        (V3 / porous-media remain unauthorized)
+        conservation audit (BI-CONSERVATION-AUDIT-001, candidate 1f5ee76)
+          ├─ drift localized: collision kernel, single f32 root cause
+          │  (sum_s inv_M[s,0] = 1 + 2^-26); no discrete imbalance
+          ├─ walls/bounce-back exactly innocent; uniform bulk bit-exact
+          ├─ backend-independent (C3: 1.556e-8 GPU vs 1.517e-8 /step CPU)
+          ├─ linear-in-T, 100% sign bias => bounded-floor refuted
+          ├─ <= 1.56e-8/step => <= 0.093%/60k, inside owner envelope
+          └─ PASS_DIAGNOSIS_READY_FOR_FIX (fix = separate owner task)
+                     ↓
+        owner decision: solver-fix task vs envelope-based V3 rewrite
+        (V3 / porous-media remain unauthorized; V3 contract rewrite
+        still required before execution)
 \`\`\`
 
-当前没有证据要求修改 core solver。
+audit 之后，"是否修改 core solver"第一次有了**具体的、定位到 kernel 与
+常数**的证据基础（见 §24）：修复 scope 明确、可单独授权；在此之前 core
+solver 保持 frozen。
 
 当前研发重点：
 
@@ -1630,7 +1672,257 @@ V3 authorization: HOLD
 reason: pre-V3 solver conservation audit + V3 contract rewrite
 \`\`\`
 
-旧 V3 中“later isolation time / pre-isolation trajectory”已由 V2 证明不适用于
+旧 V3 中"later isolation time / pre-isolation trajectory"已由 V2 证明不适用于
 当前 closed trapped-pocket geometry：gas pocket 从 t=0 即 trapped。
 V3 必须改成 buffer-size 对 stall displacement、G_bulk、outer-wall reflection、
 topology 和（守恒不确定性闭合后的）pocket rho/p 的 sensitivity test。
+
+R-V2-3 要求的 pre-V3 conservation audit 已完成，结果与修复提案见
+**§24**（BI-CONSERVATION-AUDIT-001，PASS_DIAGNOSIS_READY_FOR_FIX）；
+V3 的启动仍待 owner 决定 solver-fix task 与 V3 contract rewrite。
+
+---
+
+# 24. SOLVER Conservation Audit — BI-CONSERVATION-AUDIT-001
+
+> 诊断性记录（diagnostic record）：本节不是 algorithm change，
+> SOLVER 层变更分类 = **无**（solver byte-identical to V2 candidate）。
+> §22 的 change template 不适用于本节。
+
+## 24.0 记录头（契约第 1 项）
+
+- **Task ID:** BI-CONSERVATION-AUDIT-001（契约
+  `.agent/episodes/bilateral-imbibition-v0.1/CONSERVATION_AUDIT_CONTRACT.md`；
+  mandate 来自 V2 external review R-V2-3，§21.7）
+- **Base:** `5e679d8d99d338f9ab28565c636f021a0f9211b2`（V2 candidate）
+- **Branch:** `agent-task/BI-CONSERVATION-AUDIT-001`
+- **Candidates:** attempt-1 `24b00db`（fresh review:
+  CHANGES_REQUESTED，B1–B5/N1–N8）→ attempt-2 `1f5ee76`
+  （fresh review: **PASS_DIAGNOSIS_READY_FOR_FIX**）
+- **Reviewer sessions:** `sess_c85bbfb2…`（attempt 1）、
+  `sess_c5a55809…`（attempt 2），均 headless fresh（no resume,
+  no self-review）
+- **日期:** 2026-09-24
+
+## 24.1 质量恒等式与两个记账通道（契约第 2 项）
+
+每步在 S0..S6 checkpoint 用 f64 host reduction 记录三套质量视图
+（`M0` 为初值归一）：
+
+\[
+M_f=\sum_{\rm fluid}\sum_{q=0}^{18} f_q,\qquad
+M_c=\sum_{\rm fluid}(\rho_r+\rho_b),\qquad
+M_\rho=\sum_{\rm fluid}\rho .
+\]
+
+交叉残差（主诊断量）：
+
+\[
+\delta_{fc}=\frac{M_f-M_c}{M_0},\quad
+\delta_{f\rho}=\frac{M_f-M_\rho}{M_0},\quad
+\delta_{c\rho}=\frac{M_c-M_\rho}{M_0}.
+\]
+
+关键结构性事实：total-distribution 通道（`F → m=M·F → relax →
+f=inv_M·m → stream`）与 colour 通道（`feq(ρ_r),feq(ρ_b) → recolor →
+rhor/rhob accumulate → ρ_r,ρ_b`）在 collision kernel 内**各自独立**
+做质量记账，仅在 t=0 由 IC 对齐；两者的 f32 舍入路径不同，因此
+`δ_fc` 可以单调增长。
+
+## 24.2 生产 timestep 分解与子步恒等式（契约第 3 项）
+
+审计驱动按 `step()` 原序直接调用生产 kernel（reservoir-free；非
+traced step 走生产 `step()` 本体；J9 逐对 bit-exact 证明 host 读取
+无扰动）：
+
+```text
+S0 → collision → S1 → F.fill(0) → S2 → streaming1 → S3
+   → Boundary_condition → S4 → streaming3 → S5
+   → Boundary_condition_psi → S6
+```
+
+子步恒等式：J0（S0 时 f==F bit-exact）、J1（collision 总通道守恒
+`Mf(S1)−MFF(S0)`）、J2（fill 精确零）、J3（streaming1 守恒，
+bounce-back 是分布值的 permutation，有机制性证明）、J4（BC
+no-op——本审计全部 bc flag=0，kernel 编译空转，**vacuous check**，
+不作 BC 路径证据）、J5（streaming3 拷贝精确）、J6（macro 重构
+`Mρ(S5)−Mf(S5)`，device f32 19 项求和 vs host f64）、J7（colour
+输运守恒）、J8（colour 消费精确）、J9（S6(n)==S0(n+1) 闭合）。
+
+## 24.3 关键实现摘录（契约第 4 项，`lbm_solver_cg3d.py`，frozen）
+
+inv_M 的构造——f64 求逆后 cast 到 f32（`:115`），零列和缺陷的唯一
+来源：
+
+```python
+inv_M.from_numpy(np.linalg.inv(M_np).astype(np.float32))
+```
+
+executor 侧复现（`results/conservation_audit/inv_m_colsum_check.py`，
+attempt-1 reviewer 的 host-side f32 模型首次导出）：
+
+```text
+sum_s inv_M[s,0] − 1 = +1.49011611938476562e-08   (= 2^-26)
+```
+
+collision 的矩空间往返（`multiply_M :481-486` 读 F；`:554-557` 写
+f）与 colour 通道的 pair-sum 输运（`:558-573` recolor 后 `:578-588`
+accumulate 进 rhor/rhob）：
+
+```python
+for s in ti.static(range(19)):
+    self.f[i, j, k, s] = 0
+    for l in ti.static(range(19)):
+        self.f[i, j, k, s] += inv_M[s, l] * m_temp[l]   # :556-557
+...
+if self.solid[ip] == 0 and self.mem_r[ip] == 0:
+    self.rhor[ip] += g_r[s]                              # :582
+```
+
+macro 重构（`streaming3 :789-800`，device f32 顺序求和）与生产步序
+（`step :819-828`）。审计驱动 `tests/conservation_audit.py` 的
+checkpoint 测量与 J 定义见其 docstring（`:27-43`，`:316-340`）。
+
+## 24.4 C0–C3 isolation matrix 与机制（契约第 5/10 项）
+
+| run | dims×steps | Mf slope/step | Mc slope/step | late J1 / J7 |
+|---|---|---|---|---|
+| C0 GPU 16³/24³/32³, CPU | 5000 | 0* | 0* | 0 / 0 |
+| C1 GPU | 64×24×24×10k | +1.046e-8 (R².996)** | +2.03e-9 | +1.42e-8, 95% / +7.0e-9, 80% |
+| C1 CPU | ×5k | transient-only*** | transient-only*** | −1.0e-11, 50% / −5.4e-11, 55% |
+| C2 GPU/CPU | 32×46×6×10k/5k | 0* | 0* | 0 / 0 |
+| C3 GPU | 126×46×6×20k | **+1.556e-8 (R².9999)** | +8.31e-9 | +1.59e-8, **100%** / +7.5e-9, **100%** |
+| C3 CPU | ×10k | **+1.517e-8 (R².9999)** | +1.14e-8 | +1.58e-8, 100% / +9.9e-9, 100% |
+
+\* slope bit-zero：~2 步 IC transient 后进入 bit-exact fixed
+point；但该 transient 一次性制造 **+3.427267e-07**（+2.875 ULP/node）
+有界偏移——GPU 上出现在 total 通道（三视图一致），CPU 上出现在
+colour 通道（`Mff`=0.0 精确，`Mrho`=−1.49e-8 常值表示偏移）。
+R²=1.000 是 zero-variance fallback，不是拟合质量。
+\** C1_gpu 非严格线性：per-5k block 比 ~1.24、per-1k 增量跨度
+~×2.3（R²=0.9957）；线性陈述只对 C3 成立。
+\*** C1_cpu：IC relaxation 后 plateau（~3.52e-5 平台，零均值抖动
+±1.4e-9，不累积）；quiescent 态在 CPU 上 per-step identity 无偏。
+
+**机制（attempt-1 reviewer host-side f32 模型导出，关键常数
+executor 复现）：** 单一 f32 根因——stored f32 `inv_M` 零列和
+`1+2^-26` 使每个 collision 对重构零阶矩按该因子膨胀，**与
+colour-gradient 强度无关**（cc=0→0.20 时 per-node 偏差
++1.368e-8→+1.398e-8）；interface 的作用只是维持 non-equilibrium、
+阻止状态进入 bit-exact fixed point（C0/C2 冻结后停止泄漏，C1/C3
+不冻结）。colour 通道同 kernel 独立泄漏：`feq` pair sum 主导
+（+1.508e-8，与 traced J7 均值一致），recoloring pair 算术 ~300×
+更小（+8.3e-11），accumulate 顺序零均值（+1.4e-9 偏置）。walls /
+bounce-back 精确无罪（C2）；macro 重构无罪（J6 小，Mrho slope ==
+Mf slope）；非随机累积（linear-in-T + 100% 符号偏置，双 backend）。
+分类：**B — colour/total-population bookkeeping mismatch**（可观测
+层），单一 f32 根因，无 discrete imbalance（全 f64 往返残差
+2.7e-17）；`PASS_BOUNDED_FLOOR` 被明确否定。
+
+预测 vs 实测：`2^-26`=1.49e-8/step vs C3 GPU 1.556e-8（+4.4%）/
+CPU 1.517e-8（+1.8%）。与 V2 生产对照：population 通道 1.53e-8/step
+（V2 实测）vs 1.556e-8（C3，+1.7%）；colour 9.12e-9 vs 8.31e-9
+（−8.7%）。
+
+## 24.5 结果图（契约第 6/7/8 项；数据源 = candidate `1f5ee76`
+committed CSV；生成器 `figures/ca_make_figs.py`，与 SVG 一同
+committed 于产品分支 `results/conservation_audit/figures/`）
+
+![audit drift horizon](figures/fig_ca_drift_horizon.svg)
+
+长时程漂移（a）与 isolation 零漂移（b）。注意（b）为 log 轴且两条
+C0/C2 曲线都是 +3.427e-07 平台（相互差 ~6e-7 相对量级），轴 span
+退化、主刻度同读数——曲线的"上下分离"是 ULP 级差异的放大（attempt-2
+review O5，如实注明）。
+
+![substep localization](figures/fig_ca_substep_localization.svg)
+
+子步定位：只有 collision kernel 泄漏（J1 总通道、J7 colour）；
+streaming1（含 bounce-back permutation）精确守恒。
+
+![spatial budget](figures/fig_ca_spatial_budget.svg)
+
+C3 空间预算（ref1000→final 窗口）。注意：end-of-step residence 不能
+定位 creation（契约 §6）；per-node 速率各区可比（gas +2.07e-4 /
+interface +3.43e-4 / liq +4.81e-4 / wall +2.44e-4），92% 泄漏质量
+驻留在 bulk——与 node-wise arithmetic residue 一致，非 interface
+局域产生。colour 的 gas→liquid 大额交换（−30 ρr）是 meniscus
+动力学。窗口净泄漏：`ΣdMf=+8.4827`（= 该窗速率 2.9454e-4 × 28800）、
+`ΣdMc=+4.6094`（= 1.6005e-4 × 28800）；t0→final 全程总漂移为
+3.096e-4 / 1.705e-4（两个窗口口径不同，勿混用——attempt-2 review
+O1）。
+
+![backend scaling](figures/fig_ca_backend_scaling.svg)
+
+backend × isolation 矩阵（a）与 C3 GPU horizon scaling（b）：
+`ΔMf ∝ T` 线性（increments 7.76/7.90/7.84e-5 per 5k，R²=0.9999）；
+colour 在 5k 处 5.40e-5，增量 4.30/3.74/3.61e-5（减速）。C0 domain
+scaling 16/24/32：无尺度依赖（per-node 常数）。
+
+## 24.6 backend / 精度对比（契约第 9 项前半）
+
+`backend_comparison.csv`：C3 双 backend 同号同速率（1.517 vs
+1.556e-8/step，差 2.5%，均 R²>0.999、J1 100% 正偏）→ 算法性 f32
+bookkeeping，非 atomic 顺序（契约 §7 判读规则）。C1 quiescent 态的
+CPU/GPU 差异（CPU 无偏冻结、GPU 继续泄漏）是实现层差异，非机制
+差异。跨表示残差首个 material（>1e-6 相对）checkpoint：step 200
+（C1_gpu）、400（C3_gpu）、400（C1_cpu）、600（C3_cpu），均在 IC
+relaxation 内；`δ_fρ` 全程不 material（全局最大 2.69e-8 @
+C1_gpu step 200；CPU 常值 1.49e-8 表示偏移；C3_gpu 内最大
+2.21e-9——attempt-2 review O2 修正口径）。
+
+## 24.7 机制分类与修复提案（契约第 10/11 项）
+
+- **分类：B**（colour/total-population bookkeeping mismatch，
+  collision kernel S0→S1，可重复、非 transient storage 表象），
+  单一 f32 根因、无 discrete imbalance。
+- **修复提案（未实施，需 owner 单独授权）：**
+  - kernel/path：`collision()` 的 `inv_M @ m_temp` 重构（总通道）
+    与 `g_r/g_b` 输运（colour 通道）；
+  - 失效恒等式：重构 f 的 per-node 零阶矩应等于 collision 前
+    `sum_s F[s]`；精确算术下成立（M 零行整一、S[0]=0），仅因
+    stored f32 `inv_M`（零列和 1+2^-26）失效；
+  - 有效最小 scope（reviewer 验证）：(i) moment roundtrip 全 f64
+    （矩阵与累加器都 f64，残差 2.7e-17）或 (ii) 重构 f 的 per-node
+    零阶矩精确校正；**明确无效**：f32 矩阵 + f64 累加器（偏置
+    +1.496e-8 不变，frac_pos 1.00）；colour 修复必须针对 `feq`
+    pair sum（主导项），针对 recoloring/atomics 的修复会错过实际
+    项；
+  - 回归清单：P-line unit validations（Laplace σ=1.012·CapA、
+    contact angle θ(−0.68)、Poiseuille eff~0.99）、V1c a26/a40
+    differential gates、V2 symmetry/topology sentinels、V1c/V2 全部
+    mass-drift 数字重出（预期仅 f32-floor 级变化）。
+
+## 24.8 对 V3 的影响（契约第 10/11 项续）
+
+实测生产相关速率：总通道 ≤1.56e-8/step、colour ≤1.14e-8/step，
+60k 外推总漂移 ~9.3e-4，**在 owner 已校准的 V2 envelope 内**
+（r_M≤2e-8/step、|ΔM|/M0≤1e-3/60k，§21.7 R-V2-2）——V3 可在
+不修复的前提下按该 envelope 进行（owner 决定）；修复是推荐的独立
+task。V3 contract 仍需重写 + external authorization（§21.7）。
+
+## 24.9 变更分类（契约第 10 项：SOLVER/BC/VAL/DIAG/HARNESS）
+
+- SOLVER：**无**（byte-identical）；
+- BC：**无**（无 reservoir/membrane/force；bc flags 全 0）；
+- VAL：**新增诊断验证**（C0–C3 isolation matrix，非物理 acceptance
+  gate）；
+- DIAG：**新增审计驱动 + derived-artifact generators**
+  （`tests/conservation_audit.py`、`results/conservation_audit/*`，
+  含 f64 checkpoint 视图、J0–J9 恒等式、空间预算、backend/scaling
+  探针）；
+- HARNESS：**无 runner 变更**（episode 层未触碰）。
+
+## 24.10 评审决策与证据路径（契约第 11 项）
+
+- attempt 1：`CHANGES_REQUESTED`（诊断被 uphold 并强化——reviewer
+  独立 host f32 模型预测 C3 速率至 4%；四项文本缺陷 B1–B5 + N1–N8）；
+- attempt 2（candidate `1f5ee76`，text/derived-artifact 修订，无
+  仿真重跑）：**PASS_DIAGNOSIS_READY_FOR_FIX**（残余 O1–O6 为文档
+  级修正，已在本节应用：O1 窗口速率口径、O2 δ_fρ 全局最大值、O3
+  C0/C2 偏移按通道表述、O4 C1 增量比、O5 图注 axis 说明）；
+- 证据：`.agent/evidence/BI-CONSERVATION-AUDIT-001/`（REVIEW ×2、
+  REVIEW_REQUEST、REVIEW_SESSION.json、SUMMARY.md）；产品证据
+  `results/conservation_audit/**` @ `agent-task/BI-CONSERVATION-AUDIT-001`
+  （`1f5ee76`，93-artifact SHA256 MANIFEST）；
+- 本评审**不授权** solver fix，也**不授权** V3；均待 owner 决定。
