@@ -1,0 +1,19 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[dyn_h26_2L] dynamic nx=500 ny=28 L_hyd=477 T_TRANS=5070 x_ic_exit=94 x_stop=474
+[dyn_h26_2L]  10000/60000 x_vol=  42.00 (754s, 13 st/s)
+[dyn_h26_2L]  20000/60000 x_vol=  42.00 (768s, 26 st/s)
+[dyn_h26_2L]  30000/60000 x_vol=  42.00 (782s, 38 st/s)
+[dyn_h26_2L]  40000/60000 x_vol=  42.00 (796s, 50 st/s)
+[dyn_h26_2L]  50000/60000 x_vol=  42.00 (810s, 62 st/s)
+[dyn_h26_2L]  60000/60000 x_vol=  42.00 (824s, 73 st/s)
+Traceback (most recent call last):
+  File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-SOLVER-CONSERVATION-FIX-001\tests\levelc_v1c.py", line 1042, in <module>
+    main()
+  File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-SOLVER-CONSERVATION-FIX-001\tests\levelc_v1c.py", line 1036, in main
+    rc = dict(static=run_static, dynamic=run_dynamic,
+  File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-SOLVER-CONSERVATION-FIX-001\tests\levelc_v1c.py", line 533, in run_dynamic
+    write_csv(os.path.join(out, 'front.csv'),
+  File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-SOLVER-CONSERVATION-FIX-001\tests\levelc_v1c.py", line 149, in write_csv
+    with open(path, 'w', newline='') as f:
+FileNotFoundError: [Errno 2] No such file or directory: 'D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-SOLVER-CONSERVATION-FIX-001\\results\\conservation_fix\\levelc_v1c_fix\\dyn_h26_2L\\front.csv'

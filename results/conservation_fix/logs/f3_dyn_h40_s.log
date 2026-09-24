@@ -1,0 +1,28 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[dyn_h40_s] dynamic nx=264 ny=42 L_hyd=241 T_TRANS=12000 x_ic_exit=122 x_stop=238
+Traceback (most recent call last):
+  File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-SOLVER-CONSERVATION-FIX-001\tests\levelc_v1c.py", line 1042, in <module>
+    main()
+  File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-SOLVER-CONSERVATION-FIX-001\tests\levelc_v1c.py", line 1036, in main
+    rc = dict(static=run_static, dynamic=run_dynamic,
+  File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-SOLVER-CONSERVATION-FIX-001\tests\levelc_v1c.py", line 422, in run_dynamic
+    s.step()
+  File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-SOLVER-CONSERVATION-FIX-001\lbm_solver_cg3d.py", line 992, in step
+    out[i, j, k, 1] = C[1]
+  File "C:\Users\yangc\anaconda3\envs\lbm\lib\site-packages\taichi\lang\kernel_impl.py", line 1178, in __call__
+    raise type(e)("\n" + str(e)) from None
+taichi.lang.exception.TaichiCompilationError: 
+File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-SOLVER-CONSERVATION-FIX-001\lbm_solver_cg3d.py", line 619, in streaming1:
+                m_temp = self.multiply_M(i, j, k)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-SOLVER-CONSERVATION-FIX-001\lbm_solver_cg3d.py", line 542, in multiply_M:
+    def Compute_S_local(self, id: ti.template()):
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Traceback (most recent call last):
+  File "C:\Users\yangc\anaconda3\envs\lbm\lib\site-packages\taichi\lang\ast\ast_transformer_utils.py", line 27, in __call__
+    return method(ctx, node)
+  File "C:\Users\yangc\anaconda3\envs\lbm\lib\site-packages\taichi\lang\ast\ast_transformer.py", line 743, in build_FunctionDef
+    assert len(args.args) == len(ctx.argument_data)
+AssertionError
+

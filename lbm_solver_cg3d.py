@@ -262,16 +262,23 @@ class ColorGradientSolver3D:
                  total_fix=None, colour_fix=None, dbg_local=False):
         # BI-SOLVER-CONSERVATION-FIX-001 candidate switches (compile-time).
         # PRODUCTION DEFAULT since BI-SOLVER-CONSERVATION-FIX-001:
-        # total_fix='T1' (stored-f32 inv_M column-sum projection) +
-        # colour_fix='C1' (per-colour zeroth-moment projection).  Selected
-        # over T0 baseline (C3 total drift 1.55e-8/step -> 2.9e-11),
-        # T2 (global -2.76e-9 monotone despite unbiased local closure),
-        # T3 (reference quality but f64 storage/ops), T4 (negative
-        # control: f64 accumulator + f32 matrix keeps the bias).
+        # total_fix='T3' (full-f64 moment roundtrip: f64 inverse matrix
+        # + f64 accumulator, final cast to f32) + colour_fix='C1'
+        # (per-colour zeroth-moment projection, scoped to interface
+        # nodes cc>0 where the audit measured the colour leak; bulk
+        # bit-frozen states are left untouched).
+        # Selection history: T1 (table projection) matched T3 on F0/F1
+        # drift but, like every f32-path table/correction change, breaks
+        # the uniform single-phase bit-frozen fixed point and fails the
+        # unchanged V0 A2 stationarity gate (max|v| -> 4.46e-6 > 1e-6);
+        # T2 fails the F1 >=10x total gate (-2.76e-9/step monotone);
+        # T4 is the negative control (f64 accumulator + f32 matrix keeps
+        # the +1.49e-8/step bias).  Only T3 preserves the frozen point
+        # exactly (A2 max|v| = 0.0) while closing both channels.
         # LBM_TOTAL_FIX / LBM_COLOUR_FIX env vars can force any candidate
         # (regression A/B); 'T0'/'C0' reproduce the pre-fix arithmetic.
         self.total_fix = total_fix if total_fix is not None else \
-            os.environ.get('LBM_TOTAL_FIX', 'T1')
+            os.environ.get('LBM_TOTAL_FIX', 'T3')
         self.colour_fix = colour_fix if colour_fix is not None else \
             os.environ.get('LBM_COLOUR_FIX', 'C1')
         assert self.total_fix in ('T0', 'T1', 'T2', 'T3', 'T4')
@@ -692,21 +699,28 @@ class ColorGradientSolver3D:
                         g_b[kk + 1] += cospsi
 
                 # C1: per-colour local zeroth-moment projection after
-                # equilibrium + recoloring (contract C1).  rho_r/rho_b
-                # still hold the pre-collision macro values here.
+                # equilibrium + recoloring (contract C1).  Scoped to
+                # interface nodes (cc > 0): the conservation audit
+                # measured the colour leak to exist ONLY at diffuse
+                # interfaces (J7 exactly 0 in single-phase/wall-only
+                # cases), and corrections in bit-frozen uniform bulk
+                # inject ulp-scale noise that breaks exact stationarity
+                # (F2 A2 gate).  rho_r/rho_b still hold the pre-collision
+                # macro values here.
                 dr_loc = 0.0
                 db_loc = 0.0
                 if ti.static(self.colour_fix == 'C1'):
-                    sr = 0.0
-                    sb = 0.0
-                    for s in ti.static(range(19)):
-                        sr += g_r[s]
-                        sb += g_b[s]
-                    dr_loc = self.rho_r[i, j, k] - sr
-                    db_loc = self.rho_b[i, j, k] - sb
-                    for s in ti.static(range(19)):
-                        g_r[s] += w[s] * dr_loc
-                        g_b[s] += w[s] * db_loc
+                    if cc > 0:
+                        sr = 0.0
+                        sb = 0.0
+                        for s in ti.static(range(19)):
+                            sr += g_r[s]
+                            sb += g_b[s]
+                        dr_loc = self.rho_r[i, j, k] - sr
+                        db_loc = self.rho_b[i, j, k] - sb
+                        for s in ti.static(range(19)):
+                            g_r[s] += w[s] * dr_loc
+                            g_b[s] += w[s] * db_loc
 
                 # Stream colour densities; half-way bounce-back at
                 # solids; membrane nodes bounce only the blocked colour.

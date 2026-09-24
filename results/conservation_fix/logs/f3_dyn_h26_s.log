@@ -1,0 +1,3 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[dyn_h26_s] dynamic nx=264 ny=28 L_hyd=241 T_TRANS=5070 x_ic_exit=94 x_stop=238

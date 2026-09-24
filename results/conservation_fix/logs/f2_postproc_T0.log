@@ -1,0 +1,13 @@
+PASS conn6 splits edge-diagonal (2 singletons)
+PASS conn18 merges edge-diagonal (1 cluster, size 2)
+PASS periodic y merges the seam pair
+PASS non-periodic baseline splits it
+PASS periodic y+z ring is one cluster
+PASS size counts interior cells once
+PASS flat window passes all four
+PASS drifting saturation fails saturation only
+PASS pc drift fails pressure only
+PASS u_rms swing fails kinetic only
+PASS thresholds recorded
+PASS short window tolerated
+ALL PASS
