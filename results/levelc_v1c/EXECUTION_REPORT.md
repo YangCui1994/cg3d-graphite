@@ -1,118 +1,102 @@
-# EXECUTION REPORT — BI-V1C-CLOSURE-001
+# EXECUTION REPORT — BI-V1C-CLOSURE-001 (attempt 2)
 
-- Task: V1c closure — static resolution convergence + differential
-  hydraulics (`V1C_CLOSURE_CONTRACT.md`), executor = interactive ZCode
-  session per `START_V1C.md` section 3.
-- Base SHA: `a9c6db87da2eeb3572607152391fe6863394ebee` (V1b candidate)
-- Candidate: this commit (`results/levelc_v1c/**` +
-  `tests/levelc_v1c.py`; no solver change, no V1/V1b history change).
-- Primary runs (all shell exit 0; logs + `.exit` under `logs/`):
+- Task: V1c closure per `V1C_CLOSURE_CONTRACT.md`, launched from
+  `START_V1C.md`.  Attempt 1 reviewed CHANGES_REQUESTED (B1 aggregate
+  contamination, B2 window filter); this attempt implements the
+  prescribed correction by re-aggregation only — **no GPU rerun, no
+  solver change, per-probe simulation evidence unchanged** (the same
+  `reanalyze` production path recomputes every report from the
+  committed `front.csv`/`probes.csv`).
+- Base SHA: `a9c6db87da2eeb3572607152391fe6863394ebee`
+- Producer chain: runs `032d273…` → collect fix `5f18caa…` → validity
+  ladder `17bdb1b…`/`4d4dcb3…`+this fix (the candidate's file); all
+  ancestors of this candidate, documented in `PROVENANCE.md`.
+- Candidate: this commit.
 
-| Tag | Command (interpreter = conda env `lbm`) | Ended |
-|---|---|---|
-| static_h26 | `levelc_v1c.py static --hy 26 --tag static_h26` | Pc stationary @19 750 |
-| static_h40 | `… static --hy 40 --tag static_h40` | Pc stationary @12 500 |
-| static_h60 | `… static --hy 60 --tag static_h60` | Pc stationary @12 000 |
-| static_h80 | `… static --hy 80 --tag static_h80` | Pc stationary @13 000 |
-| dyn_h26_s | `… dynamic --hy 26 --tag dyn_h26_s` | x_stop @40 250 |
-| dyn_h26_2L | `… dynamic --hy 26 --L 472 --tag dyn_h26_2L` | steps_cap 60 000 |
-| dyn_h40_s | `… dynamic --hy 40 --tag dyn_h40_s` | x_stop @36 500 |
-| dyn_h40_2L | `… dynamic --hy 40 --L 472 --tag dyn_h40_2L` | steps_cap 60 000 |
-| (collect) | `levelc_v1c.py collect` | exit 0 |
+## B1/B2 corrections (declared validity ladder)
 
-## Measured facts
+Per-probe validity before ANY aggregate (`V0` 12-column bulk rule and
+t-window → `V1` + x-window `x_ic_exit ≤ x_m ≤ x_stop` (B2) → `V2` +
+band widths ≥ 20 columns (~9 interface widths) → `V3` gradient
+consistency `0.5 ≤ |dp/dx|/G(V_meas) ≤ 2.0` on both bands, G from the
+INDEPENDENT front fit).  V3 (gradient) is the PRIMARY; median AND mean
+for every variant plus an `r2 ≥ 0.90` alternative are published in
+`estimator_sensitivity.csv`.  Deviations from the review's illustrative
+numbers, and why, are declared in the driver docstring: the 3h/4h
+positional margins structurally empty the h40 short window
+(`x_ic_exit = 122 > buf0 − 4h = 90`), and a pure-r² primary is
+unsuitable because h40-short bulk-band fits sit at 0.85–0.90 r² even
+at 100+ columns (committed `probes.csv`), while the gradient criterion
+excludes exactly the contaminated probes the review identified
+(gradients 0.03×/4.3× analytic, `r2_gas` down to 0.002).
 
-### A — static resolution convergence (V1c-A)
+## Measured facts (primary = V3 gradient, median)
 
-| h | `Pc_static` | `C_static` | `theta_static_slit` |
-|---|---|---|---|
-| 26 | 3.690809e-3 | 0.7902 | 37.80° |
-| 40 | 2.280325e-3 | 0.7511 | 41.31° |
-| 60 | 1.632839e-3 | 0.8067 | 36.22° |
-| 80 | 1.183271e-3 | 0.7795 | 38.79° |
+### Differential hydraulics (primary gates)
 
-Convergence-fitting (C vs 1/h, contract A: constant / 1/h / 1/h²,
-residuals): constant `C = 0.7819` with `resid_max = 0.031` (±3.9%
-scatter); `over_h` R² = 0.007, `over_h2` R² = 0.0001 — **no 1/h-type
-convergence law is supported by the four points** (non-monotonic: h40
-dip).  The data support an identifiable plateau
-`C_static ≈ 0.782 ± 0.031` (`theta ≈ 38.6° ± 1.8°`), reproducible and
-non-erratic; exact equality to the 30° droplet registry is not claimed
-and not required by the contract.  V1b's fixed-band h26/h40 difference
-of 11.5% shrinks to 5.1% under the bulk-column rule (the V1b value was
-band-placement-biased; see V1b external review section 6).
+| h | `L_eff1`→`L_eff2` (L 241→477) | `a_h` | gate | `L0` | `L0/h` |
+|---|---|---|---|---|---|
+| 26 | 331.5→578.5 | **1.0436** | **PASS** (4.4%) | 77.9 lu | 3.00 |
+| 40 | 425.5→681.6 | **1.0699** | **PASS** (7.0%) | 157.5 lu | 3.94 |
 
-### C — differential hydraulics (V1c-C, primary gates)
+Estimator sensitivity (`estimator_sensitivity.csv`, a_h per variant ×
+median/mean): h26 = 1.039–1.059 across ALL variants (all PASS); h40 =
+1.065–1.096 for every defensible variant (median or mean), while the
+attempt-1 contaminated sets (`V0`/`V1` mean: 1.1206/1.1302) reproduce
+the reviewer's FAIL diagnosis — the contamination is now isolated,
+counted, and excluded explicitly.  Fully-valid probe counts:
+22/35, 43/55, 13/25, 38/49.
 
-| h | L1→L2 | `L_eff1`→`L_eff2` | `a_h` | gate | `L0` | `L0/h` |
-|---|---|---|---|---|---|---|
-| 26 | 241→477 | 329.6→576.3 | **1.0454** | **PASS** (4.5%) | 77.6 lu | 2.99 |
-| 40 | 241→477 | 424.2→681.0 | **1.0880** | **PASS** (8.8%) | 162.0 lu | 4.05 |
+### Static resolution convergence (unchanged from attempt 1)
 
-`L0/h` values are the same order (2.99 vs 4.05), supporting the
-localized entrance/membrane-resistance interpretation of the intercept
-(V1b external review section 3); V2's closed finite-buffer geometry
-does not contain these boundaries.
+`C_static` = 0.7902 / 0.7511 / 0.8067 / 0.7795 (h = 26/40/60/80),
+θ = 37.80°/41.31°/36.22°/38.79°; all four runs reached declared Pc
+stationarity (drift < 1e-3) at 19 750/12 500/12 000/13 000 steps.
+Constant fit `C = 0.7819`, `resid_max = 0.031` (±3.9%); `over_h` R² =
+0.007, `over_h2` R² = 0.0001 — no 1/h-type law supported
+(non-monotonic h40 dip); the data support a reproducible, non-erratic
+plateau `C ≈ 0.782 ± 0.031` (θ ≈ 38.6° ± 1.8°).  Plateau level is
+method-conditional: threshold sensitivity reaches 1.03% at h80
+(`Pc_thr095` vs 0.90), and the V1b↔V1c h26 shift (0.6705→0.7902, 18%)
+reflects both the band-rule change AND a different slab/relaxation
+protocol (V1b: nx=160, slab [60,100), fixed bands; V1c: nx=240, slab
+[90,150), bulk-column) — reported as method/protocol-conditional, not
+fully attributed to the band rule alone.
 
-### B — bulk-column pressure bands (V1c-B)
+### Front/stability gates (D)
 
-Valid-bulk-probe fractions inside the fit windows: 33/35, 55/55, 24/25,
-49/49 (≥0.94 everywhere; gate g8 ≥ 0.8 PASS).  Threshold sensitivity of
-`Pc_dynamic` across 0.85/0.90/0.95 is ≤ 0.7% everywhere (e.g. h26
-short: 2.9099e-3 / 2.9099e-3 / 2.9254e-3) — the V1b 8–9% band-placement
-ambiguity is removed.  Invalid probes fail explicitly (`band_valid=0`
-rows in `probes.csv`; no silent fallback).
+All four dynamic cases `all_hard` PASS: no NaN, umax ≤ 0.12, reservoir
+pinning exact, monotonic, valid windows, R2 = 0.99998–1.00000,
+primary/secondary front speeds agree ≤ 2%, base-band fraction ≥ 0.94.
+Front speeds reproduce V1b bit-comparably (4.9740e-3 / 5.5888e-3 /
+3.0002e-3).  `Pc_dynamic` threshold sensitivity (0.85/0.90/0.95) of
+the PRIMARY aggregates ≤ 0.6% — distinct from V1b's band-PLACEMENT
+sensitivity (8–9%), which the bulk-column rule removed.
 
-### D — front/stability gates
+### Mass accounting (g9, reported)
 
-All four dynamic cases: g1 no NaN ✓, g2 umax ≤ 0.12 ✓, g3 reservoir
-deviations 0.0 ✓, g4 monotonic ✓, g5 window valid ✓ (explicit threshold
-rule), g6 R2 ≥ 0.995 ✓ (0.99998–1.00000), g7 primary/secondary front
-speeds agree ≤ 2% ✓, g8 band fraction ✓.  Colour-mass closure reported
-(`closure_r/b_last` in reports; relative ~1e-4, no order-one leakage).
-Front speeds reproduce V1b bit-comparably: 4.9740e-3 vs 4.9743e-3 (h26
-short), 5.5888e-3 vs 5.5878e-3 (h40 short), 3.0002e-3 (h26 2L) — same
-solver, same layout, deterministic.
+Colour-mass closure vs reservoir bookkeeping: `closure_rel` =
+4.9e-4–6.8e-4 across the four dynamic runs (attempt-1 report understated
+this as ~1e-4); total colour-mass drift reconstructed from committed
+closure/inj finals is 0.04–0.27% over 36 500–60 000 steps
+(`mass_accounting` in summary.json).  No order-one leakage; reporting
+only, per contract.
 
-## Before/after vs V1b
+### g3 caveat (review non-blocking 4)
 
-| Metric | V1b (fixed bands) | V1c (bulk-column) |
-|---|---|---|
-| `Pc_dynamic` band sensitivity | 8–9% | ≤ 0.7% |
-| static h26/h40 C difference | 11.5% (gate FAIL) | 5.1% (4-point plateau 0.782±0.031) |
-| h26 differential slope `a26` | 1.034 (review-derived) | 1.045 (gate PASS) |
-| h40 differential slope `a40` | not measurable (no h40 2L) | 1.088 (gate PASS) |
-| raw `V/V_hyd(L_hyd)` interpretation | FAIL, mixed effects | retired as primary metric (intercept L0 documented) |
+`g3_zero_dp` verifies reservoir pinning (deviations exactly 0), i.e. BC
+application; the informative dynamical numbers are the recorded
+`jump_in`/`jump_out` (19–49% of `Pc_dynamic`), reported per run.
 
-## Interpretation (contract section 11 separation)
+## Commands (this attempt, no GPU)
 
-- Measured fact: both primary differential gates pass; the incremental
-  bulk hydraulic resistance per unit slit length matches
-  plane-Poiseuille within 4.5% (h26) / 8.8% (h40).
-- Analytic relation: `L_eff = Pc_dynamic h²/(12 μ V_meas)`,
-  `a_h = ΔL_eff/ΔL` — used as declared.
-- Project engineering gate: PASS at the 10% level for both heights.
-- Model interpretation: the residual intercept `L0(h) ∝ h·(3–4)` is
-  consistent with a localized entrance/membrane loss scaling
-  `Δp_local ~ μV/h` (V1b external review section 3), an artifact of
-  the open V1 validation system that V2's closed buffers do not share.
-- Unresolved (diagnostic): the h40 dip in `C_static(h)`; the ~0.92/0.79
-  `Pc_dynamic/Pc_static` ratios inherited from V1b reanalysis are not
-  re-quoted here because the static reference value itself moved
-  (0.67→0.79 at h26) with the corrected band method.
-
-## Deviations
-
-- Producer revisions: primary runs at `032d273…`; the collect-only
-  constant-fit design-matrix fix at `5f18caa…` (static/dynamic code
-  paths identical; the final candidate carries `5f18caa`'s file).
-  Documented in `PROVENANCE.md`.
-- No figures on the product branch (contract E); SVG figures are
-  generated on the control branch from this committed evidence.
+```
+levelc_v1c.py reanalyze --tag dyn_h26_s   (and _2L, h40_s, h40_2L)
+levelc_v1c.py collect                     (exit 0)
+```
 
 ## Suggested next action
 
-Independent fresh review against `V1C_REVIEWER_CONTRACT.md`;
-afterwards the mandatory technical-document update
-(`docs/research/bilateral_imbibition/ALGORITHM_IMPLEMENTATION_EVOLUTION.md`)
-is executed from this candidate's committed evidence.
+Fresh review (attempt 2) of this candidate against
+`V1C_REVIEWER_CONTRACT.md`; on PASS, the mandatory technical-document
+update is executed from this candidate's committed evidence.

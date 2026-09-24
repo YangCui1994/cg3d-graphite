@@ -1,26 +1,26 @@
-# PROVENANCE — BI-V1C-CLOSURE-001
+# PROVENANCE — BI-V1C-CLOSURE-001 (attempt 2)
 
 ## Producer chain
 
 | Revision | Content | Role |
 |---|---|---|
 | `032d273…` | `tests/levelc_v1c.py` (initial driver, unit-tested bulk-column rule) | **producer of all 8 primary runs** (their `prov.run_head` records it) |
-| `5f18caa…` | same file + collect-only fix (2-D design matrix for the constant convergence fit) | producer of the `collect` outputs (tables/summary/MANIFEST); static/dynamic code paths identical to `032d273` |
-| this commit | `results/levelc_v1c/**` only | final candidate; `tests/levelc_v1c.py` byte-identical to `5f18caa` |
+| `5f18caa…` | collect-only fix (2-D design matrix) | collect outputs (attempt 1) |
+| `17bdb1b…`/`4d4dcb3…`+ | validity ladder (B1/B2 correction) + `reanalyze` mode + collect variant fix | **attempt-2 aggregation**: reanalyze of the 4 dynamic runs + collect |
+| this commit | `results/levelc_v1c/**` only | final candidate; `tests/levelc_v1c.py` byte-identical to the last producer |
 
-Every `report.json` embeds `prov` (producer path, producer sha256,
-run_head, exact command with interpreter, started_at, worktree_dirty,
-exit_code); every CSV has a `<name>.prov.json` sidecar with the same
-fields plus the artifact sha256.  `MANIFEST.json` mirrors per-run
-shell exit codes and hashes every artifact.  Console logs:
-`logs/<tag>.log` + `logs/<tag>.exit`.
+Attempt-2 rework changed NO simulation input: every dynamic report was
+recomputed by `reanalyze` from the UNCHANGED committed
+`front.csv`/`probes.csv` of the attempt-1 runs (same `analyze_dynamic`
+production path; `prov_reanalysis` in each report records command,
+run_head, producer sha256, timestamps; `MANIFEST.json` mirrors both the
+original run provenance and the reanalysis entry).  Static runs are
+untouched from attempt 1.
 
-The `collect` outputs (static_table / differential_table / gates /
-summary / MANIFEST) are derived tables computed from the committed
-per-run `report.json` files at `5f18caa…`; those inputs were produced
-at `032d273…`.  Both revisions are ancestors of the final candidate
-and the driver file in the candidate is byte-identical to the last
-producer, so every artifact binds unambiguously to committed code.
+Every `report.json` embeds `prov`; every CSV has a
+`<name>.prov.json` sidecar; console logs and shell exit codes live in
+`logs/`.  New attempt-2 artifacts: `estimator_sensitivity.csv` and the
+`validity_variants` / `mass_accounting` blocks in the reports/summary.
 
 ## Runs (product worktree, GPU/CUDA, conda env `lbm`, python 3.10.21 /
 taichi 1.7.4)
@@ -32,7 +32,8 @@ taichi 1.7.4)
 | dyn_h26_2L | 0 | steps_cap 60 000 |
 | dyn_h40_s | 0 | x_stop at 36 500 |
 | dyn_h40_2L | 0 | steps_cap 60 000 |
-| collect | 0 | summary/tables/MANIFEST |
+| collect (attempt 2) | 0 | summary/tables/estimator_sensitivity/MANIFEST |
+| reanalyze ×4 (attempt 2) | 0 | no GPU; aggregation only |
 
 Fixed physics everywhere: `CapA=0.06`, `sigma=1.012·CapA`,
 `nu_l=nu_g=0.1`, `rho0=1`, `psi_solid=-0.68`, z-periodic slit,

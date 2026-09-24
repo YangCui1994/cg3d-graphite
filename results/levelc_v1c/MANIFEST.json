@@ -1,6 +1,6 @@
 {
  "producer": "tests/levelc_v1c.py",
- "producer_sha256": "5b4eea59718e53718d27df4106434eb3a7453759628591b4011cc97e2de9543c",
+ "producer_sha256": "8055095400be2a39775c45add517de7bcd41e9a0182785d78841a8146b2adc0c",
  "runs": {
   "static_h26": {
    "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py static --hy 26 --tag static_h26",
@@ -76,6 +76,14 @@
    "producer_sha256": "46a4b477f248bd14d6bf2a1c657dedc1beb56aac872eea85b9bdebc1deb00d12",
    "started_at": "2026-09-24T01:56:31Z",
    "exit_code": null,
+   "reanalysis": {
+    "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py reanalyze --tag dyn_h26_s",
+    "run_head": "4d4dcb36600ea0e3885907981a66c269a84f45f4",
+    "producer_sha256": "bcf827a745ea87be1d7721ad825d0330468ee9b7e120e124f320a15ac31fb5e8",
+    "started_at": "2026-09-24T02:38:03Z",
+    "exit_code": 0,
+    "note": "aggregation rerun on unchanged committed front.csv/probes.csv; simulation untouched"
+   },
    "shell_exit_code": 0,
    "console_log": "results\\levelc_v1c\\logs\\dyn_h26_s.log",
    "artifacts": {
@@ -88,7 +96,7 @@
     "front.prov.json": "0750a36b2827ea719d85f85cb11c4bc27e053156345c6b7daa89bf43be6e9f47",
     "probes.csv": "4aa92533feea711782e098a5bfb7958c840667c7f27f0edb1d6dded2cbb5e1e4",
     "probes.prov.json": "2d30d9d8d27794ae4a8b08367dc7d8c9079d20d9a36ac42b21e2bbbc8704331a",
-    "report.json": "a6148978e411df80540b0e5ede9fa24fdfaa3488836d5503ff1996a545d9bedc"
+    "report.json": "0494a16059f968bd7d6104286f9901280477e480275ed8d9676ae6cab9c0bbef"
    }
   },
   "dyn_h26_2L": {
@@ -97,6 +105,14 @@
    "producer_sha256": "46a4b477f248bd14d6bf2a1c657dedc1beb56aac872eea85b9bdebc1deb00d12",
    "started_at": "2026-09-24T01:56:59Z",
    "exit_code": null,
+   "reanalysis": {
+    "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py reanalyze --tag dyn_h26_2L",
+    "run_head": "4d4dcb36600ea0e3885907981a66c269a84f45f4",
+    "producer_sha256": "bcf827a745ea87be1d7721ad825d0330468ee9b7e120e124f320a15ac31fb5e8",
+    "started_at": "2026-09-24T02:38:04Z",
+    "exit_code": 0,
+    "note": "aggregation rerun on unchanged committed front.csv/probes.csv; simulation untouched"
+   },
    "shell_exit_code": 0,
    "console_log": "results\\levelc_v1c\\logs\\dyn_h26_2L.log",
    "artifacts": {
@@ -107,7 +123,7 @@
     "front.prov.json": "b80deb780877018c49667c0c7855bc166b03b6cec06135b6294f5a5dc431381f",
     "probes.csv": "b93b16d697a28ef2a497045f364af9e83e3830077974df7ed3443ae19e9c1a61",
     "probes.prov.json": "2a015f743e29debf168bdd4b8996287299c4c5b79d428037885c369c406b37db",
-    "report.json": "4931d3cf4314e2bf01e83fa890ffa1423fe9a4b4ac334df6a6e4f4d4d6643f0e"
+    "report.json": "5d2aa0027acca31ee5929d82805c1baed04d2102a00309ec22ea1d5e02a12d02"
    }
   },
   "dyn_h40_s": {
@@ -116,6 +132,14 @@
    "producer_sha256": "46a4b477f248bd14d6bf2a1c657dedc1beb56aac872eea85b9bdebc1deb00d12",
    "started_at": "2026-09-24T01:58:01Z",
    "exit_code": null,
+   "reanalysis": {
+    "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py reanalyze --tag dyn_h40_s",
+    "run_head": "4d4dcb36600ea0e3885907981a66c269a84f45f4",
+    "producer_sha256": "bcf827a745ea87be1d7721ad825d0330468ee9b7e120e124f320a15ac31fb5e8",
+    "started_at": "2026-09-24T02:38:05Z",
+    "exit_code": 0,
+    "note": "aggregation rerun on unchanged committed front.csv/probes.csv; simulation untouched"
+   },
    "shell_exit_code": 0,
    "console_log": "results\\levelc_v1c\\logs\\dyn_h40_s.log",
    "artifacts": {
@@ -128,7 +152,7 @@
     "front.prov.json": "5e9a5ebf392332a619ec3471fac9cad5dcf6cfe7d83046a70362178524b95389",
     "probes.csv": "cca0f3b1f1815220c5406da753ee11986e9d950d12ae28c5ca268ff6983e1bd9",
     "probes.prov.json": "d59f2a92d034b4070dbba727037521b5589325900dd26818b3ef0f7a270ee754",
-    "report.json": "3dab86c2936b0ed8f34f41b614fa5aa819f942300ec71853491fc222c37873c2"
+    "report.json": "29aabd9fc291e43c7ec95b83909e432ae3d027435dc98c8a41e012c4612c0979"
    }
   },
   "dyn_h40_2L": {
@@ -137,6 +161,14 @@
    "producer_sha256": "46a4b477f248bd14d6bf2a1c657dedc1beb56aac872eea85b9bdebc1deb00d12",
    "started_at": "2026-09-24T01:58:36Z",
    "exit_code": null,
+   "reanalysis": {
+    "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py reanalyze --tag dyn_h40_2L",
+    "run_head": "4d4dcb36600ea0e3885907981a66c269a84f45f4",
+    "producer_sha256": "bcf827a745ea87be1d7721ad825d0330468ee9b7e120e124f320a15ac31fb5e8",
+    "started_at": "2026-09-24T02:38:06Z",
+    "exit_code": 0,
+    "note": "aggregation rerun on unchanged committed front.csv/probes.csv; simulation untouched"
+   },
    "shell_exit_code": 0,
    "console_log": "results\\levelc_v1c\\logs\\dyn_h40_2L.log",
    "artifacts": {
@@ -147,7 +179,7 @@
     "front.prov.json": "1d5ee779a1ee59fdfcff3206161d717bdb54bbac44121ea2ac0822e1770d7211",
     "probes.csv": "9e46c8deb175b3efa47ff796a5b9a7fb0d89de9f8c0346443457ea2ae7f1e6d6",
     "probes.prov.json": "91e0168c8a97da5efd89d20cf341fc7c42ca3330e1e40d2c6681b7159506797c",
-    "report.json": "fcf9c892b9fa096ad2a089a031ca9b84b3ec650fe0f035d9e847bd8ffc266346"
+    "report.json": "31c55c04cfb3a48f87bbcbe525224bf32598c9adda334689431c5cd6d18830d0"
    }
   }
  }

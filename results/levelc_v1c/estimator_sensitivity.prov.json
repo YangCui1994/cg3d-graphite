@@ -7,6 +7,6 @@
  "started_at": "2026-09-24T02:39:16Z",
  "finished_at": null,
  "exit_code": null,
- "artifact": "static_table.csv",
- "artifact_sha256": "7158461b498240e14d06f59ea45d1716523ebcd320a5d3e87ddc72b090fd52e1"
+ "artifact": "estimator_sensitivity.csv",
+ "artifact_sha256": "388cd5275f0c022b6586d149e8df9c606195fae99f5edad87eead258ebd9ef3b"
 }

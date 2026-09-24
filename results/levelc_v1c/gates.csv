@@ -7,5 +7,5 @@ dyn_h26_s,dynamic,True,True,True,True,True,True,True,True,True
 dyn_h26_2L,dynamic,True,True,True,True,True,True,True,True,True
 dyn_h40_s,dynamic,True,True,True,True,True,True,True,True,True
 dyn_h40_2L,dynamic,True,True,True,True,True,True,True,True,True
-a26_gate,differential,True,a26=1.0454,,,,,,,
-a40_gate,differential,True,a40=1.0880,,,,,,,
+a26_gate,differential,True,a26=1.0436,,,,,,,
+a40_gate,differential,True,a40=1.0699,,,,,,,
