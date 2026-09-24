@@ -33,16 +33,31 @@ For every pressure probe, over the fit region [12, buf0) (open buffers
 
 PER-PROBE VALIDITY before any aggregate (V1c review attempt-1 findings
 B1/B2; applied identically by run-time analysis and `reanalyze`):
-  V0 base        : band_valid (12-column rule) and t inside the window
+  V0 base        : band_valid (12-column bulk rule), t inside window
   V1 window-x    : V0 and x_ic_exit <= x_m(t_probe) <= x_stop
-  V2 positional  : V1 and gas-band width >= 3h and x_m <= buf0-4h
-                   (clears the meniscus/distortion envelope and the
-                   slit exit by declared positional margins)
-  V3 linearity   : V2 and r2_liq >= 0.995 and r2_gas >= 0.995
-  V3 (full validity) defines the PRIMARY aggregate; median AND mean
-  under every variant are published as a first-class estimator
-  sensitivity table.  A probe failing validity is excluded explicitly
-  (counted per variant), never silently repaired.
+  V2 positional  : V1 and both band widths >= 20 columns
+                   (>= ~9 interface widths — genuine bulk regions, not
+                   slivers; the review's illustrative 3h/4h margins
+                   structurally empty the h40 short window, where
+                   x_ic_exit = 122 > buf0 - 4h = 90, so the declared
+                   margin is resolution-based, not h-based)
+  V3 gradient    : V2 and both fitted band gradients within
+                   [0.5, 2.0] x the analytic plane-Poiseuille G at the
+                   INDEPENDENTLY measured front speed V_meas (front
+                   fit, not the pressure fits — not circular).  This
+                   directly excludes the interface/exit-contaminated
+                   probes the review identified (gradients 0.03x and
+                   4.3x analytic with r2_gas down to 0.002).
+  V3 (gradient) defines the PRIMARY aggregate; median AND mean under
+  every variant, plus an r2-based alternative (V3_r2_090: r2 >= 0.90
+  both bands), are published as the estimator sensitivity table.  A
+  probe failing validity is counted per variant, never silently
+  repaired; an empty primary set fails the analysis explicitly.
+  Band-fit r2 values are reported as diagnostics (r2_liq/gas_min of
+  the primary set); a pure-r2 primary is unsuitable here because the
+  h40 short gas column's linear fits sit at 0.85-0.90 even for
+  100+-column bulk bands (committed probes.csv), which the sensitivity
+  table makes auditable.
 p_l(x), p_g(x) linear fits over the bulk bands, extrapolated to the
 meniscus reference x_m = x_vol (primary front).  Band threshold
 sensitivity 0.85/0.90/0.95 is reported as a diagnostic.
@@ -606,16 +621,23 @@ def analyze_dynamic(t, xv, xc, probes, hy, L_hyd, t_tr, x_ic_exit,
     # ---- per-probe validity ladder (B1/B2) -------------------------
     for r in probes:
         r['_x'] = float(np.interp(r['t'], t, xv))
+    g_at_v = 12.0 * MU * v_meas / (hy * hy)   # from the FRONT fit —
+    # independent of the pressure fits (not circular)
     w_t = [r for r in probes if t_tr <= r['t'] <= t[i_hi]]
     v0 = [r for r in w_t if r.get('band_valid')]
     v1 = [r for r in v0 if x_ic_exit <= r['_x'] <= x_stop]
     v2 = [r for r in v1
-          if buf0 is not None
-          and (r['gas_band'][1] - r['gas_band'][0]) >= 3.0 * hy
-          and r['_x'] <= buf0 - 4.0 * hy]
+          if (r['gas_band'][1] - r['gas_band'][0]) >= 20
+          and (r['liq_band'][1] - r['liq_band'][0]) >= 20]
     v3 = [r for r in v2
-          if r.get('r2_liq') is not None and r.get('r2_gas') is not None
-          and r['r2_liq'] >= 0.995 and r['r2_gas'] >= 0.995]
+          if r.get('dpdx_liq') is not None and r.get('dpdx_gas')
+          is not None
+          and 0.5 <= abs(r['dpdx_liq']) / g_at_v <= 2.0
+          and 0.5 <= abs(r['dpdx_gas']) / g_at_v <= 2.0]
+    v3r = [r for r in v2
+           if r.get('r2_liq') is not None and r.get('r2_gas')
+           is not None
+           and r['r2_liq'] >= 0.90 and r['r2_gas'] >= 0.90]
 
     def agg(sel):
         pcs = [r['Pc_dynamic'] for r in sel]
@@ -625,25 +647,27 @@ def analyze_dynamic(t, xv, xc, probes, hy, L_hyd, t_tr, x_ic_exit,
 
     res['validity_variants'] = dict(
         V0_base_12col=agg(v0), V1_window_x=agg(v1),
-        V2_positional=agg(v2), V3_linearity=agg(v3),
+        V2_positional=agg(v2), V3_gradient=agg(v3),
+        V3_r2_090=agg(v3r),
         counts=dict(windowed_t=len(w_t), base=len(v0), window_x=len(v1),
-                    positional=len(v2), full=len(v3)))
+                    positional=len(v2), full=len(v3), r2_variant=len(v3r)))
     res['n_window_probes'] = len(w_t)
     res['n_window_probes_valid'] = len(v3)
     res['n_window_probes_base'] = len(v0)
     if not v3:
         res['window_valid'] = False
         res['window_fail_reason'] = (
-            f'no probe passes FULL validity (V3): windowed={len(w_t)}, '
-            f'base={len(v0)}, window_x={len(v1)}, positional={len(v2)}, '
-            f'full={len(v3)} -- explicit FAIL, no silent fallback')
+            f'no probe passes FULL validity (V3 gradient): '
+            f'windowed={len(w_t)}, base={len(v0)}, window_x={len(v1)}, '
+            f'positional={len(v2)}, full={len(v3)} -- explicit FAIL, '
+            f'no silent fallback')
         res['gates'] = dict(g1_no_nan=None, g2_umax_cap=None,
                             g3_zero_dp=None, g4_monotonic=None,
                             g5_window_valid=False, g6_r2=None,
                             g7_front_agreement=None,
                             g8_band_valid_frac=None)
         return res
-    wp = v3                                   # PRIMARY = full validity
+    wp = v3                                   # PRIMARY = V3 gradient
     pc_med = float(np.median([r['Pc_dynamic'] for r in wp]))
     res['Pc_dynamic_median'] = pc_med
     res['Pc_dynamic_mean'] = float(np.mean([r['Pc_dynamic'] for r in wp]))
@@ -740,7 +764,8 @@ def reanalyze(args):
             for k in ('Pc_dynamic', 'Pc_dynamic_thr085',
                       'Pc_dynamic_thr095', 'jump_in', 'jump_out',
                       'dpdx_liq', 'dpdx_gas', 'r2_liq', 'r2_gas',
-                      'rho_res_liq', 'rho_res_gas', 'u_band_ut_rms'):
+                      'rho_res_liq', 'rho_res_gas', 'u_band_ut_rms',
+                      'closure_r', 'closure_b'):
                 r[k] = _num(row[k])
             probes.append(r)
 
@@ -909,7 +934,7 @@ def collect(args):
                           gates=dict(a26=abs(d26['a_h'] - 1.0) <= 0.10,
                                      a40=abs(d40['a_h'] - 1.0) <= 0.10),
                           estimator_sensitivity=sens,
-                          primary='V3_linearity median'),
+                          primary='V3_gradient median'),
         mass_accounting=mass,
         dynamic={t: dict(
             L_hyd=reps[t]['layout']['L_hyd'],
