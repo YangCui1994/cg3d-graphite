@@ -258,11 +258,13 @@ def label_gas(psi, rho):
     for i, j in zip(*np.nonzero(both)):
         union(int(lab[i, j, 0]), int(lab[i, j, NZ - 1]))
     roots = np.array([find(l) for l in range(1, n + 1)])
-    counts = np.bincount(roots, minlength=n + 1)     # counts[root] = size
+    node_counts = np.bincount(lab.ravel(), minlength=n + 1)
+    sizes_by_root = np.zeros(n + 1)
+    np.add.at(sizes_by_root, roots, node_counts[1:])
     uniq = np.unique(roots)
     n_clusters = int(len(uniq))
-    sizes = counts[uniq]
-    root_largest = int(uniq[np.argmax(counts[uniq])]) if n else None
+    sizes = sizes_by_root[uniq]
+    root_largest = int(uniq[np.argmax(sizes_by_root[uniq])]) if n else None
     mean_rho = None
     if n_clusters:
         labels_largest = np.where(roots == root_largest)[0] + 1

@@ -39,24 +39,20 @@ g3, _, _, _ = m.gap_metrics(gas3, liq)
 assert g3 == 50, g3
 print('3. gap metrics OK', g, el, er)
 
-# 4. cluster labelling: one z-wrapped cluster must count as ONE
+# 4. cluster labelling: two z=0/z=5 slabs at the SAME x join through
+# the z wrap into ONE cluster (they are NOT neighbours without wrap)
 psi = np.full((326, 42, 6), -1.0, dtype=np.float32)
-psi[120:200, y0:y1, :] = 1.0
-psi[120:200, y0:y1, 0] = 1.0
-# split into two x-halves connected ONLY through the z wrap:
-psi[160:200, y0:y1, :] = -1.0
-psi[160:200, y0:y1, 5] = 1.0
 psi[120:160, y0:y1, 0] = 1.0
-psi[120:160, y0:y1, 1:] = -1.0
+psi[120:160, y0:y1, 5] = 1.0
 rho = np.ones_like(psi)
 nc, sizes, root, mean_rho, lab = m.label_gas(psi, rho)
-assert nc == 1, ('z-wrap merge failed', nc, sizes)
+assert nc == 1 and sizes.max() == 2 * 40 * 40, ('z-wrap merge', nc, sizes)
 print('4. z-wrap cluster merge OK: n=%d largest=%d' % (nc, sizes.max()))
 # two separated clusters stay two
 psi2 = np.full((326, 42, 6), -1.0, dtype=np.float32)
 psi2[100:130, y0:y1, :] = 1.0
 psi2[200:230, y0:y1, :] = 1.0
 nc2, sizes2, _, _, _ = m.label_gas(psi2, rho)
-assert nc2 == 2, nc2
-print('5. separated clusters OK: n=%d' % nc2)
+assert nc2 == 2 and sizes2.max() == 30 * 40 * 6, (nc2, sizes2)
+print('5. separated clusters OK: n=%d largest=%d' % (nc2, sizes2.max()))
 print('ALL UNIT CHECKS PASS')
