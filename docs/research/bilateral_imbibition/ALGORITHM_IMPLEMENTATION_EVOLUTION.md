@@ -1126,74 +1126,162 @@ External review：
 
 ---
 
-# 20. V1c：下一次精度闭合
+# 20. V1c — 执行结果：resolution convergence + differential hydraulics（2026-09-24）
 
-V1c 不计划修改 solver。
+## 20.0 记录头（契约 F 第 1 项）
 
-## 20.1 Static resolution convergence
+```text
+Stage / Task ID: BI-V1C-CLOSURE-001
+Base SHA:        a9c6db87da2eeb3572607152391fe6863394ebee
+Candidate SHA:   2b82f9a5f448e756b5d5903b0df37f9a3b11d804
+Branch:          agent-task/BI-V1C-CLOSURE-001（已推送，远端 = 候选 SHA）
+Reviewer:        fresh session sess_aa39d3fb-4553-448c-8a15-bec2cbffc66b
+Decision:        PASS（attempt 2；attempt 1 为 CHANGES_REQUESTED，见 20.7）
+```
 
-新增：
+Producer 链（全部为候选祖先，驱动文件在候选处与最后 producer 字节一致）：
+`032d273`（8 个 primary run）→ `5f18caa`（collect 修复）→ `17bdb1b`/`4d4dcb3`/`fbb60aca`（B1/B2 有效性阶梯 + reanalyze）→ `2b82f9a`（results 提交）。
+collect 步 provenance（控制面补记，评审 next-action 第 3 项）：command = `…envs\lbm\python.exe tests/levelc_v1c.py collect`，started 2026-09-24T02:39:16Z，shell exit 0（`logs/collect4.exit`）；summary.json 的 prov 块记录 run_head `fbb60aca`、producer sha256 `80550954…`。
+哈希口径注：工件 sha256 均对**仓库 blob 内容（LF）**计算；Windows 工作区 checkout 为 CRLF，直接对磁盘文件哈希会得到不同值（评审非阻断项，此处声明约定）。
 
-- h60；
-- h80。
+## 20.1 实际使用的公式（契约 F 第 2 项）
 
-与 h26 / h40 联合分析：
+静态标定（同一缝几何、全周期域、无 reservoir/膜/外力）：
 
-\[
-C_\mathrm{static}(h)
-=
-\frac{P_c(h)h}{2\sigma}
-\]
+\[ C_\mathrm{static}(h)=\frac{P_{c,\mathrm{static}}h}{2\sigma},\qquad
+\theta_\mathrm{static}=\arccos C_\mathrm{static} \]
 
-判断：
+差分水力（primary 指标；raw `V/V_hyd(L_hyd)` 按 V1b 外审结论退役为非 primary）：
 
-- monotonic convergence；
-- plateau；
-- 是否存在可解释的大 \(h\) limit。
+\[ L_\mathrm{eff}=\frac{P_{c,\mathrm{dynamic}}h^2}{12\mu V_\mathrm{meas}},\qquad
+a_h=\frac{L_{\mathrm{eff,long}}-L_{\mathrm{eff,short}}}{L_\mathrm{long}-L_\mathrm{short}},\qquad
+L_0(h)=L_\mathrm{eff}-a_h L \]
 
-## 20.2 h40 length differential
+工程 gate：`|a_26−1| ≤ 0.10`、`|a_40−1| ≤ 0.10`（project engineering gates）。
 
-增加 h40 approximately 2L case。
+per-probe 有效性阶梯（B1/B2 修正；V3 为 primary）：
 
-计算：
+```text
+V0  12 列 bulk 规则 + t 窗口
+V1  + 窗口 x 规则  x_ic_exit ≤ x_m(t) ≤ x_stop
+V2  + 位置裕度     两条带各 ≥ 20 列（界面宽 ≈2.2 lu 的约 9 倍）
+V3  + 梯度一致性   两带 0.5 ≤ |dp/dx| / G(V_meas) ≤ 2.0
+                  （G 取自锋面拟合——独立于压力拟合，不循环）
+```
 
-\[
-a_{40}
-=
-\frac{
-L_{\mathrm{eff},2}
--
-L_{\mathrm{eff},1}
-}{
-L_2-L_1
-}
-\]
+对 attempt-1 评审示例阈值的**声明式偏离**（驱动 docstring 记录原因）：评审示例的 3h/4h 位置裕度会结构性清空 h40 short 窗口（`x_ic_exit=122 > buf0−4h=90`）；纯 r² primary 不适用——h40 short 的 100+ 列 bulk 带线性拟合 r² 也只 0.85–0.90，而梯度一致性恰好排除评审点名的污染探针（梯度 0.03×/4.3× 解析值、r²_gas 低至 0.002）。全部变体 × 估计器（median/mean）以 `estimator_sensitivity.csv` 一等公民公开，r²≥0.90 替代方案保留为 `V3_r2_090` 敏感性变体。
 
-hard engineering target：
+## 20.2 关键实现摘录（契约 F 第 3 项，`tests/levelc_v1c.py`）
 
-\[
-|a_{40}-1|\le10\%
-\]
+bulk-column 带选择（V1b 固定带的替代）：
 
-同时用 improved bulk pressure bands 重新计算 h26：
+```python
+def bulk_bands(psi_slit, x_off, thr=0.90, frac=0.95, pad=2, min_cols=12):
+    frac_l = (psi_slit < -thr).mean(axis=(1, 2))
+    frac_g = (psi_slit > +thr).mean(axis=(1, 2))
+    liq, gas = frac_l >= frac, frac_g >= frac
+    mixed = ~(liq | gas)
+    excl = mixed.copy()
+    for _ in range(pad):            # 混合柱包络两侧再各扩 pad 列
+        excl[1:] |= excl[:-1]; excl[:-1] |= excl[1:]
+    ua, un = _longest_run(liq & ~excl)
+    ga, gn = _longest_run(gas & ~excl)
+    if un < min_cols or gn < min_cols:
+        return None                 # 探针无效——显式失败，不静默回退
+    return dict(liq=(x_off+ua, x_off+ua+un), gas=(x_off+ga, x_off+ga+gn), ...)
+```
 
-\[
-|a_{26}-1|\le10\%
-\]
+有效性阶梯（B1/B2 修正核心）：
 
-## 20.3 V1c 文档输出要求
+```python
+w_t = [r for r in probes if t_tr <= r['t'] <= t[i_hi]]
+v0 = [r for r in w_t if r.get('band_valid')]
+v1 = [r for r in v0 if x_ic_exit <= r['_x'] <= x_stop]
+v2 = [r for r in v1
+      if (r['gas_band'][1]-r['gas_band'][0]) >= 20
+      and (r['liq_band'][1]-r['liq_band'][0]) >= 20]
+v3 = [r for r in v2
+      if 0.5 <= abs(r['dpdx_liq'])/g_at_v <= 2.0
+      and 0.5 <= abs(r['dpdx_gas'])/g_at_v <= 2.0]   # g_at_v = 12*mu*V_meas/h^2
+```
 
-V1c 完成后必须更新本文档，并至少新增：
+reanalyze（同一生产聚合路径重算，无 GPU）：
 
-- V1c 实现代码摘录；
-- h26 / h40 differential 对比图；
-- h26 / h40 / h60 / h80 static convergence 图；
-- before / after accuracy table；
-- 新 candidate SHA；
-- 新 evidence paths；
-- 哪些 uncertainty 被关闭、哪些仍保留。
+```python
+a = analyze_dynamic(t, xv, xc, probes, lay['hy'], lay['L_hyd'],
+                    rep['T_TRANS'], rep['x_ic_exit'], rep['x_stop'],
+                    buf0=lay['out_buffer'][0])   # 与 run 时完全同一函数
+rep['prov_reanalysis'] = p    # 命令/头部/producer sha/时间戳落盘
+```
 
-如果 simulation gate 通过但本文档未同步，V1c 任务视为**未完成**。
+## 20.3 静态分辨率结果（契约 F 第 4/5 项）
+
+| h | `Pc_static` | `C_static` | `θ_static_slit` | 收敛 |
+|---|---|---|---|---|
+| 26 | 3.690809e-3 | 0.7902 | 37.80° | Pc stationary @19 750 |
+| 40 | 2.280325e-3 | 0.7511 | 41.31° | Pc stationary @12 500 |
+| 60 | 1.632839e-3 | 0.8067 | 36.22° | Pc stationary @12 000 |
+| 80 | 1.183271e-3 | 0.7795 | 38.79° | Pc stationary @13 000 |
+
+constant 拟合 `C = 0.7819`（resid_max 0.031，±3.9%）；`over_h` R²=0.007、`over_h2` R²=0.0001 —— **数据支持可复现平台而非任何 1/h 收敛律**（h40 下凹，非单调）。θ ≈ 38.6° ± 1.8°，与 30° 液滴注册表不等（契约不要求相等）。平台水平是方法/协议条件性的：阈值敏感性在 h80 达 1.03%（thr 0.95 vs 0.90），V1b↔V1c 的 h26 位移（0.6705→0.7902，18%）同时含带规则与域协议（nx 160→240、slab 位置）变化，不单独归因于带规则。
+
+![V1c static resolution convergence](figures/fig_v1c_static_convergence.svg)
+
+## 20.4 差分水力结果（契约 F 第 6/7 项）
+
+primary = V3 梯度一致性、median（gate 注记直接读自 `estimator_sensitivity.csv` 的 V3_gradient 单元格，FAIL 不可能被静默隐藏）：
+
+| h | `L_eff`(L=241) | `L_eff`(L=477) | `a_h` | gate | `L0` | `L0/h` |
+|---|---|---|---|---|---|---|
+| 26 | 331.5 | 578.5 | **1.0436** | **PASS**（4.4%） | 77.9 lu | 3.00 |
+| 40 | 425.5 | 681.6 | **1.0699** | **PASS**（7.0%） | 157.5 lu | 3.94 |
+
+敏感性（5 变体 × median/mean 全公开）：h26 = 1.039–1.059（全部 PASS）；h40 可辩护变体 1.065–1.096（PASS），attempt-1 污染集（V0/V1 mean = 1.121/1.130）复现评审 FAIL 诊断——污染现在被显式计数排除（全有效探针 22/35、43/55、13/25、38/49）。`Pc_dynamic` 阈值敏感性（0.85/0.90/0.95，primary 聚合）最大 0.94%（h26 short @0.95）——注意这与 V1b 的**带放置**敏感性（8–9%）是不同口径，后者由 bulk-column 规则消除。`L0/h` = 3.00/3.94 同量级，支持局部化入口/膜阻力解释（`Δp_local ~ μV/h` → 等效长度 ∝ h）；V2 的封闭有限缓冲不含这些边界。
+
+![V1c L_eff vs L differential hydraulics](figures/fig_v1c_leff_vs_L.svg)
+
+两图均由 `figures/v1c_make_figs.py` 从**已提交数值证据**生成，图内标注候选 `2b82f9a5f448…`。
+
+## 20.5 V1b → V1c before/after（契约 F 第 8 项）
+
+| 指标 | V1b | V1c |
+|---|---|---|
+| `Pc_dynamic` 带**放置**敏感性 | 8–9% | 由 bulk-column 规则消除（新口径：阈值敏感性 ≤0.94%） |
+| 静态 h26/h40 C 差 | 11.5%（gate FAIL） | 5.1%；四点平台 0.782±0.031 |
+| h26 差分斜率 `a26` | 1.034（外审推算） | **1.0436**（primary，PASS） |
+| h40 差分斜率 `a40` | 不可测（无 h40 2L） | **1.0699**（PASS） |
+| raw `V/V_hyd(L_hyd)` | FAIL（混合效应） | 退役为非 primary；截距 `L0(h)` 单独文档化 |
+| 静态测量协议 | 固定带 + nx160 域 | bulk-column + nx240 域（h26 平台值随协议移动 18%，已声明） |
+
+## 20.6 各层变动声明（契约 F 第 9 项）
+
+```text
+SOLVER  无改动（lbm_solver_cg3d.py / cg3d/** 字节不变）
+BC      无改动（V1b 分离式 reservoir/membrane/buffer 拓扑原样复用）
+VAL     新增静态分辨率序列（h26/40/60/80）与差分水力 gate（a26/a40 ≤10%）
+        取代 raw V/V_hyd 作为 primary 验证指标
+DIAG    bulk-column 压力带规则 + per-probe 有效性阶梯（V0→V3）+
+        估计器敏感性表 + L0/h 截距诊断 + 质量闭合（closure_rel
+        4.9e-4–6.8e-4，总色质量漂移 0.04–0.27%）
+HARNESS tests/levelc_v1c.py 驱动（static/dynamic/reanalyze/collect）；
+        reanalyze = 同一 analyze_dynamic 生产路径对已提交证据重聚合
+```
+
+g8 为 **base-band 有效率**（V0 口径 ≥0.8），与全有效性（V3）计数分开报告。
+
+## 20.7 评审史与证据路径（契约 F 第 10 项）
+
+- attempt 1（候选 `cfff538`）：fresh reviewer **CHANGES_REQUESTED**——B1 聚合被劣质带污染（r²_gas 低至 0.002、梯度 0.03×/4.3× 进入 median）、B2 Pc 聚合未遵守声明窗口。修正 = 声明式有效性阶梯 + reanalyze 重聚合（无 GPU、无 solver 改动、逐探针证据不变）。
+- attempt 2（候选 `2b82f9a`）：fresh reviewer **PASS**（session `sess_aa39d3fb…`）。
+- 产品证据：`agent-task/BI-V1C-CLOSURE-001` 分支 `results/levelc_v1c/`（EXECUTION_REPORT.md、PROVENANCE.md、MANIFEST.json、summary.json、estimator_sensitivity.csv、static_table.csv、differential_table.csv、gates.csv、逐 run 数据与日志）。
+- 控制面评审：`.agent/evidence/BI-V1C-CLOSURE-001/`（REVIEW_REQUEST.md、REVIEW.md、REVIEW_ATTEMPT_1.md、REVIEW_SESSION.json、SUMMARY.md）。
+- PASS 仅表示技术/科学上就绪可交外审，**不自动授权 V2**。
+
+## 20.8 V1c 关闭与保留的不确定性
+
+已关闭：V1b 遗留的两个验证问题——(1) 静缝润湿的分辨率行为：可复现平台 `C≈0.782±0.031`（非 erratic、非 1/h 律）；(2) 分离局部边界电阻后的分布水力精度：增量体阻力与 plane-Poiseuille 一致至 4.4%（h26）/ 7.0%（h40）。
+
+保留（诊断项，不阻碍按外审授权进入 V2 设计）：h40 在 `C_static(h)` 中的下凹；开域验证系统的局部截距 `L0(h)`（V2 封闭几何不含）；静态平台对方法/协议的条件性（18% h26 位移）；`Pc_dynamic/Pc_static` 比值在 V1c 口径下的重新表述（静态参考值本身随方法移动）留待 V2 设计文档处理。
 
 ---
 
@@ -1272,10 +1360,12 @@ Core CG-LBM
           ├─ boundary layout separated
           ├─ h26 front speed +29%
           ├─ localized resistance ~59% lower
-          ├─ h26 differential hydraulic error ~3.4%
-          └─ static slit convergence unresolved
+          ├─ V1c static plateau C=0.782±0.031 (h26/40/60/80)
+          ├─ V1c differential a26=1.0436 / a40=1.0699 (both PASS)
+          └─ localized open-boundary intercept L0(h) documented
                      ↓
-                    V1c
+        external scientific review of BI-V1C-CLOSURE-001
+        (V2/V3 remain unauthorized until then)
 \`\`\`
 
 当前没有证据要求修改 core solver。
