@@ -1,0 +1,21 @@
+=== C0_24_gpu start 17:59:22 ===
+=== C0_24_gpu exit=0 17:59:35 ===
+=== C0_16_gpu start 17:59:35 ===
+=== C0_16_gpu exit=0 18:05:29 ===
+=== C0_32_gpu start 18:05:29 ===
+=== C0_32_gpu exit=0 18:05:44 ===
+=== C1_gpu start 18:05:44 ===
+=== C1_gpu exit=0 18:11:35 ===
+=== C2_gpu start 18:11:35 ===
+=== C2_gpu exit=0 18:17:23 ===
+=== C3_gpu start 18:17:23 ===
+=== C3_gpu exit=0 18:23:18 ===
+=== C0_24_cpu start 18:23:18 ===
+=== C0_24_cpu exit=0 18:29:42 ===
+=== C1_cpu start 18:29:42 ===
+=== C1_cpu exit=0 18:36:40 ===
+=== C2_cpu start 18:36:40 ===
+=== C2_cpu exit=0 18:42:55 ===
+=== C3_cpu start 18:42:55 ===
+=== C3_cpu exit=0 18:50:08 ===
+=== analyze exit=0 ===

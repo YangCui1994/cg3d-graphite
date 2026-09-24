@@ -71,10 +71,17 @@
   "C3_gpu/spatial_budget.csv": "9374b539ac701fe2f07c6850ce750618185260848d899c4d0d83a425e1bc709b",
   "C3_gpu/substep_mass_trace.csv": "6b26d75d57bd1c45aa030791bf443dceb3dde5492b8fe7861307285709c0d33d",
   "C3_gpu/symmetry_check.json": "70f819fb996757ad0f4b2a15391af168f6ef1cd38472cb58eb20f4aee5c0b47f",
-  "EXECUTION_REPORT.md": "3e1b56cab4767fb7a493c231a178788b597c11f8aecbfc2f64b1fd9eb2e07e5a",
-  "PROVENANCE.md": "3a2dd9c8a8235e6dc085377656d812bacadc9b714e4f080a97ee943905526105",
+  "EXECUTION_REPORT.md": "37f4b3dfcbc34685db57886a9a95d05c124865c44fa02a5eda401b1aab0494b7",
+  "PROVENANCE.md": "6590456c39de98a48003b03214b82d8317caa921343ce29e79bb18b06ce389b3",
   "backend_comparison.csv": "1dbc9e8ae6b54896f928ff304f1ecc49e11c56b69ff3790c5b3e7dab6720dcf7",
-  "late_window_identities.json": "c80d3b60a33c7a01ddb32fdcdc52688141b5ce921f6a698f2b38818aa05c9573",
+  "figures/ca_make_figs.py": "6a085e1fdc9a93397e6b21c0c5875f14a15fea38793993e7d0f2c838b8b8894a",
+  "figures/fig_ca_backend_scaling.svg": "fa08e25c43d15fe4273e67b5f5de637ddd715d6c8adb7d0f95c86e9c680ca032",
+  "figures/fig_ca_drift_horizon.svg": "a193638fcbdb40645c4fd33f91eb565e9ce7b163bb042e527d2ae9e310aea1b7",
+  "figures/fig_ca_spatial_budget.svg": "09cd97afed9b7fa4c3e6758847f10a60f134468c870e3e38f199cf062a1abf72",
+  "figures/fig_ca_substep_localization.svg": "cd5103865cf6720e9ba4dbf42e417c8d6fe936082fce0b7ae98f9337c3d533ff",
+  "inv_m_colsum_check.json": "7c774131e83caf5b69426c95032aa6676d381875462b0e3dc2b0724f4f34d09a",
+  "inv_m_colsum_check.py": "4b6306b6f08b37e714527db2cd7ea46f40d581f69dc0a7bd9e273ef6a1ea8e0f",
+  "late_window_identities.json": "fd82b98ea004287d443af3ba6abb73171a4ce39e4ec77f9cf39191353b881c7f",
   "logs/C0_16_gpu.log": "93b67fc12204aa4eb78094c3028735e18254abf1ed9f1c90ad8c89a173a609f9",
   "logs/C0_24_cpu.log": "d22aca82e3aa33dc5578301b3ec26d9de961d0dc07e8bb68324f776cc02da9ae",
   "logs/C0_24_gpu.log": "40cf926027dcc45ec970ff353534a79e28da4e1b60d6c3e091c0fb5fe5432b17",
@@ -86,9 +93,23 @@
   "logs/C3_cpu.log": "4b0cc9ca5145a70b12a03d334c6dcb7f156980007fe697988459f4045dad3550",
   "logs/C3_gpu.log": "c45d4952cb9e3360b3e56fda30550c5ee9f9dda087dae83c4f31b451064a98c5",
   "logs/analyze.log": "d769c0dea2e4ea663d667b471e665d5e1c4ea92fba4ec4dab78e53847c3b8fcf",
+  "logs/batch_exit_codes.log": "1daa1ee579f1c5b28f959e5044cab652b70e4d484a82241aaa2b918e720a0621",
+  "make_late_window.py": "19342190aaea7c0cbf1cda03fd3205c00883146df217fb5c98f300bd53898be9",
   "run_batch.sh": "12cc8a33fb01bc0f4c2d914943eaaf4fa68060fb7e2209f6193680a8e7d647c3",
   "scaling_results.csv": "483f41985ac2a6256edd36dce8d926b3a5e36a868397488b3782797a5259775c",
   "summary.json": "35ee66e8e76c1077c20d4de49fc8c317d00680a4a758010d74cbb78a9521692a"
  },
- "generator": "BI-CONSERVATION-AUDIT-001 executor"
+ "generator": {
+  "derived_artifact_generators": {
+   "results/conservation_audit/figures/ca_make_figs.py": "6a085e1fdc9a93397e6b21c0c5875f14a15fea38793993e7d0f2c838b8b8894a",
+   "results/conservation_audit/inv_m_colsum_check.py": "4b6306b6f08b37e714527db2cd7ea46f40d581f69dc0a7bd9e273ef6a1ea8e0f",
+   "results/conservation_audit/make_late_window.py": "19342190aaea7c0cbf1cda03fd3205c00883146df217fb5c98f300bd53898be9",
+   "results/conservation_audit/run_batch.sh": "12cc8a33fb01bc0f4c2d914943eaaf4fa68060fb7e2209f6193680a8e7d647c3"
+  },
+  "note": "SHA256-bound generators; runs executed in the attempt-1 batch (see PROVENANCE.md), revision 2 changes text/derived artifacts only",
+  "run_producer": {
+   "results/conservation_audit/run_batch.sh": "12cc8a33fb01bc0f4c2d914943eaaf4fa68060fb7e2209f6193680a8e7d647c3",
+   "tests/conservation_audit.py": "4354f3873b181f553d47bd93adde1d16e1ddbfff1e98f5be071f444b0c064456"
+  }
+ }
 }

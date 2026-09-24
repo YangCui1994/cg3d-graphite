@@ -28,8 +28,8 @@
 
 ## Environment
 
-- Windows 11, conda env `lbm`: python 3.10.21, taichi 1.7.4,
-  numpy 1.26.x (per-run detail in each `<tag>/prov.json`)
+- Windows 11, conda env `lbm`: python 3.10.21, taichi 1.7.4, numpy 2.2.6
+  (per-run detail in each `<tag>/prov.json`)
 - Backends: `LBM_ARCH=gpu` -> taichi cuda (RTX 5080); `LBM_ARCH=cpu` ->
   taichi cpu. Set before solver import (module-level `ti.init`).
 - No solver physics parameters were changed relative to V2:
@@ -54,7 +54,34 @@
 
 Aggregate: `python tests/conservation_audit.py analyze` (writes
 `summary.json`, `backend_comparison.csv`, `scaling_results.csv`).
-Console logs: `logs/<tag>.log`, `logs/analyze.log`.
+Console logs: `logs/<tag>.log`, `logs/analyze.log`; shell-level exit
+codes of every batch member: `logs/batch_exit_codes.log` (all exit=0).
+
+## Revision 2 (attempt-2 candidate)
+
+Attempt-1 fresh review returned CHANGES_REQUESTED (findings B1-B5,
+N1-N8; `.agent_runtime/BI-CONSERVATION-AUDIT-001/REVIEW.md`, archived as
+`REVIEW_ATTEMPT_1.md` in the evidence publication). The revision commit
+on this branch changes text and derived artifacts only:
+`EXECUTION_REPORT.md` / `PROVENANCE.md` rewrites, regenerated
+`late_window_identities.json` (all 10 runs, committed generator
+`make_late_window.py`), new `inv_m_colsum_check.py/.json` (executor-side
+reproduction of the attempt-1 reviewer's `inv_M` zeroth-column defect),
+`logs/batch_exit_codes.log`, `figures/` (script + 4 SVGs), regenerated
+`MANIFEST.json`. **No simulation was re-run; no raw evidence file
+(per-run CSVs/npz/prov.json/logs) was modified.**
+
+## Derived-artifact generators (attempt-1 review N3/N8)
+
+- `results/conservation_audit/make_late_window.py`
+  -> `late_window_identities.json` (10 runs)
+- `results/conservation_audit/inv_m_colsum_check.py`
+  -> `inv_m_colsum_check.json`
+- `results/conservation_audit/figures/ca_make_figs.py` -> 4 SVGs
+- `tests/conservation_audit.py` (driver; run producer)
+- `results/conservation_audit/run_batch.sh` (batch sequence)
+Their SHA256s are recorded in `MANIFEST.json:files`; the run producer
+hash is additionally bound in `MANIFEST.json:driver`.
 
 ## Audit-only changes relative to base `5e679d8`
 
