@@ -693,7 +693,7 @@ def collect(args):
     c = np.array(cs, float)
     inv = 1.0 / h
     fits = {}
-    for name, X in (('constant', np.ones_like(inv)),
+    for name, X in (('constant', np.column_stack([np.ones_like(inv)])),
                     ('over_h', np.column_stack([np.ones_like(inv),
                                                 inv])),
                     ('over_h2', np.column_stack([np.ones_like(inv),
