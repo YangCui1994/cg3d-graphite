@@ -1,0 +1,31 @@
+{
+ "arch": "gpu",
+ "cf": "C1",
+ "chi_primary": 1e-06,
+ "chi_sensitivity": [
+  1e-07,
+  1e-05
+ ],
+ "dims": [
+  64,
+  24,
+  24
+ ],
+ "fix": "T3",
+ "geom": "C1",
+ "git": {
+  "dirty": "M lbm_solver_cg3d.py\n?? results/colour_closure/\n?? tests/colour_closure.py",
+  "head": "e256b4857a6e51510b75358994d7c5bcc742781e"
+ },
+ "nfluid": 36864,
+ "pre_steps": 1500,
+ "pre_wall_s": 7.45364236831665,
+ "probe_steps": 40,
+ "scatter_identity_max_abs": {
+  "b": 7.275957614183426e-12,
+  "r": 3.637978807091713e-12
+ },
+ "stage": "B_diagnose",
+ "started": "2026-09-25T15:15:37",
+ "task": "BI-COLOUR-CLOSURE-001"
+}

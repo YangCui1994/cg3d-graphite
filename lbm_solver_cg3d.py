@@ -259,7 +259,8 @@ class ColorGradientSolver3D:
                  psi_x_left=-1.0, psi_x_right=1.0,
                  psi_y_left=1.0, psi_y_right=1.0,
                  psi_z_left=1.0, psi_z_right=1.0,
-                 total_fix=None, colour_fix=None, dbg_local=False):
+                 total_fix=None, colour_fix=None, dbg_local=False,
+                 acc_fix=None):
         # BI-SOLVER-CONSERVATION-FIX-001 candidate switches (compile-time).
         # PRODUCTION DEFAULT since BI-SOLVER-CONSERVATION-FIX-001:
         # total_fix='T3' (full-f64 moment roundtrip: f64 inverse matrix
@@ -277,12 +278,36 @@ class ColorGradientSolver3D:
         # exactly (A2 max|v| = 0.0) while closing both channels.
         # LBM_TOTAL_FIX / LBM_COLOUR_FIX env vars can force any candidate
         # (regression A/B); 'T0'/'C0' reproduce the pre-fix arithmetic.
+        #
+        # BI-COLOUR-CLOSURE-001 additions (colour-channel only; the T3
+        # total path is frozen):
+        #   colour_fix='C1R' — rest-population closure (external-review
+        #     suggested candidate; single-component g[0] += dr).
+        #   colour_fix='C1X' — scope extension with a natural guard:
+        #     apply the weighted closure when (cc > 0) OR the local
+        #     identity is actually violated (dr != 0 / db != 0).  The
+        #     colour-closure diagnosis measured the one-sided local
+        #     residual at NON-FROZEN cc==0 nodes near interfaces (the
+        #     uncorrected equilibrium-construction leak); bit-frozen
+        #     bulk nodes have dr == 0 exactly, so the guard is a strict
+        #     no-op there (preserves exact stationarity).
+        #   acc_fix='A1' — f64 colour-transport accumulation (rhor/rhob
+        #     f64).  The diagnosis measured the C3 one-sided colour
+        #     drift to be dominated by f32 scatter-accumulate rounding
+        #     (budget: dacc ~ -2e-5/step vs local closures +0.7e-5);
+        #     f64 accumulation is exact for <=19 f32 addends and only
+        #     the final rho_r/rho_b store rounds once.  'A0' keeps the
+        #     original f32 fields.
+        # LBM_ACC_FIX env var overrides acc_fix.
         self.total_fix = total_fix if total_fix is not None else \
             os.environ.get('LBM_TOTAL_FIX', 'T3')
         self.colour_fix = colour_fix if colour_fix is not None else \
             os.environ.get('LBM_COLOUR_FIX', 'C1')
+        self.acc_fix = acc_fix if acc_fix is not None else \
+            os.environ.get('LBM_ACC_FIX', 'A0')
         assert self.total_fix in ('T0', 'T1', 'T2', 'T3', 'T4')
-        assert self.colour_fix in ('C0', 'C1')
+        assert self.colour_fix in ('C0', 'C1', 'C1R', 'C1X')
+        assert self.acc_fix in ('A0', 'A1')
         if self.total_fix == 'T1':
             project_inv_m_colsums()
         self.dbg_local = bool(dbg_local)
@@ -339,8 +364,12 @@ class ColorGradientSolver3D:
         self.psi   = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
         self.rho_r = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
         self.rho_b = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
-        self.rhor  = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
-        self.rhob  = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
+        # BI-COLOUR-CLOSURE-001 acc_fix='A1': f64 colour-transport
+        # accumulation (exact for <=19 f32 addends; one final rounding
+        # at the rho_r/rho_b store in streaming3).  'A0' = original f32.
+        acc_dt = ti.f64 if self.acc_fix == 'A1' else ti.f32
+        self.rhor = ti.field(acc_dt, shape=(self.nx, self.ny, self.nz))
+        self.rhob = ti.field(acc_dt, shape=(self.nx, self.ny, self.nz))
         self.solid = ti.field(ti.i8, shape=(self.nx, self.ny, self.nz))
 
         # ---- CG2 infrastructure (2D mirror; zero masks == original
@@ -741,6 +770,43 @@ class ColorGradientSolver3D:
                             sb += g_b[s]
                         dr_loc = self.rho_r[i, j, k] - sr
                         db_loc = self.rho_b[i, j, k] - sb
+                        for s in ti.static(range(19)):
+                            g_r[s] += w[s] * dr_loc
+                            g_b[s] += w[s] * db_loc
+
+                # BI-COLOUR-CLOSURE-001 candidates (colour-only; T3
+                # total path frozen).  C1R: rest-population closure,
+                # same cc>0 scope — e_0 = (0,0,0) keeps momentum exactly,
+                # but dr_loc is typically ulp-below ulp(g[0]) so the
+                # correction must be shown to survive f32 storage.
+                if ti.static(self.colour_fix == 'C1R'):
+                    if cc > 0:
+                        sr = 0.0
+                        sb = 0.0
+                        for s in ti.static(range(19)):
+                            sr += g_r[s]
+                            sb += g_b[s]
+                        dr_loc = self.rho_r[i, j, k] - sr
+                        db_loc = self.rho_b[i, j, k] - sb
+                        g_r[0] += dr_loc
+                        g_b[0] += db_loc
+
+                # C1X: weighted closure with the natural guard
+                # (cc > 0) OR (local identity actually violated).  The
+                # diagnosis located the one-sided local residual at
+                # non-frozen cc==0 nodes near diffuse interfaces; at
+                # bit-frozen bulk nodes dr_loc == db_loc == 0 exactly,
+                # and g_r[s] += w[s] * 0.0 is an exact no-op, so the
+                # frozen state is preserved bit-exactly.
+                if ti.static(self.colour_fix == 'C1X'):
+                    sr = 0.0
+                    sb = 0.0
+                    for s in ti.static(range(19)):
+                        sr += g_r[s]
+                        sb += g_b[s]
+                    dr_loc = self.rho_r[i, j, k] - sr
+                    db_loc = self.rho_b[i, j, k] - sb
+                    if (cc > 0) or (dr_loc != 0.0) or (db_loc != 0.0):
                         for s in ti.static(range(19)):
                             g_r[s] += w[s] * dr_loc
                             g_b[s] += w[s] * db_loc

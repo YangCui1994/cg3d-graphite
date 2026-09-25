@@ -63,9 +63,9 @@ def build_C1(nx=64, ny=24, nz=24):
     return solid, psi
 
 
-def make_solver(Solver, solid, psi, fix, cf, dbg=False):
+def make_solver(Solver, solid, psi, fix, cf, dbg=False, acc='A0'):
     s = Solver(*solid.shape, niu_l=0.1, niu_g=0.1, CapA=0.06,
-               total_fix=fix, colour_fix=cf, dbg_local=dbg)
+               total_fix=fix, colour_fix=cf, dbg_local=dbg, acc_fix=acc)
     if solid[:, :3, :].all():      # C3-like wall geometry
         s.set_psi_solid(-0.68)
     s.init(psi, solid)

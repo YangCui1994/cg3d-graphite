@@ -1,0 +1,31 @@
+{
+ "arch": "gpu",
+ "cf": "C1",
+ "dims": [
+  126,
+  46,
+  6
+ ],
+ "fix": "T3",
+ "geom": "C3",
+ "git": {
+  "dirty": "M tests/colour_closure.py\n?? results/colour_closure/SMOKE2_dx_C1/\n?? results/colour_closure/ac_C1_T3C1s_20k/\n?? results/colour_closure/bg_C3_T3C1s/\n?? results/colour_closure/dx_C1_T3C1s/\n?? results/colour_closure/dx_C3_T3C1s/\n?? results/colour_closure/logs/",
+  "head": "388892e6d5353b85c39d17a2c4f8fadf51431bcd"
+ },
+ "means": {
+  "dMb": -2.6876560605160192e-06,
+  "dMr": -1.2825258017983288e-05,
+  "identity_resid_b": 2.2737367544323206e-12,
+  "identity_resid_r": 7.73070496506989e-12,
+  "sumR_b": 1.300784972773676e-05,
+  "sumR_r": 6.989666078754671e-06,
+  "sumdacc_b": -1.5695505783705304e-05,
+  "sumdacc_r": -1.9814924083095536e-05
+ },
+ "nfluid": 28800,
+ "pre_steps": 20000,
+ "probe_steps": 200,
+ "stage": "budget",
+ "started": "2026-09-25T15:32:53",
+ "task": "BI-COLOUR-CLOSURE-001"
+}

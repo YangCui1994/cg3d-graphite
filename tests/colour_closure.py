@@ -78,11 +78,14 @@ def gather_incoming(gr, solid):
         g = gr[..., s]
         # incoming to ip from source ip - e_s: roll(g, +e)[ip] = g[ip - e]
         shifted = np.roll(np.roll(np.roll(g, ex, 0), ey, 1), ez, 2)
-        # target of source i is solid -> source keeps g (bounce in place):
-        # solid[i + e_s] == roll(solid, -e)[i]
+        # bounce-back adds the source's own population ON TOP of the
+        # stream when its target (i + e_s) is solid: the node keeps g
+        # AND still receives whatever the fluid side sends
+        # (solid[i + e_s] == roll(solid, -e)[i])
         tgt_solid = np.roll(np.roll(np.roll(solid, -ex, 0), -ey, 1),
                             -ez, 2).astype(bool)
-        out += np.where(tgt_solid, g, shifted).astype(np.float64)
+        out += shifted.astype(np.float64)
+        out += np.where(tgt_solid, g, 0.0).astype(np.float64)
     return out
 
 
@@ -276,14 +279,15 @@ def cmd_diagnose(args, Solver):
     out = os.path.join(args.results_root, args.tag)
     os.makedirs(out, exist_ok=True)
     rep = dict(task='BI-COLOUR-CLOSURE-001', stage='B_diagnose',
-               geom=args.geom, fix=args.fix, cf=args.cf,
+               geom=args.geom, fix=args.fix, cf=args.cf, acc=args.acc,
                dims=list(solid.shape), nfluid=int(fluid.sum()),
                pre_steps=args.pre_steps, probe_steps=args.probe_steps,
                chi_primary=CHI_PRIMARY, chi_sensitivity=list(CHI_SENS),
                arch=os.environ.get('LBM_ARCH', 'gpu'),
                git=git_state(), started=time.strftime('%Y-%m-%dT%H:%M:%S'))
 
-    s = make_solver(Solver, solid, psi, args.fix, args.cf, dbg=True)
+    s = make_solver(Solver, solid, psi, args.fix, args.cf, dbg=True,
+                    acc=args.acc)
     assert not s.use_reservoirs
     assert s.mem_r.to_numpy().max() == 0 and s.mem_b.to_numpy().max() == 0
 
@@ -368,12 +372,12 @@ def cmd_accum(args, Solver):
     out = os.path.join(args.results_root, args.tag)
     os.makedirs(out, exist_ok=True)
     rep = dict(task='BI-COLOUR-CLOSURE-001', stage='C_accum',
-               geom=args.geom, fix=args.fix, cf=args.cf, steps=args.steps,
+               geom=args.geom, fix=args.fix, cf=args.cf, acc=args.acc, steps=args.steps,
                horizon_every=args.every, dims=list(solid.shape),
                nfluid=int(fluid.sum()), arch=os.environ.get('LBM_ARCH',
                                                             'gpu'),
                git=git_state(), started=time.strftime('%Y-%m-%dT%H:%M:%S'))
-    s = make_solver(Solver, solid, psi, args.fix, args.cf)
+    s = make_solver(Solver, solid, psi, args.fix, args.cf, acc=args.acc)
     assert not s.use_reservoirs
     m0 = measure(s, fluid)
     M0 = m0['Mff']
@@ -425,12 +429,13 @@ def cmd_budget(args, Solver):
     out = os.path.join(args.results_root, args.tag)
     os.makedirs(out, exist_ok=True)
     rep = dict(task='BI-COLOUR-CLOSURE-001', stage='budget',
-               geom=args.geom, fix=args.fix, cf=args.cf,
+               geom=args.geom, fix=args.fix, cf=args.cf, acc=args.acc,
                pre_steps=args.pre_steps, probe_steps=args.probe_steps,
                dims=list(solid.shape), nfluid=int(fluid.sum()),
                arch=os.environ.get('LBM_ARCH', 'gpu'),
                git=git_state(), started=time.strftime('%Y-%m-%dT%H:%M:%S'))
-    s = make_solver(Solver, solid, psi, args.fix, args.cf, dbg=True)
+    s = make_solver(Solver, solid, psi, args.fix, args.cf, dbg=True,
+                    acc=args.acc)
     assert not s.use_reservoirs
     for _ in range(args.pre_steps):
         s.step()
@@ -500,7 +505,9 @@ def main():
     dg = sub.add_parser('diagnose')
     dg.add_argument('--geom', default='C1', choices=['C1', 'C3'])
     dg.add_argument('--fix', default='T3', choices=['T0', 'T3'])
-    dg.add_argument('--cf', default='C1', choices=['C0', 'C1'])
+    dg.add_argument('--cf', default='C1',
+                    choices=['C0', 'C1', 'C1R', 'C1X'])
+    dg.add_argument('--acc', default='A0', choices=['A0', 'A1'])
     dg.add_argument('--tag', required=True)
     dg.add_argument('--pre-steps', dest='pre_steps', type=int, default=1500)
     dg.add_argument('--probe-steps', dest='probe_steps', type=int,
@@ -509,7 +516,9 @@ def main():
     ac = sub.add_parser('accum')
     ac.add_argument('--geom', default='C1', choices=['C1', 'C3'])
     ac.add_argument('--fix', default='T3', choices=['T0', 'T3'])
-    ac.add_argument('--cf', default='C1', choices=['C0', 'C1'])
+    ac.add_argument('--cf', default='C1',
+                    choices=['C0', 'C1', 'C1R', 'C1X'])
+    ac.add_argument('--acc', default='A0', choices=['A0', 'A1'])
     ac.add_argument('--tag', required=True)
     ac.add_argument('--steps', type=int, default=20000)
     ac.add_argument('--every', type=int, default=200)
@@ -517,7 +526,9 @@ def main():
     bg = sub.add_parser('budget')
     bg.add_argument('--geom', default='C3', choices=['C1', 'C3'])
     bg.add_argument('--fix', default='T3', choices=['T0', 'T3'])
-    bg.add_argument('--cf', default='C1', choices=['C0', 'C1'])
+    bg.add_argument('--cf', default='C1',
+                    choices=['C0', 'C1', 'C1R', 'C1X'])
+    bg.add_argument('--acc', default='A0', choices=['A0', 'A1'])
     bg.add_argument('--tag', required=True)
     bg.add_argument('--pre-steps', dest='pre_steps', type=int, default=20000)
     bg.add_argument('--probe-steps', dest='probe_steps', type=int,
