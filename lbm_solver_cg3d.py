@@ -379,6 +379,18 @@ class ColorGradientSolver3D:
         self.dbg_db = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
         self.dbg_sumgr_eq = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
         self.dbg_sumb_eq = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        # BI-COLOUR-CLOSURE-001 additions (dbg-only, same gate as above):
+        # post-recolor pre-correction stage sums (completes the
+        # eq -> recolor -> correction three-stage split), the local
+        # colour-gradient magnitude, and the full post-correction colour
+        # populations for the host-side streaming/accumulate attribution.
+        self.dbg_sumgr_rc = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_sumb_rc = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_cc = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_gr = ti.Vector.field(19, ti.f32,
+                                      shape=(self.nx, self.ny, self.nz))
+        self.dbg_gb = ti.Vector.field(19, ti.f32,
+                                      shape=(self.nx, self.ny, self.nz))
 
     # --------------------------------------------------------
     #  Runtime parameter setters (2D API mirror)
@@ -698,6 +710,17 @@ class ColorGradientSolver3D:
                         g_b[kk] -= cospsi
                         g_b[kk + 1] += cospsi
 
+                # BI-COLOUR-CLOSURE-001 dbg: post-recolor, pre-correction
+                # stage sums (second stage of the three-stage split)
+                if ti.static(self.dbg_local):
+                    rcr = ti.cast(0.0, ti.f64)
+                    rcb = ti.cast(0.0, ti.f64)
+                    for s in ti.static(range(19)):
+                        rcr += ti.cast(g_r[s], ti.f64)
+                        rcb += ti.cast(g_b[s], ti.f64)
+                    self.dbg_sumgr_rc[i, j, k] = rcr
+                    self.dbg_sumb_rc[i, j, k] = rcb
+
                 # C1: per-colour local zeroth-moment projection after
                 # equilibrium + recoloring (contract C1).  Scoped to
                 # interface nodes (cc > 0): the conservation audit
@@ -762,6 +785,11 @@ class ColorGradientSolver3D:
                     self.dbg_delta[i, j, k] = ti.cast(delta_f, ti.f64)
                     self.dbg_dr[i, j, k] = ti.cast(dr_loc, ti.f64)
                     self.dbg_db[i, j, k] = ti.cast(db_loc, ti.f64)
+                    # BI-COLOUR-CLOSURE-001 dbg additions
+                    self.dbg_cc[i, j, k] = ti.cast(cc, ti.f64)
+                    for s in ti.static(range(19)):
+                        self.dbg_gr[i, j, k][s] = g_r[s]
+                        self.dbg_gb[i, j, k][s] = g_b[s]
 
     @ti.kernel
     def streaming1(self):
