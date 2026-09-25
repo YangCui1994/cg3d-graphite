@@ -2129,8 +2129,9 @@ T4 负对照坐实（R_f +1.494e-8、frac_pos 0.94）；T2 局部闭合但全局
 
 C3 60k：baseline +1.552e-8/step（R²=1.0000）→ 选定 T3+C1s
 +1.19e-11（R²=0.62，无趋势，≈1300×）；colour +6.76e-9 → −6.43e-10
-（10.5×，≤2e-9 达标；**有界单向（负）floor，符号如实披露**——
-attempt-1 review B3 修正口径；CPU 一致）。被拒候选 T2+C1 的单调
+（10.5×，≤2e-9 数值目标达标；但 **仍为单向系统性负漂移，不能称为
+bounded floor**：60k 全段 R²≈0.983，外审分段拟合的后 20k 仍约
+−5.22e-10/step、R²≈0.9995）。被拒候选 T2+C1 的单调
 负漂移作对照保留。数据源 `f1_*/long_horizon_mass.csv`。
 
 ## 25.6 性能对比（契约第 6 项）
@@ -2190,3 +2191,56 @@ NOT_REACHED、bulk ρ 界 [0.9350,1.0074] 不变；定性物理无变化。
 披露）。**V3 仍 HOLD**：唯一解除路径 = owner 组织的外部科学评审
 接受本包 + V3 contract 重写（旧 isolation-time gate 已废）。
 本评审不授权 V3、不构成 fix 的对外晋升。
+
+
+## 25.11 External scientific review — CHANGES_REQUESTED（colour closure）
+
+External review:
+
+`.agent/evidence/BI-SOLVER-CONSERVATION-FIX-001/EXTERNAL_SCIENTIFIC_REVIEW_CHANGES_REQUESTED.md`
+
+裁决：
+
+```text
+Total-channel T3 fix: ACCEPTED
+T1/T2/T4 rejection: ACCEPTED
+V0/V1c/V2 regression chain: ACCEPTED
+Colour-channel closure: CHANGES_REQUESTED
+V3: HOLD
+```
+
+外审独立重算 selected C3 60k colour series：
+
+| interval | slope / step | R² |
+|---|---:|---:|
+| 1–20k | −9.56e-10 | 0.9940 |
+| 20–40k | −5.77e-10 | 0.9992 |
+| 40–60k | −5.22e-10 | 0.9995 |
+
+因此当前残差虽然满足 `|r_M,colour| <= 2e-9/step` 且比 baseline
+改善 >10×，但在已测试 horizon 内仍是明确的单向近线性漂移，不能
+作为“有界 floor”关闭。
+
+此外 `f0_T3C1s/f0_report.json` 的 periodic two-phase C1 geometry
+仍有：
+
+```text
+R_r mean ≈ +3.88e-9, frac_pos ≈ 0.758
+R_b mean ≈ +3.10e-9, frac_pos ≈ 0.761
+```
+
+而 C3 geometry 已接近无偏。这说明 scoped-C1 的 local closure 对 geometry /
+node class 有依赖，与 frozen F0 “representative C0–C3 无 persistent
+one-sided bias” 的字面 hard gate 尚未完全闭合。
+
+下一步只做 **narrow colour-closure follow-up**；不重开 total T0–T4
+选型。必须先把 residual 按 `cc>0 / cc==0`、pure/mixed、wall/bulk
+节点分解，并对 periodic C1 做 long-horizon 检查，再决定是进一步
+修正还是由 owner 明确重定标 colour residual gate。
+
+文献元数据同时修正：
+Dubois & Philippi 2025 DOI = `10.1063/5.0254041`；
+PMID 22680576 对应 Liu–Valocchi–Kang, PRE 85, 046309 (2012),
+DOI `10.1103/PhysRevE.85.046309`。
+
+V3 继续 HOLD。
