@@ -1,0 +1,3 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[ac_C3_T3C1X_A2_120k] Mr 3.260e-12 (R2 0.4076) Mb -5.666e-13 (R2 0.2960) Mc 2.693e-12 (R2 0.4146) Mff 1.014e-11 (R2 0.3219)

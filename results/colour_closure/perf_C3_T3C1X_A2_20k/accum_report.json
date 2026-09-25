@@ -1,0 +1,58 @@
+{
+ "M0": 28800.000429153442,
+ "acc": "A2",
+ "arch": "gpu",
+ "cf": "C1X",
+ "dims": [
+  126,
+  46,
+  6
+ ],
+ "drift_fits": {
+  "Mb": {
+   "frac_pos": 0.3333333333333333,
+   "r2": 0.8520484069429423,
+   "slope_per_step": -6.942781045480842e-12
+  },
+  "Mc": {
+   "frac_pos": 0.6666666666666666,
+   "r2": 0.8351033798695439,
+   "slope_per_step": 1.763328124155536e-11
+  },
+  "Mff": {
+   "frac_pos": 0.5555555555555556,
+   "r2": 0.5320967007546847,
+   "slope_per_step": 2.5242474964816033e-11
+  },
+  "Mr": {
+   "frac_pos": 0.5555555555555556,
+   "r2": 0.8487334685556117,
+   "slope_per_step": 2.4576062311012616e-11
+  }
+ },
+ "final_views": {
+  "MFF": 28800.019079491496,
+  "Mb": 9599.997450432014,
+  "Mbacc": 0.0,
+  "Mff": 28800.019079491496,
+  "Mr": 19200.009250149502,
+  "Mracc": 0.0,
+  "Mrho": 28800.019080877304,
+  "fF_maxdiff": 0.0
+ },
+ "fix": "T3",
+ "geom": "C3",
+ "git": {
+  "dirty": "M results/colour_closure/make_report_tables.py\n M tests/colour_closure.py\n?? results/colour_closure/CANDIDATE_COMPARISON.md\n?? results/colour_closure/PROVENANCE.md\n?? results/colour_closure/ac_C1_T3C1X_A2_240k/\n?? results/colour_closure/ac_C1_T3C1s_240k/\n?? results/colour_closure/ac_C3_T3C1X_A2_120k/\n?? results/colour_closure/figures/fig_cc_candidates.svg\n?? results/colour_closure/figures/fig_cc_diagnosis.svg\n?? results/colour_closure/levelc_v1c_fix/\n?? results/colour_closure/levelc_v2_fix/\n?? results/colour_closure/logs/ac_C1_T3C1X_A2_240k.log\n?? results/colour_closure/logs/ac_C1_T3C1s_240k.log\n?? results/colour_closure/logs/ac_C3_T3C1X_A2_120k.log\n?? results/colour_closure/logs/f2_computeC_CAND.log\n?? results/colour_closure/logs/f2_computeC_T0.log\n?? results/colour_closure/logs/f2_contact_CAND.log\n?? results/colour_closure/logs/f2_contact_T0.log\n?? results/colour_closure/logs/f2_laplace_CAND.log\n?? results/colour_closure/logs/f2_laplace_T0.log\n?? results/colour_closure/logs/f2_levelA_CAND.log\n?? results/colour_closure/logs/f2_levelA_T0.log\n?? results/colour_closure/logs/f2_poiseuille_CAND.log\n?? results/colour_closure/logs/f2_poiseuille_T0.log\n?? results/colour_closure/logs/f2_postproc_CAND.log\n?? results/colour_closure/logs/f2_postproc_T0.log\n?? results/colour_closure/logs/f3_collect.log\n?? results/colour_closure/logs/f3_dyn_h26_2L.log\n?? results/colour_closure/logs/f3_dyn_h26_s.log\n?? results/colour_closure/logs/f3_dyn_h40_2L.log\n?? results/colour_closure/logs/f3_dyn_h40_s.log\n?? results/colour_closure/logs/f3_static_h26.log\n?? results/colour_closure/logs/f3_static_h40.log\n?? results/colour_closure/logs/f3_static_h60.log\n?? results/colour_closure/logs/f3_static_h80.log\n?? results/colour_closure/logs/f4_v2_primary.log\n?? results/colour_closure/logs/perf_C3_T3C1X_A2_20k.log\n?? results/colour_closure/logs/perf_C3_T3C1s_20k.log\n?? results/colour_closure/make_manifest.py\n?? results/colour_closure/perf_C3_T3C1s_20k/\n?? results/colour_closure/run_collect_finish.sh\n?? results/colour_closure/run_post_batch.sh",
+  "head": "246a463aa5664f89a3cbebceb7e146d5d52c736f"
+ },
+ "horizon_every": 2000,
+ "jit_first_step_s": 6.743978023529053,
+ "mlups": 82.17295081595437,
+ "nfluid": 28800,
+ "stage": "C_accum",
+ "started": "2026-09-25T20:12:41",
+ "steady_steps_per_s": 2853.2274588873042,
+ "steps": 20000,
+ "task": "BI-COLOUR-CLOSURE-001"
+}

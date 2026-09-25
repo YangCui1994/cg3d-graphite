@@ -1,0 +1,86 @@
+{
+ "mode": "static",
+ "tag": "static_h80",
+ "hy": 80,
+ "Pc_static": 0.0011711716651916504,
+ "C_static": 0.7715228360946313,
+ "theta_static_slit_deg": 39.50916416377958,
+ "registry_theta_deg": 30.0,
+ "threshold_sensitivity": {
+  "0.85": {
+   "liq_band": [
+    99,
+    141
+   ],
+   "gas_band": [
+    0,
+    75
+   ],
+   "Pc_static": 0.0011711716651916504
+  },
+  "0.9": {
+   "liq_band": [
+    99,
+    141
+   ],
+   "gas_band": [
+    0,
+    75
+   ],
+   "Pc_static": 0.0011711716651916504
+  },
+  "0.95": {
+   "liq_band": [
+    99,
+    141
+   ],
+   "gas_band": [
+    0,
+    74
+   ],
+   "Pc_static": 0.0011859238147735596
+  }
+ },
+ "bulk_bands_090": {
+  "liq": [
+   99,
+   141
+  ],
+  "gas": [
+   0,
+   75
+  ],
+  "n_mixed": 40
+ },
+ "convergence": {
+  "exit_reason": "Pc stationary at 11500 (rel drift 7.9e-04 < 0.001 over last 10 blocks; umax floor 2.53e-02 recorded separately, not gated)",
+  "steps_run": 11500,
+  "Pc_stationary": true,
+  "Pc_last10_rel_drift": 0.0007861475725791726,
+  "drift_tol": 0.001,
+  "umax_final": 0.025295650586485863,
+  "umax_floor_note": "spurious-current magnitude floor, recorded separately from pressure stationarity"
+ },
+ "layout": {
+  "nx": 240,
+  "ny": 82,
+  "nz": 6,
+  "slab": [
+   90,
+   150
+  ],
+  "boundary": "x periodic (lattice wrap), z periodic, y walls psi_solid=-0.68"
+ },
+ "wall_s": 312.1328067779541,
+ "nan": false,
+ "prov": {
+  "producer_script": "tests/levelc_v1c.py",
+  "producer_sha256": "c1b490238c221a2832667b9b008406dd6db3acd21e8c659c8e4495c47539d0fc",
+  "run_head": "246a463aa5664f89a3cbebceb7e146d5d52c736f",
+  "worktree_dirty": true,
+  "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py static --hy 80 --tag static_h80",
+  "started_at": "2026-09-25T11:55:29Z",
+  "finished_at": null,
+  "exit_code": null
+ }
+}

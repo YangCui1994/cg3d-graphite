@@ -383,12 +383,18 @@ def cmd_accum(args, Solver):
     M0 = m0['Mff']
     rep['M0'] = M0
     rows = []
+    t_start = time.time()
     for it in range(1, args.steps + 1):
         s.step()
+        if it == 1:
+            rep['jit_first_step_s'] = time.time() - t_start
+            t_steady = time.time()
         if (it % args.every == 0) or (it == args.steps):
             d = measure(s, fluid)
             rows.append([it, d['Mff'], d['Mr'], d['Mb'], d['Mrho'],
                          d['Mff'] - d['Mr'] - d['Mb']])
+    rep['steady_steps_per_s'] = (args.steps - 1) / (time.time() - t_steady)
+    rep['mlups'] = (args.steps - 1) * int(fluid.sum())         / (time.time() - t_steady) / 1e6
     write_csv(os.path.join(out, 'mass_series.csv'),
               ['step', 'Mff', 'Mr', 'Mb', 'Mrho', 'd_fc'], rows)
     t = np.array([r[0] for r in rows], dtype=np.float64)
@@ -505,9 +511,9 @@ def main():
     dg = sub.add_parser('diagnose')
     dg.add_argument('--geom', default='C1', choices=['C1', 'C3'])
     dg.add_argument('--fix', default='T3', choices=['T0', 'T3'])
-    dg.add_argument('--cf', default='C1',
+    dg.add_argument('--cf', default=None,
                     choices=['C0', 'C1', 'C1R', 'C1X'])
-    dg.add_argument('--acc', default='A0', choices=['A0', 'A1', 'A2'])
+    dg.add_argument('--acc', default=None, choices=['A0', 'A1', 'A2'])
     dg.add_argument('--tag', required=True)
     dg.add_argument('--pre-steps', dest='pre_steps', type=int, default=1500)
     dg.add_argument('--probe-steps', dest='probe_steps', type=int,
@@ -516,9 +522,9 @@ def main():
     ac = sub.add_parser('accum')
     ac.add_argument('--geom', default='C1', choices=['C1', 'C3'])
     ac.add_argument('--fix', default='T3', choices=['T0', 'T3'])
-    ac.add_argument('--cf', default='C1',
+    ac.add_argument('--cf', default=None,
                     choices=['C0', 'C1', 'C1R', 'C1X'])
-    ac.add_argument('--acc', default='A0', choices=['A0', 'A1', 'A2'])
+    ac.add_argument('--acc', default=None, choices=['A0', 'A1', 'A2'])
     ac.add_argument('--tag', required=True)
     ac.add_argument('--steps', type=int, default=20000)
     ac.add_argument('--every', type=int, default=200)
@@ -526,9 +532,9 @@ def main():
     bg = sub.add_parser('budget')
     bg.add_argument('--geom', default='C3', choices=['C1', 'C3'])
     bg.add_argument('--fix', default='T3', choices=['T0', 'T3'])
-    bg.add_argument('--cf', default='C1',
+    bg.add_argument('--cf', default=None,
                     choices=['C0', 'C1', 'C1R', 'C1X'])
-    bg.add_argument('--acc', default='A0', choices=['A0', 'A1', 'A2'])
+    bg.add_argument('--acc', default=None, choices=['A0', 'A1', 'A2'])
     bg.add_argument('--tag', required=True)
     bg.add_argument('--pre-steps', dest='pre_steps', type=int, default=20000)
     bg.add_argument('--probe-steps', dest='probe_steps', type=int,

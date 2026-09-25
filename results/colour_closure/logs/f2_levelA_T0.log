@@ -1,0 +1,9 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+PASS A1 M @ inv_M == I  max|err|=2.98e-08
+PASS A2 uniform phase stationary  max|v|=0.00e+00 psi_dev=0.0e+00
+PASS A3 colour-mass conservation  rel drift=3.58e-07
+PASS A4 reservoir pins rho/psi  rho=1.05000 psi=1.0000
+PASS A5 membrane blocks blue (psi_left stays red)  min psi[x<9]=1.000
+level A done in 345s
+LEVEL A: ALL PASS

@@ -1,0 +1,31 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[static_h26] static slit nx=240 ny=28 slab=[90,150)
+[W 09/25/26 19:50:19.521 27412] TaichiWarning
+While compiling `collision_c82_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 866, in collision:
+                        dr_loc = drl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 19:50:19.521 27412] TaichiWarning
+While compiling `collision_c82_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 867, in collision:
+                        db_loc = dbl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 19:55:20.504 27412] TaichiWarning
+While compiling `streaming3_c92_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1132, in streaming3:
+                self.rho_r[i, j, k] = self.rhor[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 19:55:20.504 27412] TaichiWarning
+While compiling `streaming3_c92_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1133, in streaming3:
+                self.rho_b[i, j, k] = self.rhob[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[static_h26]   2500 umax=2.53e-02 Pc=3.686726e-03 mixed=20
+[static_h26]   5000 umax=2.53e-02 Pc=3.630340e-03 mixed=20
+[static_h26]   7500 umax=2.54e-02 Pc=3.649801e-03 mixed=20
+[static_h26]  10000 umax=2.53e-02 Pc=3.663719e-03 mixed=20
+[static_h26]  12500 umax=2.54e-02 Pc=3.675312e-03 mixed=20
+[static_h26]  15000 umax=2.52e-02 Pc=3.683507e-03 mixed=20
+[static_h26]  17500 umax=2.52e-02 Pc=3.689557e-03 mixed=20
+[static_h26] Pc_static=3.691554e-03 C=0.7904 theta=37.78 (Pc stationary at 19250 (rel drift 6.9e-04 < 0.001 over last 10 blocks; umax floor 2.52e-02 recorded separately, not gated))

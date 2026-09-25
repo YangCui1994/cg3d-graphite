@@ -262,62 +262,47 @@ class ColorGradientSolver3D:
                  total_fix=None, colour_fix=None, dbg_local=False,
                  acc_fix=None):
         # BI-SOLVER-CONSERVATION-FIX-001 candidate switches (compile-time).
-        # PRODUCTION DEFAULT since BI-SOLVER-CONSERVATION-FIX-001:
-        # total_fix='T3' (full-f64 moment roundtrip: f64 inverse matrix
-        # + f64 accumulator, final cast to f32) + colour_fix='C1'
-        # (per-colour zeroth-moment projection, scoped to interface
-        # nodes cc>0 where the audit measured the colour leak; bulk
-        # bit-frozen states are left untouched).
-        # Selection history: T1 (table projection) matched T3 on F0/F1
-        # drift but, like every f32-path table/correction change, breaks
-        # the uniform single-phase bit-frozen fixed point and fails the
-        # unchanged V0 A2 stationarity gate (max|v| -> 4.46e-6 > 1e-6);
-        # T2 fails the F1 >=10x total gate (-2.76e-9/step monotone);
-        # T4 is the negative control (f64 accumulator + f32 matrix keeps
-        # the +1.49e-8/step bias).  Only T3 preserves the frozen point
-        # exactly (A2 max|v| = 0.0) while closing both channels.
-        # LBM_TOTAL_FIX / LBM_COLOUR_FIX env vars can force any candidate
-        # (regression A/B); 'T0'/'C0' reproduce the pre-fix arithmetic.
-        #
-        # BI-COLOUR-CLOSURE-001 additions (colour-channel only; the T3
-        # total path is frozen):
-        #   colour_fix='C1R' — rest-population closure (external-review
-        #     suggested candidate; single-component g[0] += dr).
-        #   colour_fix='C1X' — scope extension with a natural guard:
-        #     apply the weighted closure when (cc > 0) OR the local
-        #     identity is actually violated (dr != 0 / db != 0).  The
-        #     colour-closure diagnosis measured the one-sided local
-        #     residual at NON-FROZEN cc==0 nodes near interfaces (the
-        #     uncorrected equilibrium-construction leak); bit-frozen
-        #     bulk nodes have dr == 0 exactly, so the guard is a strict
-        #     no-op there (preserves exact stationarity).
-        #   acc_fix='A1' — f64 colour-transport accumulation (rhor/rhob
-        #     f64).  The diagnosis measured the C3 one-sided colour
-        #     drift to be dominated by f32 scatter-accumulate rounding
-        #     (budget: dacc ~ -2e-5/step vs local closures +0.7e-5);
-        #     f64 accumulation is exact for <=19 f32 addends and only
-        #     the final rho_r/rho_b store rounds once.  'A0' keeps the
-        #     original f32 fields.
-        #   acc_fix='A2' — f64 colour pipeline end to end: g_r/g_b
-        #     collision locals f64 + rhor/rhob f64.  Measured A1
-        #     residual: the closure's own f32 arithmetic (sequential
-        #     sr sum + 19 weighted adds) leaves a systematic per-node
-        #     residue that still accumulates (periodic C1 -9.2e-10/s).
-        #     With f64 locals the weighted closure makes each node's
-        #     outgoing sum EXACTLY rho_r (to f64 eps ~1e-24); with the
-        #     f64 accumulate the only remaining rounding is the single
-        #     rho_r = f32(rhor) store.  Bit-frozen states are preserved
-        #     exactly: the exact f64 sum equals the f32-representable
-        #     rho_r, so the store reproduces it bit-exactly (uniform
-        #     single-phase: rho_r = 0 or the frozen point is reproduced
-        #     from step 1 — no transient).
-        # LBM_ACC_FIX env var overrides acc_fix.
+        # PRODUCTION DEFAULT since BI-COLOUR-CLOSURE-001:
+        #   total_fix='T3'  (unchanged, frozen since
+        #   BI-SOLVER-CONSERVATION-FIX-001: f64 inverse matrix + f64
+        #   accumulator in the moment inverse transform, final cast to
+        #   f32)
+        #   colour_fix='C1X' + acc_fix='A2'  (weighted colour closure
+        #   with the natural guard (cc>0 or dr!=0) + f64 colour
+        #   pipeline end to end; the only remaining colour rounding is
+        #   the single rho_r/rho_b store).
+        # Selection (BI-COLOUR-CLOSURE-001): the external solver-fix
+        # review located two colour blockers — (B1) a persistent
+        # one-sided C3 60k colour drift and (B2) a geometry-dependent
+        # local bias (periodic C1).  Diagnosis: two mechanisms of
+        # OPPOSITE sign partially cancelling — the uncorrected
+        # equilibrium-construction leak at non-frozen cc==0 nodes
+        # (positive) and f32 scatter-accumulate rounding (negative).
+        # Every single-intervention arm fails a frozen gate
+        # (C1X/A0: C1-periodic -3.5e-9/step; C1/A1: +2.4e-9/step;
+        # C1X/A1: closure f32 arithmetic still accumulates -9.2e-10;
+        # C1R: absorbed by f32 storage).  Only C1X+A2 closes both:
+        # every node class to f64 epsilon; C3 60k colour +8.1e-12/step
+        # (R2 0.58, 120k R2 0.41 — trendless); periodic C1 -6.4e-11
+        # at 60k decaying to noise by 240k (R2 0.28); A2 stationarity
+        # exact 0.0; a26/a40 1.0618/1.0741; V2 eps_b 5.2e-7.
+        # History: the BI-SOLVER-CONSERVATION-FIX-001 default was
+        # T3 + C1(scoped)/A0.  T1/T2/T4 rejection history: T1 breaks
+        # the uniform bit-frozen fixed point (A2 gate 4.46e-6) with a
+        # -1.5e-8 local momentum defect; T2 fails the F1 >=10x total
+        # gate; T4 is the negative control (f64 accumulator + f32
+        # matrix keeps the +1.49e-8/step bias).  Only T3 preserves the
+        # frozen point exactly (A2 max|v| = 0.0).
+        # LBM_TOTAL_FIX / LBM_COLOUR_FIX / LBM_ACC_FIX env vars force
+        # any candidate (regression A/B); 'T0'/'C0'/'A0' reproduce the
+        # pre-fix arithmetic; 'C1' reproduces the interim scoped
+        # closure accepted by BI-SOLVER-CONSERVATION-FIX-001.
         self.total_fix = total_fix if total_fix is not None else \
             os.environ.get('LBM_TOTAL_FIX', 'T3')
         self.colour_fix = colour_fix if colour_fix is not None else \
-            os.environ.get('LBM_COLOUR_FIX', 'C1')
+            os.environ.get('LBM_COLOUR_FIX', 'C1X')
         self.acc_fix = acc_fix if acc_fix is not None else \
-            os.environ.get('LBM_ACC_FIX', 'A0')
+            os.environ.get('LBM_ACC_FIX', 'A2')
         assert self.total_fix in ('T0', 'T1', 'T2', 'T3', 'T4')
         assert self.colour_fix in ('C0', 'C1', 'C1R', 'C1X')
         assert self.acc_fix in ('A0', 'A1', 'A2')

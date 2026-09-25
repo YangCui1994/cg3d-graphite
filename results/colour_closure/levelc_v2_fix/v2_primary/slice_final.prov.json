@@ -1,0 +1,12 @@
+{
+ "producer_script": "tests/levelc_v2_bilateral.py",
+ "producer_sha256": "8d3f639e631277b7b988992b044faf47be79ded2e9bc66d29b44504341d6400a",
+ "run_head": "246a463aa5664f89a3cbebceb7e146d5d52c736f",
+ "worktree_dirty": true,
+ "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v2_bilateral.py --tag v2_primary",
+ "started_at": "2026-09-25T11:34:12Z",
+ "finished_at": null,
+ "exit_code": null,
+ "artifact": "slice_final.csv",
+ "artifact_sha256": "a3fe20d2de6ada158ef1a69f6797d11cff7d7977c3875ecb5d77b13db9447f94"
+}

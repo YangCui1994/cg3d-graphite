@@ -1,0 +1,28 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[dyn_h40_s] dynamic nx=264 ny=42 L_hyd=241 T_TRANS=12000 x_ic_exit=122 x_stop=238
+[W 09/25/26 19:22:57.006 30264] TaichiWarning
+While compiling `collision_c82_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 866, in collision:
+                        dr_loc = drl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 19:22:57.006 30264] TaichiWarning
+While compiling `collision_c82_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 867, in collision:
+                        db_loc = dbl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 19:27:56.212 30264] TaichiWarning
+While compiling `streaming3_c92_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1132, in streaming3:
+                self.rho_r[i, j, k] = self.rhor[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 19:27:56.212 30264] TaichiWarning
+While compiling `streaming3_c92_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1133, in streaming3:
+                self.rho_b[i, j, k] = self.rhob[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[dyn_h40_s]  10000/60000 x_vol=  91.86 (310s, 32 st/s)
+[dyn_h40_s]  20000/60000 x_vol= 147.50 (315s, 64 st/s)
+[dyn_h40_s]  30000/60000 x_vol= 203.65 (319s, 94 st/s)
+[dyn_h40_s] front reached x_stop at step 36250
+[dyn_h40_s] front reached x_stop at step 36250; V_meas=5.6132e-03 R2=1.00000 probes_valid=14/25

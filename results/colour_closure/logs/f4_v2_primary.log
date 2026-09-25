@@ -1,0 +1,30 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[v2_primary] nx=326 ny=42 nz=6 x_left0=82.500 x_right0=242.500 t0_clusters={'n_clusters': 1, 'largest': 38400, 'mean_rho_largest': 1.0, 'note': '6-neighbour, z-periodic-only; central gas trapped from t=0 by construction'} steps=60000
+[W 09/25/26 19:34:20.270 57592] TaichiWarning
+While compiling `collision_c82_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 866, in collision:
+                        dr_loc = drl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 19:34:20.270 57592] TaichiWarning
+While compiling `collision_c82_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 867, in collision:
+                        db_loc = dbl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 19:39:17.994 57592] TaichiWarning
+While compiling `streaming3_c92_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1132, in streaming3:
+                self.rho_r[i, j, k] = self.rhor[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 19:39:17.994 57592] TaichiWarning
+While compiling `streaming3_c92_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1133, in streaming3:
+                self.rho_b[i, j, k] = self.rhob[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[v2_primary]  10000/60000 xL= 81.768 xR*= 81.767 e_x=0.0005 G_bulk=146 V_bin=38376 (307s, 33 st/s)
+[v2_primary]  20000/60000 xL= 81.708 xR*= 81.708 e_x=0.0005 G_bulk=146 V_bin=38376 (311s, 64 st/s)
+[v2_primary]  30000/60000 xL= 81.678 xR*= 81.678 e_x=0.0004 G_bulk=146 V_bin=38400 (315s, 95 st/s)
+[v2_primary]  40000/60000 xL= 81.664 xR*= 81.664 e_x=0.0004 G_bulk=146 V_bin=38400 (318s, 126 st/s)
+[v2_primary]  50000/60000 xL= 81.656 xR*= 81.656 e_x=0.0003 G_bulk=146 V_bin=38400 (322s, 155 st/s)
+[v2_primary]  60000/60000 xL= 81.653 xR*= 81.652 e_x=0.0003 G_bulk=146 V_bin=38400 (326s, 184 st/s)
+[v2_primary] steps_cap; gates all_hard=False

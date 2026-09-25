@@ -170,11 +170,13 @@ def main():
     elif which == 'candidates':
         print('### periodic-C1 accumulation across candidates (20k)')
         print(accum_table(['ac_C1_T3C1s_20k', 'ac_C1_T3C1X_20k',
-                           'ac_C1_T3C1_A1_20k', 'ac_C1_T3C1X_A1_20k']))
+                           'ac_C1_T3C1_A1_20k', 'ac_C1_T3C1X_A1_20k',
+                           'ac_C1_T3C1_A2_20k', 'ac_C1_T3C1X_A2_20k']))
         print()
         print('### C3 60k across candidates')
         print(accum_table(['ac_C3_T3C1s_60k_rerun', 'ac_C3_T3C1X_60k',
-                           'ac_C3_T3C1_A1_60k', 'ac_C3_T3C1X_A1_60k']))
+                           'ac_C3_T3C1_A1_60k', 'ac_C3_T3C1X_A1_60k',
+                           'ac_C3_T3C1X_A2_60k']))
         print()
         for tag in ('ac_C3_T3C1s_60k_rerun', 'ac_C3_T3C1X_A1_60k',
                     'ac_C3_T3C1_A1_60k', 'ac_C3_T3C1X_A1_60k'):
@@ -182,7 +184,8 @@ def main():
             print(segmented_table(tag))
             print()
         print('### candidate budgets')
-        print(budget_table(['bg_C3_T3C1s', 'bg_C3_T3C1X_A1']))
+        print(budget_table(['bg_C3_T3C1s', 'bg_C3_T3C1X_A1',
+                            'bg_C3_T3C1X_A2']))
         print()
         print('### A2 isolation')
         print(a2_table())
@@ -190,6 +193,14 @@ def main():
         print('### C1R rest-population f32-storage survival (F0, cc>0)')
         print(class_table('dx_C1_T3C1R', ['cc>0'],
                           ['Req_r', 'R_r', 'Rc1_r']))
+        print()
+        print('### candidate local closure (red, ALL + classes)')
+        print(class_table('dx_C1_T3C1X_A2', ['ALL', 'cc>0', 'cc==0'],
+                          ['Req_r', 'R_r', 'Rc1_r', 'dacc_r']))
+        print()
+        print(class_table('dx_C3_T3C1X_A2', ['ALL', 'cc>0', 'cc==0',
+                                             'wall_adj'],
+                          ['Req_r', 'R_r', 'Rc1_r', 'dacc_r']))
 
 
 if __name__ == '__main__':

@@ -1,0 +1,39 @@
+{
+ "solid_mirror": true,
+ "psi_solid_mirror": true,
+ "psi0_mirror": true,
+ "left_buffer_len": 80,
+ "right_buffer_len": 80,
+ "buffers_equal": true,
+ "gas_len": 160,
+ "gas_centred": true,
+ "mirror_plane": 163.0,
+ "nx": 326,
+ "layout": {
+  "wall": [
+   0,
+   3
+  ],
+  "liq_left": [
+   3,
+   83
+  ],
+  "gas": [
+   83,
+   243
+  ],
+  "liq_right": [
+   243,
+   323
+  ],
+  "wall_r": [
+   323,
+   326
+  ],
+  "h": 40,
+  "nz": 6,
+  "B": 80,
+  "G0": 160
+ },
+ "all_pass": true
+}
