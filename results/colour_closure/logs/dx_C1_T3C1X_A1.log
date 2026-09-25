@@ -1,0 +1,13 @@
+[W 09/25/26 15:43:16.873 50996] TaichiWarning
+While compiling `streaming3_c92_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1062, in streaming3:
+                self.rho_r[i, j, k] = self.rhor[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 15:43:16.873 50996] TaichiWarning
+While compiling `streaming3_c92_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1063, in streaming3:
+                self.rho_b[i, j, k] = self.rhob[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[dx_C1_T3C1X_A1] done; class_stats rows=169 identity_err max 3.638e-12

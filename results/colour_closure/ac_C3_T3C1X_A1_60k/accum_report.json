@@ -1,0 +1,55 @@
+{
+ "M0": 28800.000429153442,
+ "acc": "A1",
+ "arch": "gpu",
+ "cf": "C1X",
+ "dims": [
+  126,
+  46,
+  6
+ ],
+ "drift_fits": {
+  "Mb": {
+   "frac_pos": 0.0033444816053511705,
+   "r2": 0.9210529947941719,
+   "slope_per_step": -8.8562628365332e-10
+  },
+  "Mc": {
+   "frac_pos": 0.7591973244147158,
+   "r2": 0.9686741133782439,
+   "slope_per_step": 1.270283492095438e-10
+  },
+  "Mff": {
+   "frac_pos": 0.5050167224080268,
+   "r2": 0.49925976134689587,
+   "slope_per_step": 1.4316527962962378e-11
+  },
+  "Mr": {
+   "frac_pos": 0.9966555183946488,
+   "r2": 0.9295363483682862,
+   "slope_per_step": 1.0126546328643858e-09
+  }
+ },
+ "final_views": {
+  "MFF": 28800.026757739484,
+  "Mb": 9598.55426156029,
+  "Mbacc": 0.0,
+  "Mff": 28800.026757739484,
+  "Mr": 19201.631556159606,
+  "Mracc": 0.0,
+  "Mrho": 28800.02680170536,
+  "fF_maxdiff": 0.0
+ },
+ "fix": "T3",
+ "geom": "C3",
+ "git": {
+  "dirty": "M results/colour_closure/logs/dx_C1_T3C1X_A1.log\n?? results/colour_closure/LOCAL_RESIDUAL_DIAGNOSIS.md\n?? results/colour_closure/ac_C1_T3C1X_A1_20k/\n?? results/colour_closure/dx_C1_T3C1X_A1/\n?? results/colour_closure/dx_C3_T3C1X_A1/\n?? results/colour_closure/logs/ac_C1_T3C1X_A1_20k.log\n?? results/colour_closure/logs/ac_C3_T3C1X_A1_60k.log\n?? results/colour_closure/logs/dx_C3_T3C1X_A1.log\n?? results/colour_closure/make_report_tables.py",
+  "head": "71d2a4b98a979a7ca5c82a878643edafb188a962"
+ },
+ "horizon_every": 200,
+ "nfluid": 28800,
+ "stage": "C_accum",
+ "started": "2026-09-25T15:53:56",
+ "steps": 60000,
+ "task": "BI-COLOUR-CLOSURE-001"
+}

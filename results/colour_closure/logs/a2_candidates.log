@@ -1,0 +1,69 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+T3+C1/A0 {'max_v': 0.0, 'psi_dev': 0.0, 'gate': True}
+T3+C1R/A0 {'max_v': 0.0, 'psi_dev': 0.0, 'gate': True}
+T3+C1X/A0 {'max_v': 0.0, 'psi_dev': 0.0, 'gate': True}
+[W 09/25/26 17:34:35.610 51512] TaichiWarning
+While compiling `streaming3_c92_3`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1132, in streaming3:
+                self.rho_r[i, j, k] = self.rhor[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 17:34:35.610 51512] TaichiWarning
+While compiling `streaming3_c92_3`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1133, in streaming3:
+                self.rho_b[i, j, k] = self.rhob[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+T3+C1/A1 {'max_v': 0.0, 'psi_dev': 0.0, 'gate': True}
+[W 09/25/26 17:40:19.707 51512] TaichiWarning
+While compiling `streaming3_c92_4`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1132, in streaming3:
+                self.rho_r[i, j, k] = self.rhor[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 17:40:19.707 51512] TaichiWarning
+While compiling `streaming3_c92_4`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1133, in streaming3:
+                self.rho_b[i, j, k] = self.rhob[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+T3+C1X/A1 {'max_v': 0.0, 'psi_dev': 0.0, 'gate': True}
+[W 09/25/26 17:40:28.600 51512] TaichiWarning
+While compiling `collision_c82_5`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 866, in collision:
+                        dr_loc = drl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 17:40:28.600 51512] TaichiWarning
+While compiling `collision_c82_5`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 867, in collision:
+                        db_loc = dbl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 17:46:04.783 51512] TaichiWarning
+While compiling `streaming3_c92_5`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1132, in streaming3:
+                self.rho_r[i, j, k] = self.rhor[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 17:46:04.783 51512] TaichiWarning
+While compiling `streaming3_c92_5`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1133, in streaming3:
+                self.rho_b[i, j, k] = self.rhob[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+T3+C1X/A2 {'max_v': 0.0, 'psi_dev': 0.0, 'gate': True}
+[W 09/25/26 17:46:13.972 51512] TaichiWarning
+While compiling `collision_c82_6`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 814, in collision:
+                        dr_loc = drl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 17:46:13.972 51512] TaichiWarning
+While compiling `collision_c82_6`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 815, in collision:
+                        db_loc = dbl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 17:52:01.291 51512] TaichiWarning
+While compiling `streaming3_c92_6`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1132, in streaming3:
+                self.rho_r[i, j, k] = self.rhor[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 17:52:01.291 51512] TaichiWarning
+While compiling `streaming3_c92_6`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1133, in streaming3:
+                self.rho_b[i, j, k] = self.rhob[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+T3+C1/A2 {'max_v': 0.0, 'psi_dev': 0.0, 'gate': True}

@@ -1,0 +1,13 @@
+[W 09/25/26 20:13:19.876 62352] TaichiWarning
+While compiling `collision_c82_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 866, in collision:
+                        dr_loc = drl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 20:13:19.876 62352] TaichiWarning
+While compiling `collision_c82_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 867, in collision:
+                        db_loc = dbl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[perf_C1_T3C1X_A2_20k] Mr -5.686e-11 (R2 0.9743) Mb -5.612e-11 (R2 0.9777) Mc -1.130e-10 (R2 0.9764) Mff 1.548e-09 (R2 0.9937)

@@ -1,0 +1,58 @@
+{
+ "M0": 36864.000549316406,
+ "acc": "A0",
+ "arch": "gpu",
+ "cf": "C1",
+ "dims": [
+  64,
+  24,
+  24
+ ],
+ "drift_fits": {
+  "Mb": {
+   "frac_pos": 1.0,
+   "r2": 0.988389387113653,
+   "slope_per_step": 6.48014738770916e-10
+  },
+  "Mc": {
+   "frac_pos": 1.0,
+   "r2": 0.9701611147207018,
+   "slope_per_step": 8.822019853446408e-10
+  },
+  "Mff": {
+   "frac_pos": 0.6666666666666666,
+   "r2": 0.6374074523707629,
+   "slope_per_step": 2.8471232845402495e-10
+  },
+  "Mr": {
+   "frac_pos": 0.8888888888888888,
+   "r2": 0.881891841387498,
+   "slope_per_step": 2.3418724655421894e-10
+  }
+ },
+ "final_views": {
+  "MFF": 36864.24068890326,
+  "Mb": 18432.581896368596,
+  "Mbacc": 0.0,
+  "Mff": 36864.24068890326,
+  "Mr": 18432.29170809064,
+  "Mracc": 0.0,
+  "Mrho": 36864.24037998915,
+  "fF_maxdiff": 0.0
+ },
+ "fix": "T3",
+ "geom": "C1",
+ "git": {
+  "dirty": "M results/colour_closure/make_report_tables.py\n M tests/colour_closure.py\n?? results/colour_closure/CANDIDATE_COMPARISON.md\n?? results/colour_closure/PROVENANCE.md\n?? results/colour_closure/ac_C1_T3C1X_A2_240k/\n?? results/colour_closure/ac_C1_T3C1s_240k/\n?? results/colour_closure/ac_C3_T3C1X_A2_120k/\n?? results/colour_closure/figures/fig_cc_candidates.svg\n?? results/colour_closure/figures/fig_cc_diagnosis.svg\n?? results/colour_closure/levelc_v1c_fix/\n?? results/colour_closure/levelc_v2_fix/\n?? results/colour_closure/logs/ac_C1_T3C1X_A2_240k.log\n?? results/colour_closure/logs/ac_C1_T3C1s_240k.log\n?? results/colour_closure/logs/ac_C3_T3C1X_A2_120k.log\n?? results/colour_closure/logs/f2_computeC_CAND.log\n?? results/colour_closure/logs/f2_computeC_T0.log\n?? results/colour_closure/logs/f2_contact_CAND.log\n?? results/colour_closure/logs/f2_contact_T0.log\n?? results/colour_closure/logs/f2_laplace_CAND.log\n?? results/colour_closure/logs/f2_laplace_T0.log\n?? results/colour_closure/logs/f2_levelA_CAND.log\n?? results/colour_closure/logs/f2_levelA_T0.log\n?? results/colour_closure/logs/f2_poiseuille_CAND.log\n?? results/colour_closure/logs/f2_poiseuille_T0.log\n?? results/colour_closure/logs/f2_postproc_CAND.log\n?? results/colour_closure/logs/f2_postproc_T0.log\n?? results/colour_closure/logs/f3_collect.log\n?? results/colour_closure/logs/f3_dyn_h26_2L.log\n?? results/colour_closure/logs/f3_dyn_h26_s.log\n?? results/colour_closure/logs/f3_dyn_h40_2L.log\n?? results/colour_closure/logs/f3_dyn_h40_s.log\n?? results/colour_closure/logs/f3_static_h26.log\n?? results/colour_closure/logs/f3_static_h40.log\n?? results/colour_closure/logs/f3_static_h60.log\n?? results/colour_closure/logs/f3_static_h80.log\n?? results/colour_closure/logs/f4_v2_primary.log\n?? results/colour_closure/logs/perf_C1_T3C1s_20k.log\n?? results/colour_closure/logs/perf_C3_T3C1X_A2_20k.log\n?? results/colour_closure/logs/perf_C3_T3C1s_20k.log\n?? results/colour_closure/make_manifest.py\n?? results/colour_closure/perf_C3_T3C1X_A2_20k/\n?? results/colour_closure/perf_C3_T3C1s_20k/\n?? results/colour_closure/run_collect_finish.sh\n?? results/colour_closure/run_post_batch.sh",
+  "head": "246a463aa5664f89a3cbebceb7e146d5d52c736f"
+ },
+ "horizon_every": 2000,
+ "jit_first_step_s": 6.694349527359009,
+ "mlups": 104.62610926077801,
+ "nfluid": 36864,
+ "stage": "C_accum",
+ "started": "2026-09-25T20:12:57",
+ "steady_steps_per_s": 2838.1648562494033,
+ "steps": 20000,
+ "task": "BI-COLOUR-CLOSURE-001"
+}

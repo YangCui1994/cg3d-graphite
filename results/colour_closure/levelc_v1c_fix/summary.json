@@ -1,0 +1,284 @@
+{
+ "task": "BI-V1C-CLOSURE-001",
+ "fixed": {
+  "CapA": 0.06,
+  "sigma": 0.060719999999999996,
+  "nu": 0.1,
+  "mu": 0.1,
+  "psi_wall": -0.68,
+  "rho0": 1.0,
+  "theta_registry_deg": 30.0
+ },
+ "static": {
+  "h": [
+   26,
+   40,
+   60,
+   80
+  ],
+  "C_static": [
+   0.7903524852395843,
+   0.7515859069874479,
+   0.8068124767348701,
+   0.7715228360946313
+  ],
+  "theta_static_deg": [
+   37.78153600521875,
+   41.272058583112496,
+   36.21433934278349,
+   39.50916416377958
+  ],
+  "Pc_static": [
+   0.003691554069519043,
+   0.0022818148136138916,
+   0.001632988452911377,
+   0.0011711716651916504
+  ],
+  "convergence_fits": {
+   "constant": {
+    "coef": [
+     0.7800684262641333
+    ],
+    "r2": 1.1102230246251565e-16,
+    "resid_max": 0.028482519276685436
+   },
+   "over_h": {
+    "coef": [
+     0.7787500808898361,
+     0.05693062377588762
+    ],
+    "r2": 0.0007475533541916324,
+    "resid_max": 0.02858743949678544
+   },
+   "over_h2": {
+    "coef": [
+     0.77798910741304,
+     3.2766880770703954
+    ],
+    "r2": 0.006735169344820324,
+    "resid_max": 0.02845113047376102
+   },
+   "note": "candidate families only; no family is forced if residuals do not support it"
+  },
+  "C_h26_over_h40": 1.051579703519885
+ },
+ "differential": {
+  "h26": {
+   "h": 26,
+   "L1": 241.0,
+   "L2": 477.0,
+   "V1": 0.0049901487827537375,
+   "V2": 0.0030006337142685227,
+   "Pc1": 0.0028758080218977966,
+   "Pc2": 0.0030640634887698637,
+   "L_eff1": 324.64733809167745,
+   "L_eff2": 575.2415199715457,
+   "a_h": 1.0618397537282553,
+   "L0": 68.74395744316791,
+   "L0_over_h": 2.643998363198766,
+   "V1_sens085": 0.0028758080218977966,
+   "V1_sens095": 0.002898983508316133,
+   "V2_sens085": 0.0030640634887698637,
+   "V2_sens095": 0.003071611617885328
+  },
+  "h40": {
+   "h": 40,
+   "L1": 241.0,
+   "L2": 477.0,
+   "V1": 0.00561323932147908,
+   "V2": 0.0038013306650426645,
+   "Pc1": 0.0017872932894109073,
+   "Pc2": 0.0019330807096912261,
+   "L_eff1": 424.54233335389137,
+   "L_eff2": 678.0365017853661,
+   "a_h": 1.0741278323367573,
+   "L0": 165.67752576073286,
+   "L0_over_h": 4.141938144018321,
+   "V1_sens085": 0.0017872932894109073,
+   "V1_sens095": 0.0017872932894109073,
+   "V2_sens085": 0.0019314273783059832,
+   "V2_sens095": 0.0019351889058759897
+  },
+  "gates": {
+   "a26": true,
+   "a40": true
+  },
+  "estimator_sensitivity": {
+   "h26": {
+    "V0_base_12col_median": 1.0618397537282553,
+    "V0_base_12col_mean": 1.0658740681632797,
+    "V1_window_x_median": 1.0674262998785262,
+    "V1_window_x_mean": 1.0742527588563178,
+    "V2_positional_median": 1.06727640914953,
+    "V2_positional_mean": 1.070525790524902,
+    "V3_gradient_median": 1.0618397537282553,
+    "V3_gradient_mean": 1.059307608664471,
+    "V3_r2_090_median": 1.0576042999606177,
+    "V3_r2_090_mean": 1.055595403228276
+   },
+   "h40": {
+    "V0_base_12col_median": 1.078190921615381,
+    "V0_base_12col_mean": 1.1053304565950686,
+    "V1_window_x_median": 1.0904892769043284,
+    "V1_window_x_mean": 1.1139805624302388,
+    "V2_positional_median": 1.090257199803042,
+    "V2_positional_mean": 1.1060024204536842,
+    "V3_gradient_median": 1.0741278323367573,
+    "V3_gradient_mean": 1.093945392167196,
+    "V3_r2_090_median": null,
+    "V3_r2_090_mean": null
+   }
+  },
+  "primary": "V3_gradient median"
+ },
+ "mass_accounting": {
+  "dyn_h26_s": {
+   "m_final": 40141.744115513255,
+   "inj_total": -106.24636262655258,
+   "closure_sum": 0.009521860189124709,
+   "closure_rel": 2.365797105228759e-07,
+   "m0_total_reconstructed": 40248.0
+  },
+  "dyn_h26_2L": {
+   "m_final": 77041.83266624222,
+   "inj_total": -22.154105842113495,
+   "closure_sum": 0.01322791566781234,
+   "closure_rel": 1.7164844373264223e-07,
+   "m0_total_reconstructed": 77064.0
+  },
+  "dyn_h40_s": {
+   "m_final": 61804.47010290173,
+   "inj_total": -115.52214074134827,
+   "closure_sum": 0.007756356928439345,
+   "closure_rel": 1.2526416228099718e-07,
+   "m0_total_reconstructed": 61920.0
+  },
+  "dyn_h40_2L": {
+   "m_final": 118449.79097378612,
+   "inj_total": -110.19841504096985,
+   "closure_sum": 0.010611172903736588,
+   "closure_rel": 8.950044621910077e-08,
+   "m0_total_reconstructed": 118560.0
+  }
+ },
+ "dynamic": {
+  "dyn_h26_s": {
+   "L_hyd": 241.0,
+   "V_meas": 0.0049901487827537375,
+   "R2": 0.9999966050331726,
+   "V_secondary": 0.004986380493963543,
+   "front_rel_diff": 0.0007551455786685146,
+   "Pc_dynamic": 0.0028758080218977966,
+   "Pc_thr085": 0.0028758080218977966,
+   "Pc_thr095": 0.002898983508316133,
+   "band_valid_frac": 0.6176470588235294,
+   "L_eff": 324.64733809167745,
+   "L0_raw": 83.64733809167745,
+   "Ca": 0.008218295096761755,
+   "gates": {
+    "g1_no_nan": true,
+    "g2_umax_cap": true,
+    "g3_zero_dp": true,
+    "g4_monotonic": true,
+    "g5_window_valid": true,
+    "g6_r2": true,
+    "g7_front_agreement": true,
+    "g8_band_valid_frac": true,
+    "g9_mass_closure": null,
+    "all_hard": true
+   },
+   "exit_reason": "front reached x_stop at step 40000"
+  },
+  "dyn_h26_2L": {
+   "L_hyd": 477.0,
+   "V_meas": 0.0030006337142685227,
+   "R2": 0.9999974187428173,
+   "V_secondary": 0.0029997911590671777,
+   "front_rel_diff": 0.00028079241972733815,
+   "Pc_dynamic": 0.0030640634887698637,
+   "Pc_thr085": 0.0030640634887698637,
+   "Pc_thr095": 0.003071611617885328,
+   "band_valid_frac": 0.7818181818181819,
+   "L_eff": 575.2415199715457,
+   "L0_raw": 98.2415199715457,
+   "Ca": 0.00494175512890073,
+   "gates": {
+    "g1_no_nan": true,
+    "g2_umax_cap": true,
+    "g3_zero_dp": true,
+    "g4_monotonic": true,
+    "g5_window_valid": true,
+    "g6_r2": true,
+    "g7_front_agreement": true,
+    "g8_band_valid_frac": true,
+    "g9_mass_closure": null,
+    "all_hard": true
+   },
+   "exit_reason": "steps_cap"
+  },
+  "dyn_h40_s": {
+   "L_hyd": 241.0,
+   "V_meas": 0.00561323932147908,
+   "R2": 0.9999989733064313,
+   "V_secondary": 0.005613198438352715,
+   "front_rel_diff": 7.283339267027955e-06,
+   "Pc_dynamic": 0.0017872932894109073,
+   "Pc_thr085": 0.0017872932894109073,
+   "Pc_thr095": 0.0017872932894109073,
+   "band_valid_frac": 0.56,
+   "L_eff": 424.54233335389137,
+   "L0_raw": 183.54233335389137,
+   "Ca": 0.009244465285703362,
+   "gates": {
+    "g1_no_nan": true,
+    "g2_umax_cap": true,
+    "g3_zero_dp": true,
+    "g4_monotonic": true,
+    "g5_window_valid": true,
+    "g6_r2": true,
+    "g7_front_agreement": true,
+    "g8_band_valid_frac": true,
+    "g9_mass_closure": null,
+    "all_hard": true
+   },
+   "exit_reason": "front reached x_stop at step 36250"
+  },
+  "dyn_h40_2L": {
+   "L_hyd": 477.0,
+   "V_meas": 0.0038013306650426645,
+   "R2": 0.9999734207719341,
+   "V_secondary": 0.0038000072555777267,
+   "front_rel_diff": 0.00034814373743063953,
+   "Pc_dynamic": 0.0019330807096912261,
+   "Pc_thr085": 0.0019314273783059832,
+   "Pc_thr095": 0.0019351889058759897,
+   "band_valid_frac": 0.7755102040816326,
+   "L_eff": 678.0365017853661,
+   "L0_raw": 201.0365017853661,
+   "Ca": 0.006260425996447076,
+   "gates": {
+    "g1_no_nan": true,
+    "g2_umax_cap": true,
+    "g3_zero_dp": true,
+    "g4_monotonic": true,
+    "g5_window_valid": true,
+    "g6_r2": true,
+    "g7_front_agreement": true,
+    "g8_band_valid_frac": true,
+    "g9_mass_closure": null,
+    "all_hard": true
+   },
+   "exit_reason": "steps_cap"
+  }
+ },
+ "prov": {
+  "producer_script": "tests/levelc_v1c.py",
+  "producer_sha256": "c1b490238c221a2832667b9b008406dd6db3acd21e8c659c8e4495c47539d0fc",
+  "run_head": "246a463aa5664f89a3cbebceb7e146d5d52c736f",
+  "worktree_dirty": true,
+  "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py collect",
+  "started_at": "2026-09-25T12:00:44Z",
+  "finished_at": null,
+  "exit_code": null
+ }
+}

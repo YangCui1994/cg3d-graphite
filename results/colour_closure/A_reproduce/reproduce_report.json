@@ -1,0 +1,114 @@
+{
+ "all_ok": true,
+ "checks": {
+  "B1_colour_R2_60k": {
+   "ok": true,
+   "ref": 0.9827,
+   "value": 0.9827035644302168
+  },
+  "B1_colour_slope_60k": {
+   "ok": true,
+   "ref": -6.43e-10,
+   "value": -6.425290011717184e-10
+  },
+  "B1_seg1": {
+   "ok": true,
+   "ref": -9.56e-10,
+   "value": -9.562450278096368e-10
+  },
+  "B1_seg2": {
+   "ok": true,
+   "ref": -5.77e-10,
+   "value": -5.771107027819721e-10
+  },
+  "B1_seg3": {
+   "ok": true,
+   "ref": -5.22e-10,
+   "value": -5.221138531294588e-10
+  },
+  "B2_C1_Rb_fracpos": {
+   "ok": true,
+   "ref": 0.761,
+   "value": 0.760919189453125
+  },
+  "B2_C1_Rb_mean": {
+   "ok": true,
+   "ref": 3.1e-09,
+   "value": 3.096527383485179e-09
+  },
+  "B2_C1_Rr_fracpos": {
+   "ok": true,
+   "ref": 0.758,
+   "value": 0.7577846950954861
+  },
+  "B2_C1_Rr_mean": {
+   "ok": true,
+   "ref": 3.88e-09,
+   "value": 3.883555835916506e-09
+  },
+  "B2_C3_Rb_mean": {
+   "ok": true,
+   "ref": 1.96e-10,
+   "value": 1.9554209167299552e-10
+  },
+  "B2_C3_Rr_fracpos": {
+   "ok": true,
+   "ref": 0.51,
+   "value": 0.5125208333333333
+  },
+  "B2_C3_Rr_mean": {
+   "ok": true,
+   "ref": 9.76e-11,
+   "value": 9.760210119231469e-11
+  },
+  "total_slope_60k": {
+   "ok": true,
+   "ref": 1.19e-11,
+   "value": 1.1944048171404585e-11
+  }
+ },
+ "fits": {
+  "colour_60k": {
+   "frac_pos": 0.0033333333333333335,
+   "r2": 0.9827035644302168,
+   "slope": -6.425290011717184e-10
+  },
+  "segments": [
+   {
+    "frac_pos": 0.01,
+    "hi": 20000,
+    "lo": 1,
+    "r2": 0.9940143428753593,
+    "slope": -9.562450278096368e-10
+   },
+   {
+    "frac_pos": 0.0,
+    "hi": 40000,
+    "lo": 20000,
+    "r2": 0.999224568336355,
+    "slope": -5.771107027819721e-10
+   },
+   {
+    "frac_pos": 0.0,
+    "hi": 60000,
+    "lo": 40000,
+    "r2": 0.999531261608941,
+    "slope": -5.221138531294588e-10
+   }
+  ],
+  "total_60k": {
+   "frac_pos": 0.5266666666666666,
+   "r2": 0.624638709111146,
+   "slope": 1.1944048171404585e-11
+  }
+ },
+ "git": {
+  "dirty": "M lbm_solver_cg3d.py\n?? tests/colour_closure.py",
+  "head": "e256b4857a6e51510b75358994d7c5bcc742781e"
+ },
+ "source_f0": "results/conservation_fix/f0_T3C1s/f0_report.json",
+ "source_f1": "results/conservation_fix/f1_T3C1s_60k/long_horizon_mass.csv",
+ "stage": "A_reproduce",
+ "started": "2026-09-25T15:08:45",
+ "task": "BI-COLOUR-CLOSURE-001"
+}

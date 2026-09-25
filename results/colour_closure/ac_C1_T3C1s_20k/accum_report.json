@@ -1,0 +1,54 @@
+{
+ "M0": 36864.000549316406,
+ "arch": "gpu",
+ "cf": "C1",
+ "dims": [
+  64,
+  24,
+  24
+ ],
+ "drift_fits": {
+  "Mb": {
+   "frac_pos": 0.7373737373737373,
+   "r2": 0.9476525910923347,
+   "slope_per_step": 5.560607180189361e-10
+  },
+  "Mc": {
+   "frac_pos": 0.7777777777777778,
+   "r2": 0.9268630071279316,
+   "slope_per_step": 8.844631203474909e-10
+  },
+  "Mff": {
+   "frac_pos": 0.6262626262626263,
+   "r2": 0.847743275920444,
+   "slope_per_step": 3.1430132226096397e-10
+  },
+  "Mr": {
+   "frac_pos": 0.6666666666666666,
+   "r2": 0.8678629197477323,
+   "slope_per_step": 3.28402402320674e-10
+  }
+ },
+ "final_views": {
+  "MFF": 36864.24259757809,
+  "Mb": 18432.485364649878,
+  "Mbacc": 0.0,
+  "Mff": 36864.24259757809,
+  "Mr": 18432.32343840944,
+  "Mracc": 0.0,
+  "Mrho": 36864.24280065298,
+  "fF_maxdiff": 0.0
+ },
+ "fix": "T3",
+ "geom": "C1",
+ "git": {
+  "dirty": "?? results/colour_closure/SMOKE2_dx_C1/\n?? results/colour_closure/dx_C1_T3C1s/\n?? results/colour_closure/dx_C3_T3C1s/\n?? results/colour_closure/logs/",
+  "head": "388892e6d5353b85c39d17a2c4f8fadf51431bcd"
+ },
+ "horizon_every": 200,
+ "nfluid": 36864,
+ "stage": "C_accum",
+ "started": "2026-09-25T15:21:20",
+ "steps": 20000,
+ "task": "BI-COLOUR-CLOSURE-001"
+}

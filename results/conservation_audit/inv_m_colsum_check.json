@@ -1,0 +1,30 @@
+{
+ "colsum_inv_M_f64": [
+  1.0000000149011612,
+  1.4901161249358807e-08,
+  3.725290298461914e-09,
+  0.0,
+  -2.7755575615628914e-17,
+  8.326672684688674e-17,
+  -6.938893903907228e-17,
+  0.0,
+  0.0,
+  -5.551115123125783e-17,
+  -5.551115123125783e-17,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "colsum0_minus_1": 1.4901161193847656e-08,
+ "max_abs_other_colsums": 1.4901161249358807e-08,
+ "M_row0_integer": true,
+ "predicted_total_channel_rate_per_step": 1.4901161193847656e-08,
+ "measured_C3_gpu": 1.5556e-08,
+ "measured_C3_cpu": 1.5173e-08,
+ "note": "sum_s inv_M[s,0] != 1 in f32: the stored f32 inverse does not conserve the zeroth moment; prediction vs measurement (attempt-1 review, reproduced executor-side): +4.4%/+1.8%"
+}

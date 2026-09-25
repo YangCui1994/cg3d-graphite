@@ -1,0 +1,66 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+{
+ "static_C": {
+  "26": 0.7904,
+  "40": 0.7516,
+  "60": 0.8068,
+  "80": 0.7715
+ },
+ "a26": 1.0618397537282553,
+ "a40": 1.0741278323367573,
+ "L0_over_h": {
+  "h26": 2.643998363198766,
+  "h40": 4.141938144018321
+ },
+ "gates": {
+  "dyn_h26_s": {
+   "g1_no_nan": true,
+   "g2_umax_cap": true,
+   "g3_zero_dp": true,
+   "g4_monotonic": true,
+   "g5_window_valid": true,
+   "g6_r2": true,
+   "g7_front_agreement": true,
+   "g8_band_valid_frac": true,
+   "g9_mass_closure": null,
+   "all_hard": true
+  },
+  "dyn_h26_2L": {
+   "g1_no_nan": true,
+   "g2_umax_cap": true,
+   "g3_zero_dp": true,
+   "g4_monotonic": true,
+   "g5_window_valid": true,
+   "g6_r2": true,
+   "g7_front_agreement": true,
+   "g8_band_valid_frac": true,
+   "g9_mass_closure": null,
+   "all_hard": true
+  },
+  "dyn_h40_s": {
+   "g1_no_nan": true,
+   "g2_umax_cap": true,
+   "g3_zero_dp": true,
+   "g4_monotonic": true,
+   "g5_window_valid": true,
+   "g6_r2": true,
+   "g7_front_agreement": true,
+   "g8_band_valid_frac": true,
+   "g9_mass_closure": null,
+   "all_hard": true
+  },
+  "dyn_h40_2L": {
+   "g1_no_nan": true,
+   "g2_umax_cap": true,
+   "g3_zero_dp": true,
+   "g4_monotonic": true,
+   "g5_window_valid": true,
+   "g6_r2": true,
+   "g7_front_agreement": true,
+   "g8_band_valid_frac": true,
+   "g9_mass_closure": null,
+   "all_hard": true
+  }
+ }
+}

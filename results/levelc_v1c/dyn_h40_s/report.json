@@ -1,0 +1,180 @@
+{
+ "n_samples": 146,
+ "window_valid": true,
+ "window_idx": [
+  62,
+  144
+ ],
+ "window_t": [
+  15750.0,
+  36250.0
+ ],
+ "window_x": [
+  123.334912109375,
+  237.78816731770834
+ ],
+ "V_meas": 0.005588790705614267,
+ "R2_x_linear": 0.999999549956615,
+ "V_meas_secondary": 0.00558196549263255,
+ "R2_x_secondary": 0.9999261694845805,
+ "front_speed_rel_diff": 0.0012212325243923239,
+ "monotonic_window": true,
+ "n_window_probes": 25,
+ "n_window_probes_valid": 13,
+ "Pc_dynamic_median": 0.0017931757618345756,
+ "Pc_dynamic_median_thr085": 0.0017931757618345756,
+ "Pc_dynamic_median_thr095": 0.001797873629970581,
+ "jump_in_median": 0.0004875361919403076,
+ "jump_out_median": 0.0003821849822998047,
+ "dpdx_liq_median": -4.2034380031462396e-06,
+ "dpdx_gas_median": -3.3545763468829205e-06,
+ "L_eff": 427.8029258418344,
+ "L_hyd": 241.0,
+ "L0_raw": 186.8029258418344,
+ "L0_raw_over_h": 4.67007314604586,
+ "Ca": 0.009204200766821918,
+ "G_poiseuille_analytic": 4.191593029210701e-06,
+ "dpdx_liq_over_G": 1.0028258883562866,
+ "dpdx_gas_over_G": 0.8003106035116689,
+ "rho_res_liq_dev_max": 0.0,
+ "rho_res_gas_dev_max": 0.0,
+ "closure_r_last": -12.924839800332848,
+ "closure_b_last": -14.348813536817033,
+ "u_band_ut_rms_max": 0.0031728155445307493,
+ "umax_peak_window": 0.023403363302350044,
+ "gates": {
+  "g1_no_nan": true,
+  "g2_umax_cap": true,
+  "g3_zero_dp": true,
+  "g4_monotonic": true,
+  "g5_window_valid": true,
+  "g6_r2": true,
+  "g7_front_agreement": true,
+  "g8_band_valid_frac": true,
+  "g9_mass_closure": null,
+  "all_hard": true
+ },
+ "mode": "dynamic",
+ "tag": "dyn_h40_s",
+ "layout": {
+  "nx": 264,
+  "hy": 40,
+  "nz": 6,
+  "L_slit": 236,
+  "x0": 42,
+  "wall_in": [
+   0,
+   3
+  ],
+  "liq_res": [
+   3,
+   11
+  ],
+  "mem_in": 11,
+  "in_buffer": [
+   12,
+   14
+  ],
+  "slit": [
+   14,
+   250
+  ],
+  "out_buffer": [
+   250,
+   252
+  ],
+  "mem_out": 252,
+  "gas_res": [
+   253,
+   261
+  ],
+  "wall_out": [
+   261,
+   264
+  ],
+  "L_hyd": 241.0,
+  "note": "V1b separated topology unchanged; fit region [12,16+L) = open buffers + slit"
+ },
+ "steps_run": 36500,
+ "wall_s": 33.20262384414673,
+ "exit_reason": "front reached x_stop at step 36500",
+ "nan_at": null,
+ "umax_break": null,
+ "x_stop": 238.0,
+ "T_TRANS": 12000,
+ "x_ic_exit": 122.0,
+ "sigma": 0.060719999999999996,
+ "capa": 0.06,
+ "nu": 0.1,
+ "mu": 0.1,
+ "psi_wall": -0.68,
+ "prov": {
+  "producer_script": "tests/levelc_v1c.py",
+  "producer_sha256": "46a4b477f248bd14d6bf2a1c657dedc1beb56aac872eea85b9bdebc1deb00d12",
+  "run_head": "032d273f83900b12423c31af59944ad9cb311612",
+  "worktree_dirty": true,
+  "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py dynamic --hy 40 --tag dyn_h40_s",
+  "started_at": "2026-09-24T01:58:01Z",
+  "finished_at": null,
+  "exit_code": null
+ },
+ "m_r_final": 5237.495599256814,
+ "m_b_final": 56562.0818641113,
+ "inj_r_final": -47335.78088593483,
+ "inj_b_final": 47184.98589783907,
+ "closure_r_final": -13.276485191643587,
+ "closure_b_final": -17.095966272230726,
+ "validity_variants": {
+  "V0_base_12col": {
+   "n": 24,
+   "median": 0.0017782136404537463,
+   "mean": 0.0017504680859543643
+  },
+  "V1_window_x": {
+   "n": 20,
+   "median": 0.0017677612493602335,
+   "mean": 0.0017357711046815216
+  },
+  "V2_positional": {
+   "n": 18,
+   "median": 0.0017736380040781763,
+   "mean": 0.0017640087683798464
+  },
+  "V3_gradient": {
+   "n": 13,
+   "median": 0.0017931757618345756,
+   "mean": 0.0017766382231900874
+  },
+  "V3_r2_090": {
+   "n": 1,
+   "median": 0.001797873629970581,
+   "mean": 0.001797873629970581
+  },
+  "counts": {
+   "windowed_t": 25,
+   "base": 24,
+   "window_x": 20,
+   "positional": 18,
+   "full": 13,
+   "r2_variant": 1
+  }
+ },
+ "n_window_probes_base": 24,
+ "window_fail_reason": "no probe passes FULL validity (V3): windowed=25, base=24, window_x=20, positional=0, full=0 -- explicit FAIL, no silent fallback",
+ "prov_reanalysis": {
+  "producer_script": "tests/levelc_v1c.py",
+  "producer_sha256": "bcf827a745ea87be1d7721ad825d0330468ee9b7e120e124f320a15ac31fb5e8",
+  "run_head": "4d4dcb36600ea0e3885907981a66c269a84f45f4",
+  "worktree_dirty": true,
+  "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py reanalyze --tag dyn_h40_s",
+  "started_at": "2026-09-24T02:38:05Z",
+  "finished_at": "2026-09-24T02:38:05Z",
+  "exit_code": 0
+ },
+ "reanalysis_note": "aggregation recomputed from the unchanged committed front.csv/probes.csv by the same analyze_dynamic path; simulation data untouched",
+ "Pc_dynamic_mean": 0.0017766382231900874,
+ "r2_liq_min": 0.9773966659201475,
+ "r2_gas_min": 0.2504914909347169,
+ "band_valid_frac": 0.52,
+ "band_valid_frac_base": 0.96
+}

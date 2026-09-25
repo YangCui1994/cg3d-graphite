@@ -1,0 +1,10 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+Traceback (most recent call last):
+  File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-V1C-CLOSURE-001\tests\levelc_v1c.py", line 1042, in <module>
+    main()
+  File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-V1C-CLOSURE-001\tests\levelc_v1c.py", line 1036, in main
+    rc = dict(static=run_static, dynamic=run_dynamic,
+  File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-V1C-CLOSURE-001\tests\levelc_v1c.py", line 887, in collect
+    pc1 = rs['validity_variants'][var][est]
+KeyError: 'V3_linearity'

@@ -1,0 +1,33 @@
+{
+ "argv": [
+  "tests/conservation_audit.py",
+  "run",
+  "--case",
+  "C3",
+  "--tag",
+  "diag_C3_gpu",
+  "--steps",
+  "4000",
+  "--horizon-every",
+  "200",
+  "--trace-first",
+  "5",
+  "--late-trace",
+  "3990:10"
+ ],
+ "cwd": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-SOLVER-CONSERVATION-FIX-001",
+ "env_arch": "gpu",
+ "git": {
+  "branch": "agent-task/BI-SOLVER-CONSERVATION-FIX-001",
+  "dirty": "?? results/conservation_fix/",
+  "head": "1f5ee76fa183b42dd0ffcb291f389c3f1974a147"
+ },
+ "numpy": "2.2.6",
+ "python": "3.10.21",
+ "started": "2026-09-24T22:46:16",
+ "taichi": [
+  1,
+  7,
+  4
+ ]
+}

@@ -1,0 +1,11 @@
+tag,mode,g1_no_nan,g2_umax,g3_zero_dp,g4_monotonic,g5_window,g6_r2,g7_front_agree,g8_band_frac,all_hard
+static_h26,static,True,Pc stationarity judged separately from umax floor,,,,,,,
+static_h40,static,True,Pc stationarity judged separately from umax floor,,,,,,,
+static_h60,static,True,Pc stationarity judged separately from umax floor,,,,,,,
+static_h80,static,True,Pc stationarity judged separately from umax floor,,,,,,,
+dyn_h26_s,dynamic,True,True,True,True,True,True,True,True,True
+dyn_h26_2L,dynamic,True,True,True,True,True,True,True,True,True
+dyn_h40_s,dynamic,True,True,True,True,True,True,True,True,True
+dyn_h40_2L,dynamic,True,True,True,True,True,True,True,True,True
+a26_gate,differential,True,a26=1.0389,,,,,,,
+a40_gate,differential,True,a40=1.0581,,,,,,,

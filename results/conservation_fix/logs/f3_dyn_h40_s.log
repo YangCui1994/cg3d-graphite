@@ -1,0 +1,8 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+[dyn_h40_s] dynamic nx=264 ny=42 L_hyd=241 T_TRANS=12000 x_ic_exit=122 x_stop=238
+[dyn_h40_s]  10000/60000 x_vol=  91.57 (313s, 32 st/s)
+[dyn_h40_s]  20000/60000 x_vol= 147.01 (317s, 63 st/s)
+[dyn_h40_s]  30000/60000 x_vol= 202.90 (321s, 93 st/s)
+[dyn_h40_s] front reached x_stop at step 36500
+[dyn_h40_s] front reached x_stop at step 36500; V_meas=5.5860e-03 R2=1.00000 probes_valid=13/25

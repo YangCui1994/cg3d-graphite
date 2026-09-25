@@ -21,3 +21,6 @@ Desktop.ini
 
 # Test scratch outputs
 tests_output/
+
+# BI-COLOUR-CLOSURE-001: per-node snapshots are evidence (reviewer recomputation)
+!results/colour_closure/**/*.npz

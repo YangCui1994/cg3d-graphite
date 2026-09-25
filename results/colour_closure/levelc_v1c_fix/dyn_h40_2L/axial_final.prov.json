@@ -1,0 +1,12 @@
+{
+ "producer_script": "tests/levelc_v1c.py",
+ "producer_sha256": "c1b490238c221a2832667b9b008406dd6db3acd21e8c659c8e4495c47539d0fc",
+ "run_head": "246a463aa5664f89a3cbebceb7e146d5d52c736f",
+ "worktree_dirty": true,
+ "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py dynamic --hy 40 --L 472 --tag dyn_h40_2L",
+ "started_at": "2026-09-25T11:28:15Z",
+ "finished_at": null,
+ "exit_code": null,
+ "artifact": "axial_final.csv",
+ "artifact_sha256": "3a724667218d1a6a6e51ffcae74244691a3e442be6efc3b7ea9fe1ee78da6a79"
+}

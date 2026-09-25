@@ -1,0 +1,11 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+=== CapA=0.06, R=14 (n=88) ===
+  dP=0.00860 R_eff=14.06 conv=True steps=7500 wall=393s
+=== CapA=0.06, R=18 (n=88) ===
+  dP=0.00668 R_eff=18.04 conv=True steps=8500 wall=47s
+=== CapA=0.06, R=22 (n=88) ===
+  dP=0.00546 R_eff=22.05 conv=True steps=9500 wall=52s
+  [offset probe] dP=0.00669
+CapA=0.06: sigma=0.0609 (expect 0.0607, rel 0.31%), R2=1.00000, intercept=-0.00007
+LEVEL B (Laplace): PASS — sigma calibration reproduced

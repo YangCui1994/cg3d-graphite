@@ -1,0 +1,24 @@
+[W 09/25/26 18:55:57.126 37668] TaichiWarning
+While compiling `collision_c82_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 866, in collision:
+                        dr_loc = drl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 18:55:57.127 37668] TaichiWarning
+While compiling `collision_c82_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 867, in collision:
+                        db_loc = dbl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 19:00:59.941 37668] TaichiWarning
+While compiling `streaming3_c92_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1132, in streaming3:
+                self.rho_r[i, j, k] = self.rhor[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 19:00:59.947 37668] TaichiWarning
+While compiling `streaming3_c92_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1133, in streaming3:
+                self.rho_b[i, j, k] = self.rhob[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+psi_solid=-0.68: theta_liq = 31.2 deg (expect 30 +- 6); steps=12000, wall=313s
+LEVEL B (contact angle): PASS — registry reproduced

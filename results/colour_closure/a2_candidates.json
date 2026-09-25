@@ -1,0 +1,41 @@
+{
+ "grid": 24,
+ "steps": 200,
+ "results": {
+  "T3+C1/A0": {
+   "max_v": 0.0,
+   "psi_dev": 0.0,
+   "gate": true
+  },
+  "T3+C1R/A0": {
+   "max_v": 0.0,
+   "psi_dev": 0.0,
+   "gate": true
+  },
+  "T3+C1X/A0": {
+   "max_v": 0.0,
+   "psi_dev": 0.0,
+   "gate": true
+  },
+  "T3+C1/A1": {
+   "max_v": 0.0,
+   "psi_dev": 0.0,
+   "gate": true
+  },
+  "T3+C1X/A1": {
+   "max_v": 0.0,
+   "psi_dev": 0.0,
+   "gate": true
+  },
+  "T3+C1X/A2": {
+   "max_v": 0.0,
+   "psi_dev": 0.0,
+   "gate": true
+  },
+  "T3+C1/A2": {
+   "max_v": 0.0,
+   "psi_dev": 0.0,
+   "gate": true
+  }
+ }
+}

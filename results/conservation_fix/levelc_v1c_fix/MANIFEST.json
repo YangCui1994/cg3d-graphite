@@ -1,0 +1,138 @@
+{
+ "producer": "tests/levelc_v1c.py",
+ "producer_sha256": "57155f48ae9f5c1ee451044ca2f95ec717fe33e27860ada512892db8c21259b8",
+ "runs": {
+  "static_h26": {
+   "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py static --hy 26 --tag static_h26",
+   "run_head": "e3d5a93e397fd0d636c0caa945cc59fdc4adb6a2",
+   "producer_sha256": "57155f48ae9f5c1ee451044ca2f95ec717fe33e27860ada512892db8c21259b8",
+   "started_at": "2026-09-24T19:45:08Z",
+   "exit_code": null,
+   "artifacts": {
+    "axial_static.csv": "c5d2d2422ffeaab9c4e51d363d7b0371e0f409402676f9999b1ed2e256d1f7e4",
+    "axial_static.prov.json": "6b94078a14d1c9e3960a778781ef5dcdfe3c87a97bf269fbacc6a8769cd3ff5c",
+    "fields_final.npz": "9052279dfbb600b87e26a22a9a9b28246a6550a56043ed2fb8640f53057677f6",
+    "report.json": "e8a087cfc12eaa66776c26bda5db76d5719b90d8aa1e7a33641bcfb49c1684bd",
+    "static_series.csv": "0800b77c766784aa60f1da8fb5c9bff88546052594bd5722f233fe0feabb6b36",
+    "static_series.prov.json": "1c79d884ad8c09a5c43390cd20905aff1808e16810520ae22157fe5027a262fa"
+   }
+  },
+  "static_h40": {
+   "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py static --hy 40 --tag static_h40",
+   "run_head": "e3d5a93e397fd0d636c0caa945cc59fdc4adb6a2",
+   "producer_sha256": "57155f48ae9f5c1ee451044ca2f95ec717fe33e27860ada512892db8c21259b8",
+   "started_at": "2026-09-24T19:02:55Z",
+   "exit_code": null,
+   "artifacts": {
+    "axial_static.csv": "f6b8b0f83a72f5db2d176c7d4097b65e6b7481b6d4575a66a3a753a30e9bff65",
+    "axial_static.prov.json": "ef988ef605c3dcf91c13302cc5d494ce53ff04e31415e3e4e083e18aa4dbd244",
+    "fields_final.npz": "875f685f4ed762ee550e1e3726ab12f55e455295988d2e8d2578adbda584f042",
+    "report.json": "12fa565255b3ea355570a65158455609af4f48c2310c05b7839f68f443ba7d55",
+    "static_series.csv": "254497f5b592d63838225e948cdc3fd0fab1e9a476056b77a4f05f8c82f87324",
+    "static_series.prov.json": "c75485151899e8265369a2f9d53b0b8c998a6ac1994ea8321b7dcbb14bebb253"
+   }
+  },
+  "static_h60": {
+   "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py static --hy 60 --tag static_h60",
+   "run_head": "e3d5a93e397fd0d636c0caa945cc59fdc4adb6a2",
+   "producer_sha256": "57155f48ae9f5c1ee451044ca2f95ec717fe33e27860ada512892db8c21259b8",
+   "started_at": "2026-09-24T19:07:59Z",
+   "exit_code": null,
+   "artifacts": {
+    "axial_static.csv": "9657a67c87ea756dc386b44df4f9c061564b4575fcff510a3608693b24b9afaa",
+    "axial_static.prov.json": "68ad2d09c63bfe316425d94a2b3cdfd2b3d138886eb9ebbb9af4a0fbd8a7293d",
+    "fields_final.npz": "533b51e7e64e03bbd34b72e5cf6b8ad3240dc8e8ee6a12cb27cd8e8e98b62c00",
+    "report.json": "613b60bf5237035de773b57510bdd852e7c97b731b2a90ef786b27717964da17",
+    "static_series.csv": "ba0de2f710248d74de432d14d3f1cb0520e72476fbea9e23369885c85b9b679b",
+    "static_series.prov.json": "301a0ca12a6805bf551e8ee3944f103cdc5d11e55c40710d4a015f8cd0211392"
+   }
+  },
+  "static_h80": {
+   "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py static --hy 80 --tag static_h80",
+   "run_head": "e3d5a93e397fd0d636c0caa945cc59fdc4adb6a2",
+   "producer_sha256": "57155f48ae9f5c1ee451044ca2f95ec717fe33e27860ada512892db8c21259b8",
+   "started_at": "2026-09-24T19:50:26Z",
+   "exit_code": null,
+   "artifacts": {
+    "axial_static.csv": "1dd2e842309dab105bd0dafcee954020ba5a9f7e73eecd6c4490b026f5e7d5cf",
+    "axial_static.prov.json": "d634f0053c0872ba7342029e23fddc7fcbb6833235d490331e685cb5db99206c",
+    "fields_final.npz": "1d60716943634dc809a5a3df8aebfe6e6b78fc6dc4c887833f3fcf4bb610a000",
+    "report.json": "eb413daa0feaf27e9081965812d34bb6445e5c2a2e96f7ad61947ff7760d4706",
+    "static_series.csv": "1e332c2749db0d8706c7dd4567b96d5b9b1038c3892d8e2351cbe2ffe3a6026f",
+    "static_series.prov.json": "10ff841618566fc13bced8bcb778b5e59ba6cd76a5b56345e04376737032cd64"
+   }
+  },
+  "dyn_h26_s": {
+   "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py dynamic --hy 26 --tag dyn_h26_s",
+   "run_head": "e3d5a93e397fd0d636c0caa945cc59fdc4adb6a2",
+   "producer_sha256": "57155f48ae9f5c1ee451044ca2f95ec717fe33e27860ada512892db8c21259b8",
+   "started_at": "2026-09-24T19:13:02Z",
+   "exit_code": null,
+   "artifacts": {
+    "axial_final.csv": "78560c4e867a8283b9c0c1ac2440351c5860afbe3e744f484f4b57c4f6a45900",
+    "axial_final.prov.json": "0b97bfd30910a4e5cf986b2be7826755fb61a55d5b7bbe668ce5c88c97f1f9dc",
+    "axial_mid.csv": "97c0d47a5625938cfbac20d198e9d7b5c337f4fb1f2ac384bb197629a54315bf",
+    "axial_mid.prov.json": "95fcec7958ccd8ccd2a4d4d227313c99952b6c9d3029ffadbdc98f0a3059e2f6",
+    "fields_final.npz": "7afdfae99c8e4274080b4baf15481886f0e881ccd37c42f231cbf7340456f786",
+    "front.csv": "0ad4bf5410facebf22f32e634ed46418668a2bfd22b68013127d42b0615cf3c0",
+    "front.prov.json": "0c18f41d051c082a62c310e0a39ae5949fb951ba0762c95371211967572f3147",
+    "probes.csv": "92105e0dd0322a88a8859877eb8ec315f729ee210893db3f8b3404f2e77c870f",
+    "probes.prov.json": "06116751d20eafe3f380305b46863c11ea6c287f7a064fb0190968489b8c42a4",
+    "report.json": "843a8b821a74e060229c882166ae5b67540a5319b42ae553279950d673033e2a"
+   }
+  },
+  "dyn_h26_2L": {
+   "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py dynamic --hy 26 --L 472 --tag dyn_h26_2L",
+   "run_head": "e3d5a93e397fd0d636c0caa945cc59fdc4adb6a2",
+   "producer_sha256": "57155f48ae9f5c1ee451044ca2f95ec717fe33e27860ada512892db8c21259b8",
+   "started_at": "2026-09-24T19:18:31Z",
+   "exit_code": null,
+   "artifacts": {
+    "axial_final.csv": "8a0846c2758b02809e923e1e56d2905462181ed0692737f40d197b08f6bf471d",
+    "axial_final.prov.json": "e33d78a90598eac121eeff6bb9a64c7e10274956b0d609e0cebfd3d162bb0a34",
+    "fields_final.npz": "932297546d4035b5b96e72e6ac3d54835fa380f5e1c1bb42ec29b125eea5fc16",
+    "front.csv": "99840c1fbc066beaa8531eb81bbc875dc3413a95728d242bb9467b676cc1c71e",
+    "front.prov.json": "1016766bbe497ff2b9c11f2376f275addbe9827ff3c566787f02b18b90935b7c",
+    "probes.csv": "a046ea70d6ef7dc76954d3a3fcb49e8e11d3e7549a642bc01348c9dec3ca4b80",
+    "probes.prov.json": "5b4754735ceac88ef3cadd036c2753b7dd13bf6b000e7554127f78865f58689d",
+    "report.json": "26d3fcb9ec052a4b5266834cb9fec1a1894e5abd1f02f5c03a802c35cf2ee27c"
+   }
+  },
+  "dyn_h40_s": {
+   "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py dynamic --hy 40 --tag dyn_h40_s",
+   "run_head": "e3d5a93e397fd0d636c0caa945cc59fdc4adb6a2",
+   "producer_sha256": "57155f48ae9f5c1ee451044ca2f95ec717fe33e27860ada512892db8c21259b8",
+   "started_at": "2026-09-24T19:24:00Z",
+   "exit_code": null,
+   "artifacts": {
+    "axial_final.csv": "c5dec3a4fd741e6ebce33e89652f3fa5dff6ad556b2bb74cba96a56b7e44e879",
+    "axial_final.prov.json": "9e66bbe80259b4576cb8029412167463061020e83e0d03203bfbd6dfb0c1a6bf",
+    "axial_mid.csv": "98634b041aad72ea8a8bfb4b26555f70c76508f7e7de652bdae2108871a2994b",
+    "axial_mid.prov.json": "1a0f1ae4c29ce85a8a15ca1ebc4eb104ea71b437b680853d90f2604e89bfab7a",
+    "fields_final.npz": "350aca298c93cc84815e5745823b62b5a12bc58ee228f8eb28a39adb343730a1",
+    "front.csv": "017502bbb8b1a4041505427b00f51153f651249d794706a0dc31c5d69dbf7629",
+    "front.prov.json": "b0608545f5f7ea89fc6ee93179325e70e13bdfdce03d3f2f22afef6af1907970",
+    "probes.csv": "96b02597ce29e02ceee59fcae97697c0921105c24c9f47772c2fa66add5eaade",
+    "probes.prov.json": "6fd575b22e88637f16b1258bc4bfb2046186471750fa9a759f30db79a543a6ad",
+    "report.json": "31e997b9b6c4ce7a52870bdb9530736b4cd5595288c5b36b54a42d00873a31b1"
+   }
+  },
+  "dyn_h40_2L": {
+   "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1c.py dynamic --hy 40 --L 472 --tag dyn_h40_2L",
+   "run_head": "e3d5a93e397fd0d636c0caa945cc59fdc4adb6a2",
+   "producer_sha256": "57155f48ae9f5c1ee451044ca2f95ec717fe33e27860ada512892db8c21259b8",
+   "started_at": "2026-09-24T19:29:26Z",
+   "exit_code": null,
+   "artifacts": {
+    "axial_final.csv": "2ab763ca399cf6690cbc9675e4201c7c12c4e626f23d54f319ed01fb0c69a58d",
+    "axial_final.prov.json": "318d4756d2ebaabb80bf5ca357a916e5c66ad3e4bbb1f19161889ba7e6a2a26b",
+    "fields_final.npz": "05fc5e4e371d45d3f258f2c4add14900f0136fa82eec1f9039512e46d6b18384",
+    "front.csv": "1e4c60f7193e88100383b7af27da18fd590497144a3c7184d8f5d967fb1950ce",
+    "front.prov.json": "ad375c2cef43099f3f52e5bc49a8c0839dca8c31bd4a1686994de6e791460baf",
+    "probes.csv": "9c1ca7dd4ee755068606ece3611defa2e5e72dc1f6ba0cfa990a221e1da2a773",
+    "probes.prov.json": "75a49adeae6d77cc35aea3b2c81e29ec5fbbdc5aa14f0c0beb269cae933ddf59",
+    "report.json": "3954e87e993f1ce731b1dbab953eac7f49ac7b7cc42d4441f09affd93c5f87da"
+   }
+  }
+ }
+}

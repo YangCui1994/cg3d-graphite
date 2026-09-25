@@ -1,0 +1,7 @@
+tag,g1_no_nan,g2_umax,g3_zero_dp,g4_monotonic,g5_window,g6_r2>=0.995,g7_|V/Vhyd-1|<=0.1,g8_poiseuille<=0.1,g9_mass_reported,all_hard
+static_h26,static run,,,,,,,,,
+static_h40,static run,,,,,,,,,
+dyn_h26,True,True,True,True,True,True,False,False,,False
+dyn_h40,True,True,True,True,True,True,False,False,,False
+dyn_h26_2L,True,True,True,True,True,True,False,False,,False
+static_scaling_gate,False,,,,,,,,,

@@ -1,0 +1,6 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+u_mean = 9.609592e-04, analytic = 9.600000e-04
+effective force factor eff = 1.0010   (1.0 = exact Guo)
+profile L2 vs parabola    = 0.0001    (14s)
+PASS: Guo forcing injects the full body force; Poiseuille profile matches the analytic parabola

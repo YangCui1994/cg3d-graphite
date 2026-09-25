@@ -1,0 +1,32 @@
+{
+ "acc": "A1",
+ "arch": "gpu",
+ "cf": "C1X",
+ "dims": [
+  126,
+  46,
+  6
+ ],
+ "fix": "T3",
+ "geom": "C3",
+ "git": {
+  "dirty": "M results/colour_closure/logs/dx_C1_T3C1X_A1.log\n?? results/colour_closure/LOCAL_RESIDUAL_DIAGNOSIS.md\n?? results/colour_closure/ac_C1_T3C1X_A1_20k/\n?? results/colour_closure/ac_C3_T3C1X_A1_60k/\n?? results/colour_closure/dx_C1_T3C1X_A1/\n?? results/colour_closure/dx_C3_T3C1X_A1/\n?? results/colour_closure/logs/ac_C1_T3C1X_A1_20k.log\n?? results/colour_closure/logs/ac_C3_T3C1X_A1_60k.log\n?? results/colour_closure/logs/bg_C3_T3C1X_A1.log\n?? results/colour_closure/logs/dx_C3_T3C1X_A1.log\n?? results/colour_closure/make_report_tables.py",
+  "head": "71d2a4b98a979a7ca5c82a878643edafb188a962"
+ },
+ "means": {
+  "dMb": -3.070667479732947e-05,
+  "dMr": 4.187236194411526e-05,
+  "identity_resid_b": 1.66379376624529e-05,
+  "identity_resid_r": 3.2038817510232436e-05,
+  "sumR_b": -3.0310787418619538e-05,
+  "sumR_r": 4.107663608489789e-05,
+  "sumdacc_b": 0.0,
+  "sumdacc_r": 0.0
+ },
+ "nfluid": 28800,
+ "pre_steps": 20000,
+ "probe_steps": 200,
+ "stage": "budget",
+ "started": "2026-09-25T15:59:18",
+ "task": "BI-COLOUR-CLOSURE-001"
+}

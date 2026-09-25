@@ -1,0 +1,4 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+psi_solid=-0.68: theta_liq = 33.1 deg (expect 30 +- 6); steps=12000, wall=382s
+LEVEL B (contact angle): PASS — registry reproduced

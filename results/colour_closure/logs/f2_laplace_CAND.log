@@ -1,0 +1,31 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+=== CapA=0.06, R=14 (n=88) ===
+[W 09/25/26 18:49:23.321 50952] TaichiWarning
+While compiling `collision_c82_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 866, in collision:
+                        dr_loc = drl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 18:49:23.321 50952] TaichiWarning
+While compiling `collision_c82_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 867, in collision:
+                        db_loc = dbl
+                        ^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 18:54:25.927 50952] TaichiWarning
+While compiling `streaming3_c92_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1132, in streaming3:
+                self.rho_r[i, j, k] = self.rhor[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+[W 09/25/26 18:54:25.927 50952] TaichiWarning
+While compiling `streaming3_c92_0`, File "D:\2026_agent_work\01_GLM_LBM3D_porous_media\cg3d-episode-worktrees\BI-COLOUR-CLOSURE-001\lbm_solver_cg3d.py", line 1133, in streaming3:
+                self.rho_b[i, j, k] = self.rhob[i, j, k]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assign may lose precision: f32 <- f64
+  dP=0.00860 R_eff=14.06 conv=True steps=7500 wall=326s
+=== CapA=0.06, R=18 (n=88) ===
+  dP=0.00668 R_eff=18.04 conv=True steps=8500 wall=20s
+=== CapA=0.06, R=22 (n=88) ===
+  dP=0.00546 R_eff=22.05 conv=True steps=9500 wall=23s
+  [offset probe] dP=0.00669
+CapA=0.06: sigma=0.0610 (expect 0.0607, rel 0.42%), R2=0.99999, intercept=-0.00008
+LEVEL B (Laplace): PASS — sigma calibration reproduced

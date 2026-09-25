@@ -1,0 +1,12 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+[Taichi] Starting on arch=cuda
+T0+C0    max|v|=0.000e+00 psi_dev=0.0e+00 gate=True
+T1+C0    max|v|=4.463e-06 psi_dev=0.0e+00 gate=False
+T2+C0    max|v|=4.463e-06 psi_dev=0.0e+00 gate=False
+T3+C0    max|v|=0.000e+00 psi_dev=0.0e+00 gate=True
+T4+C0    max|v|=3.103e-06 psi_dev=0.0e+00 gate=False
+T0+C1    max|v|=4.463e-06 psi_dev=0.0e+00 gate=False
+T1+C1    max|v|=4.463e-06 psi_dev=0.0e+00 gate=False
+T2+C1    max|v|=4.463e-06 psi_dev=0.0e+00 gate=False
+T3+C1    max|v|=0.000e+00 psi_dev=0.0e+00 gate=True
+written a2_isolation.json

@@ -49,9 +49,19 @@ Four known upstream defects are NOT inherited (plan §4 table):
      body force.
 
 Timestep (identical order to 2D):
-  collision(+recolour) -> F.fill(0) -> streaming1 (atomic accumulate,
+  collision(+reccolour) -> F.fill(0) -> streaming1 (atomic accumulate,
   psi-conditional membrane bounce-back) -> Boundary_condition ->
   streaming3 -> Boundary_condition_psi -> apply_reservoirs.
+
+BI-SOLVER-CONSERVATION-FIX-001 conservation candidates (constructor
+switches, compile-time; env overrides LBM_TOTAL_FIX / LBM_COLOUR_FIX;
+default T0/C0 = pre-fix arithmetic):
+  T0 baseline | T1 stored-f32 inv_M column-sum projection (module table,
+  one mode per process) | T2 local post-reconstruction zeroth-moment
+  correction (w_q-distributed) | T3 f64 matrix + f64 accumulator |
+  T4 f64 accumulator + unchanged f32 matrix (negative control);
+  C0 baseline | C1 per-colour zeroth-moment projection after
+  equilibrium/recoloring.  dbg_local=True enables per-node F0 probes.
 
 Backend: LBM_ARCH env var — default ti.gpu (CUDA), 'cpu' forces CPU.
 """
@@ -75,6 +85,42 @@ w   = ti.field(ti.f32, shape=(19,))
 LR  = ti.field(ti.i32, shape=(19,))     # bounce-back opposite-direction map
 M   = ti.field(ti.f32, shape=(19, 19))  # upstream :124-142
 inv_M = ti.field(ti.f32, shape=(19, 19))
+# BI-SOLVER-CONSERVATION-FIX-001: un-cast f64 inverse for the T3
+# reference path (f64 matrix + f64 accumulator).  The stored f32 inv_M
+# zeroth column sums to 1 + 2^-26 (conservation-audit root cause).
+inv_M_f64 = ti.field(ti.f64, shape=(19, 19))
+
+
+def _inv_m_colsums_f64():
+    """Exact (f64) column sums of the STORED f32 inv_M."""
+    return inv_M.to_numpy().astype(np.float64).sum(axis=0)
+
+
+def project_inv_m_colsums(max_iter=64):
+    """BI-SOLVER-CONSERVATION-FIX-001 candidate T1: re-shape the stored
+    f32 inverse so that 1^T inv_M = (1, 0, ..., 0) as closely as f32
+    entries represent.  Greedy per-column: nudge the smallest-magnitude
+    entry (finest ulp) by the current exact residual, iterate.  Returns
+    the achieved exact column sums after projection."""
+    inv = inv_M.to_numpy()
+    for l in range(19):
+        target = 1.0 if l == 0 else 0.0
+        for _ in range(max_iter):
+            r = float(inv.astype(np.float64)[:, l].sum() - target)
+            if r == 0.0:
+                break
+            order = np.argsort(np.abs(inv[:, l]))
+            moved = False
+            for s1 in order:
+                cand = np.float32(inv[s1, l] - r)
+                if cand != inv[s1, l]:
+                    inv[s1, l] = cand
+                    moved = True
+                    break
+            if not moved:
+                break  # residual below every entry's ulp: representable floor
+    inv_M.from_numpy(np.ascontiguousarray(inv))
+    return _inv_m_colsums_f64()
 
 
 def _init_lattice_tables():
@@ -113,6 +159,7 @@ def _init_lattice_tables():
     [0,0,0,0,0,0,0,0,0,0,0,1,-1,-1,1,-1,1,1,-1]], dtype=np.float64)
     M.from_numpy(M_np.astype(np.float32))
     inv_M.from_numpy(np.linalg.inv(M_np).astype(np.float32))
+    inv_M_f64.from_numpy(np.linalg.inv(M_np))
 
 
 _init_lattice_tables()
@@ -211,7 +258,57 @@ class ColorGradientSolver3D:
                  bc_psi_z_left=0, bc_psi_z_right=0,
                  psi_x_left=-1.0, psi_x_right=1.0,
                  psi_y_left=1.0, psi_y_right=1.0,
-                 psi_z_left=1.0, psi_z_right=1.0):
+                 psi_z_left=1.0, psi_z_right=1.0,
+                 total_fix=None, colour_fix=None, dbg_local=False,
+                 acc_fix=None):
+        # BI-SOLVER-CONSERVATION-FIX-001 candidate switches (compile-time).
+        # PRODUCTION DEFAULT since BI-COLOUR-CLOSURE-001:
+        #   total_fix='T3'  (unchanged, frozen since
+        #   BI-SOLVER-CONSERVATION-FIX-001: f64 inverse matrix + f64
+        #   accumulator in the moment inverse transform, final cast to
+        #   f32)
+        #   colour_fix='C1X' + acc_fix='A2'  (weighted colour closure
+        #   with the natural guard (cc>0 or dr!=0) + f64 colour
+        #   pipeline end to end; the only remaining colour rounding is
+        #   the single rho_r/rho_b store).
+        # Selection (BI-COLOUR-CLOSURE-001): the external solver-fix
+        # review located two colour blockers — (B1) a persistent
+        # one-sided C3 60k colour drift and (B2) a geometry-dependent
+        # local bias (periodic C1).  Diagnosis: two mechanisms of
+        # OPPOSITE sign partially cancelling — the uncorrected
+        # equilibrium-construction leak at non-frozen cc==0 nodes
+        # (positive) and f32 scatter-accumulate rounding (negative).
+        # Every single-intervention arm fails a frozen gate
+        # (C1X/A0: C1-periodic -3.5e-9/step; C1/A1: +2.4e-9/step;
+        # C1X/A1: closure f32 arithmetic still accumulates -9.2e-10;
+        # C1R: absorbed by f32 storage).  Only C1X+A2 closes both:
+        # every node class to f64 epsilon; C3 60k colour +8.1e-12/step
+        # (R2 0.58, 120k R2 0.41 — trendless); periodic C1 -6.4e-11
+        # at 60k decaying to noise by 240k (R2 0.28); A2 stationarity
+        # exact 0.0; a26/a40 1.0618/1.0741; V2 eps_b 5.2e-7.
+        # History: the BI-SOLVER-CONSERVATION-FIX-001 default was
+        # T3 + C1(scoped)/A0.  T1/T2/T4 rejection history: T1 breaks
+        # the uniform bit-frozen fixed point (A2 gate 4.46e-6) with a
+        # -1.5e-8 local momentum defect; T2 fails the F1 >=10x total
+        # gate; T4 is the negative control (f64 accumulator + f32
+        # matrix keeps the +1.49e-8/step bias).  Only T3 preserves the
+        # frozen point exactly (A2 max|v| = 0.0).
+        # LBM_TOTAL_FIX / LBM_COLOUR_FIX / LBM_ACC_FIX env vars force
+        # any candidate (regression A/B); 'T0'/'C0'/'A0' reproduce the
+        # pre-fix arithmetic; 'C1' reproduces the interim scoped
+        # closure accepted by BI-SOLVER-CONSERVATION-FIX-001.
+        self.total_fix = total_fix if total_fix is not None else \
+            os.environ.get('LBM_TOTAL_FIX', 'T3')
+        self.colour_fix = colour_fix if colour_fix is not None else \
+            os.environ.get('LBM_COLOUR_FIX', 'C1X')
+        self.acc_fix = acc_fix if acc_fix is not None else \
+            os.environ.get('LBM_ACC_FIX', 'A2')
+        assert self.total_fix in ('T0', 'T1', 'T2', 'T3', 'T4')
+        assert self.colour_fix in ('C0', 'C1', 'C1R', 'C1X')
+        assert self.acc_fix in ('A0', 'A1', 'A2')
+        if self.total_fix == 'T1':
+            project_inv_m_colsums()
+        self.dbg_local = bool(dbg_local)
         self.nx, self.ny, self.nz = int(nx), int(ny), int(nz)
 
         # ---- runtime-tunable physics scalars (0-d fields) ----
@@ -265,8 +362,17 @@ class ColorGradientSolver3D:
         self.psi   = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
         self.rho_r = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
         self.rho_b = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
-        self.rhor  = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
-        self.rhob  = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
+        # BI-COLOUR-CLOSURE-001 acc_fix: 'A1' = f64 colour-transport
+        # accumulation (exact for <=19 f32 addends; one final rounding
+        # at the rho_r/rho_b store in streaming3).  'A2' = f64 colour
+        # pipeline end to end (f64 g locals + f64 accumulate; the
+        # weighted closure then makes the outgoing sum exactly rho_r
+        # and only the store rounds).  'A0' = original f32.
+        acc_dt = ti.f64 if self.acc_fix in ('A1', 'A2') else ti.f32
+        self.rhor = ti.field(acc_dt, shape=(self.nx, self.ny, self.nz))
+        self.rhob = ti.field(acc_dt, shape=(self.nx, self.ny, self.nz))
+        # colour-local dtype in collision (A2 only; A0/A1 stay f32)
+        self.g_dt = ti.f64 if self.acc_fix == 'A2' else ti.f32
         self.solid = ti.field(ti.i8, shape=(self.nx, self.ny, self.nz))
 
         # ---- CG2 infrastructure (2D mirror; zero masks == original
@@ -291,6 +397,32 @@ class ColorGradientSolver3D:
         self.ext_fr = ti.Vector.field(3, ti.f32, shape=())
         self.ext_fb[None] = ti.Vector([0.0, 0.0, 0.0])
         self.ext_fr[None] = ti.Vector([0.0, 0.0, 0.0])
+
+        # BI-SOLVER-CONSERVATION-FIX-001 F0 probe (allocated always,
+        # written only when dbg_local; zero cost when off)
+        self.dbg_m0pre = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_sumpost = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_sumgr = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_sumb = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_mom = ti.Vector.field(3, ti.f64,
+                                       shape=(self.nx, self.ny, self.nz))
+        self.dbg_delta = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_dr = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_db = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_sumgr_eq = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_sumb_eq = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        # BI-COLOUR-CLOSURE-001 additions (dbg-only, same gate as above):
+        # post-recolor pre-correction stage sums (completes the
+        # eq -> recolor -> correction three-stage split), the local
+        # colour-gradient magnitude, and the full post-correction colour
+        # populations for the host-side streaming/accumulate attribution.
+        self.dbg_sumgr_rc = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_sumb_rc = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_cc = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
+        self.dbg_gr = ti.Vector.field(19, ti.f64,
+                                      shape=(self.nx, self.ny, self.nz))
+        self.dbg_gb = ti.Vector.field(19, ti.f64,
+                                      shape=(self.nx, self.ny, self.nz))
 
     # --------------------------------------------------------
     #  Runtime parameter setters (2D API mirror)
@@ -548,15 +680,57 @@ class ColorGradientSolver3D:
                     m_temp[s] += (1 - 0.5 * S_local[s]) * self.GuoF(i, j, k, s, self.v[i, j, k])
 
                 # Inverse transform: moment space -> distribution space
-                g_r = ti.Vector([0.0] * 19)
-                g_b = ti.Vector([0.0] * 19)
+                # (BI-COLOUR-CLOSURE-001 acc_fix='A2': f64 colour locals
+                # — with the f64 closure + f64 accumulate the colour
+                # channel rounds only at the final rho_r/rho_b store;
+                # 'A0'/'A1' keep the original f32 locals bit-identically)
+                g_r = ti.Vector([0.0] * 19, dt=self.g_dt)
+                g_b = ti.Vector([0.0] * 19, dt=self.g_dt)
 
-                for s in ti.static(range(19)):
-                    self.f[i, j, k, s] = 0
-                    for l in ti.static(range(19)):
-                        self.f[i, j, k, s] += inv_M[s, l] * m_temp[l]
-                    g_r[s] = feq(s, self.rho_r[i, j, k], self.v[i, j, k])
-                    g_b[s] = feq(s, self.rho_b[i, j, k], self.v[i, j, k])
+                if ti.static(self.total_fix in ('T3', 'T4')):
+                    # f64-accumulated roundtrip; T3 uses the un-cast f64
+                    # inverse, T4 keeps the f32 matrix values (negative
+                    # control: the stored-matrix column-sum defect remains)
+                    for s in ti.static(range(19)):
+                        acc = ti.cast(0.0, ti.f64)
+                        for l in ti.static(range(19)):
+                            if ti.static(self.total_fix == 'T3'):
+                                acc += inv_M_f64[s, l] * ti.cast(m_temp[l], ti.f64)
+                            else:
+                                acc += ti.cast(inv_M[s, l], ti.f64) * ti.cast(m_temp[l], ti.f64)
+                        self.f[i, j, k, s] = ti.cast(acc, ti.f32)
+                        g_r[s] = feq(s, self.rho_r[i, j, k], self.v[i, j, k])
+                        g_b[s] = feq(s, self.rho_b[i, j, k], self.v[i, j, k])
+                else:
+                    for s in ti.static(range(19)):
+                        self.f[i, j, k, s] = 0
+                        for l in ti.static(range(19)):
+                            self.f[i, j, k, s] += inv_M[s, l] * m_temp[l]
+                        g_r[s] = feq(s, self.rho_r[i, j, k], self.v[i, j, k])
+                        g_b[s] = feq(s, self.rho_b[i, j, k], self.v[i, j, k])
+
+                # T2: local post-reconstruction zeroth-moment correction,
+                # w_q-distributed (sum_q w_q e_q = 0 keeps momentum to the
+                # f32 floor).  m_temp[0] is the unrelaxed zeroth moment,
+                # i.e. the sequential f32 sum of the pre-collision F.
+                delta_f = 0.0
+                if ti.static(self.total_fix == 'T2'):
+                    m0r = 0.0
+                    for s in ti.static(range(19)):
+                        m0r += self.f[i, j, k, s]
+                    delta_f = m_temp[0] - m0r
+                    for s in ti.static(range(19)):
+                        self.f[i, j, k, s] += w[s] * delta_f
+
+                # F0 probe: equilibrium-stage colour sums (before recolor)
+                if ti.static(self.dbg_local):
+                    eqr = ti.cast(0.0, ti.f64)
+                    eqb = ti.cast(0.0, ti.f64)
+                    for s in ti.static(range(19)):
+                        eqr += ti.cast(g_r[s], ti.f64)
+                        eqb += ti.cast(g_b[s], ti.f64)
+                    self.dbg_sumgr_eq[i, j, k] = eqr
+                    self.dbg_sumb_eq[i, j, k] = eqb
 
                 # Recoloring (Latva-Kokko); 9 opposite pairs (upstream :358)
                 if cc > 0:
@@ -572,6 +746,126 @@ class ColorGradientSolver3D:
                         g_b[kk] -= cospsi
                         g_b[kk + 1] += cospsi
 
+                # BI-COLOUR-CLOSURE-001 dbg: post-recolor, pre-correction
+                # stage sums (second stage of the three-stage split)
+                if ti.static(self.dbg_local):
+                    rcr = ti.cast(0.0, ti.f64)
+                    rcb = ti.cast(0.0, ti.f64)
+                    for s in ti.static(range(19)):
+                        rcr += ti.cast(g_r[s], ti.f64)
+                        rcb += ti.cast(g_b[s], ti.f64)
+                    self.dbg_sumgr_rc[i, j, k] = rcr
+                    self.dbg_sumb_rc[i, j, k] = rcb
+
+                # C1: per-colour local zeroth-moment projection after
+                # equilibrium + recoloring (contract C1).  Scoped to
+                # interface nodes (cc > 0): the conservation audit
+                # measured the colour leak to exist ONLY at diffuse
+                # interfaces (J7 exactly 0 in single-phase/wall-only
+                # cases), and corrections in bit-frozen uniform bulk
+                # inject ulp-scale noise that breaks exact stationarity
+                # (F2 A2 gate).  rho_r/rho_b still hold the pre-collision
+                # macro values here.
+                # BI-COLOUR-CLOSURE-001 colour-closure dispatch.  Each
+                # ti.static branch is self-contained (variables defined
+                # and consumed within the same branch).  A0/A1 keep the
+                # original f32 correction arithmetic bit-identically;
+                # under A2 the closure is computed in f64 against the
+                # exact f64 sum, making the outgoing sum exactly rho_r.
+                # C1R: rest-population closure (external-review
+                #   candidate; e_0 = 0 keeps momentum exactly, but the
+                #   f32-arm correction is typically ulp-below ulp(g[0])
+                #   — its f32-storage survival is an empirical gate).
+                # C1X: weighted closure with the natural guard
+                #   (cc > 0) OR (local identity violated).  The
+                #   diagnosis located the one-sided local residual at
+                #   non-frozen cc==0 nodes near diffuse interfaces; at
+                #   bit-frozen bulk nodes dr == 0 exactly and
+                #   g_r[s] += w[s]*0.0 is an exact no-op.  Under A2 the
+                #   f64 closure fires everywhere (dr generically != 0
+                #   against the exact sum) but preserves frozen states
+                #   exactly by construction.
+                dr_loc = 0.0
+                db_loc = 0.0
+                if ti.static(self.colour_fix == 'C1'):
+                    if ti.static(self.acc_fix == 'A2'):
+                        sr = ti.cast(0.0, ti.f64)
+                        sb = ti.cast(0.0, ti.f64)
+                        for s in ti.static(range(19)):
+                            sr += g_r[s]
+                            sb += g_b[s]
+                        drl = ti.cast(self.rho_r[i, j, k], ti.f64) - sr
+                        dbl = ti.cast(self.rho_b[i, j, k], ti.f64) - sb
+                        dr_loc = drl
+                        db_loc = dbl
+                        if cc > 0:
+                            for s in ti.static(range(19)):
+                                g_r[s] += w[s] * drl
+                                g_b[s] += w[s] * dbl
+                    else:
+                        if cc > 0:
+                            sr = 0.0
+                            sb = 0.0
+                            for s in ti.static(range(19)):
+                                sr += g_r[s]
+                                sb += g_b[s]
+                            dr_loc = self.rho_r[i, j, k] - sr
+                            db_loc = self.rho_b[i, j, k] - sb
+                            for s in ti.static(range(19)):
+                                g_r[s] += w[s] * dr_loc
+                                g_b[s] += w[s] * db_loc
+                if ti.static(self.colour_fix == 'C1R'):
+                    if ti.static(self.acc_fix == 'A2'):
+                        sr = ti.cast(0.0, ti.f64)
+                        sb = ti.cast(0.0, ti.f64)
+                        for s in ti.static(range(19)):
+                            sr += g_r[s]
+                            sb += g_b[s]
+                        drl = ti.cast(self.rho_r[i, j, k], ti.f64) - sr
+                        dbl = ti.cast(self.rho_b[i, j, k], ti.f64) - sb
+                        dr_loc = drl
+                        db_loc = dbl
+                        if cc > 0:
+                            g_r[0] += drl
+                            g_b[0] += dbl
+                    else:
+                        if cc > 0:
+                            sr = 0.0
+                            sb = 0.0
+                            for s in ti.static(range(19)):
+                                sr += g_r[s]
+                                sb += g_b[s]
+                            dr_loc = self.rho_r[i, j, k] - sr
+                            db_loc = self.rho_b[i, j, k] - sb
+                            g_r[0] += dr_loc
+                            g_b[0] += db_loc
+                if ti.static(self.colour_fix == 'C1X'):
+                    if ti.static(self.acc_fix == 'A2'):
+                        sr = ti.cast(0.0, ti.f64)
+                        sb = ti.cast(0.0, ti.f64)
+                        for s in ti.static(range(19)):
+                            sr += g_r[s]
+                            sb += g_b[s]
+                        drl = ti.cast(self.rho_r[i, j, k], ti.f64) - sr
+                        dbl = ti.cast(self.rho_b[i, j, k], ti.f64) - sb
+                        dr_loc = drl
+                        db_loc = dbl
+                        for s in ti.static(range(19)):
+                            g_r[s] += w[s] * drl
+                            g_b[s] += w[s] * dbl
+                    else:
+                        sr = 0.0
+                        sb = 0.0
+                        for s in ti.static(range(19)):
+                            sr += g_r[s]
+                            sb += g_b[s]
+                        dr_loc = self.rho_r[i, j, k] - sr
+                        db_loc = self.rho_b[i, j, k] - sb
+                        if (cc > 0) or (dr_loc != 0.0) or (db_loc != 0.0):
+                            for s in ti.static(range(19)):
+                                g_r[s] += w[s] * dr_loc
+                                g_b[s] += w[s] * db_loc
+
                 # Stream colour densities; half-way bounce-back at
                 # solids; membrane nodes bounce only the blocked colour.
                 # All paths atomic-accumulate -> race-free.
@@ -586,6 +880,37 @@ class ColorGradientSolver3D:
                         self.rhob[ip] += g_b[s]
                     else:
                         self.rhob[i, j, k] += g_b[s]
+
+                # F0 probe (BI-SOLVER-CONSERVATION-FIX-001): per-node
+                # closure identities in device arithmetic
+                if ti.static(self.dbg_local):
+                    sp = ti.cast(0.0, ti.f64)
+                    gs = ti.cast(0.0, ti.f64)
+                    bs = ti.cast(0.0, ti.f64)
+                    mx = ti.cast(0.0, ti.f64)
+                    my = ti.cast(0.0, ti.f64)
+                    mz = ti.cast(0.0, ti.f64)
+                    for s in ti.static(range(19)):
+                        sp += ti.cast(self.f[i, j, k, s], ti.f64)
+                        gs += ti.cast(g_r[s], ti.f64)
+                        bs += ti.cast(g_b[s], ti.f64)
+                        d = ti.cast(self.f[i, j, k, s] - self.F[i, j, k, s], ti.f64)
+                        mx += d * e[s][0]
+                        my += d * e[s][1]
+                        mz += d * e[s][2]
+                    self.dbg_m0pre[i, j, k] = ti.cast(m_temp[0], ti.f64)
+                    self.dbg_sumpost[i, j, k] = sp
+                    self.dbg_sumgr[i, j, k] = gs
+                    self.dbg_sumb[i, j, k] = bs
+                    self.dbg_mom[i, j, k] = ti.Vector([mx, my, mz])
+                    self.dbg_delta[i, j, k] = ti.cast(delta_f, ti.f64)
+                    self.dbg_dr[i, j, k] = ti.cast(dr_loc, ti.f64)
+                    self.dbg_db[i, j, k] = ti.cast(db_loc, ti.f64)
+                    # BI-COLOUR-CLOSURE-001 dbg additions
+                    self.dbg_cc[i, j, k] = ti.cast(cc, ti.f64)
+                    for s in ti.static(range(19)):
+                        self.dbg_gr[i, j, k][s] = g_r[s]
+                        self.dbg_gb[i, j, k][s] = g_b[s]
 
     @ti.kernel
     def streaming1(self):

@@ -1,0 +1,12 @@
+{
+ "producer_script": "tests/levelc_v1b.py",
+ "producer_sha256": "f66aabb236281b00996b7894f7e8e06f27425ef67e3b2a624b2c676be5706f46",
+ "run_head": "da9a13d797150fcbd774242c5a10a7a50c4b83bd",
+ "worktree_dirty": true,
+ "command": "C:\\Users\\yangc\\anaconda3\\envs\\lbm\\python.exe tests/levelc_v1b.py collect",
+ "started_at": "2026-09-23T17:27:38Z",
+ "finished_at": null,
+ "exit_code": null,
+ "artifact": "gates.csv",
+ "artifact_sha256": "3a94e67226dc65221d3b3ba7c5bb8a973111e156f4fad62683fa7517a94f75a6"
+}

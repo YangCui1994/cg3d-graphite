@@ -1,0 +1,32 @@
+{
+ "acc": "A0",
+ "arch": "gpu",
+ "cf": "C1X",
+ "chi_primary": 1e-06,
+ "chi_sensitivity": [
+  1e-07,
+  1e-05
+ ],
+ "dims": [
+  64,
+  24,
+  24
+ ],
+ "fix": "T3",
+ "geom": "C1",
+ "git": {
+  "dirty": "M lbm_solver_cg3d.py\n M results/colour_closure/a2_candidates.py\n M results/colour_closure/logs/dx_C1_T3C1X_A1.log\n M tests/colour_closure.py\n?? results/colour_closure/LOCAL_RESIDUAL_DIAGNOSIS.md\n?? results/colour_closure/ac_C1_T3C1X_A1_20k/\n?? results/colour_closure/ac_C3_T3C1X_A1_60k/\n?? results/colour_closure/bg_C3_T3C1X_A1/\n?? results/colour_closure/dx_C1_T3C1X_A1/\n?? results/colour_closure/dx_C3_T3C1X_A1/\n?? results/colour_closure/figures/\n?? results/colour_closure/logs/a2_candidates.log\n?? results/colour_closure/logs/ac_C1_T3C1X_20k.log\n?? results/colour_closure/logs/ac_C1_T3C1X_A1_20k.log\n?? results/colour_closure/logs/ac_C1_T3C1_A1_20k.log\n?? results/colour_closure/logs/ac_C3_T3C1X_60k.log\n?? results/colour_closure/logs/ac_C3_T3C1X_A1_60k.log\n?? results/colour_closure/logs/ac_C3_T3C1_A1_60k.log\n?? results/colour_closure/logs/ac_C3_T3C1s_60k_rerun.log\n?? results/colour_closure/logs/bg_C3_T3C1X_A1.log\n?? results/colour_closure/logs/dx_C1_T3C1R.log\n?? results/colour_closure/logs/dx_C1_T3C1X.log\n?? results/colour_closure/logs/dx_C3_T3C1R.log\n?? results/colour_closure/logs/dx_C3_T3C1X.log\n?? results/colour_closure/logs/dx_C3_T3C1X_A1.log\n?? results/colour_closure/make_report_tables.py\n?? results/colour_closure/run_a2_batch.sh\n?? results/colour_closure/run_retry_a2_batch.sh",
+  "head": "71d2a4b98a979a7ca5c82a878643edafb188a962"
+ },
+ "nfluid": 36864,
+ "pre_steps": 1500,
+ "pre_wall_s": 329.33091497421265,
+ "probe_steps": 40,
+ "scatter_identity_max_abs": {
+  "b": 3.637978807091713e-12,
+  "r": 3.637978807091713e-12
+ },
+ "stage": "B_diagnose",
+ "started": "2026-09-25T16:19:23",
+ "task": "BI-COLOUR-CLOSURE-001"
+}

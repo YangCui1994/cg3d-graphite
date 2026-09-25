@@ -1,0 +1,81 @@
+{
+ "base": "e256b4857a6e51510b75358994d7c5bcc742781e",
+ "baseline": {
+  "c1_20k": 8.844631203474909e-10,
+  "c3_60k_committed": -6.42529e-10,
+  "c3_60k_rerun": -6.553072896514569e-10
+ },
+ "diagnosis": {
+  "base_c1_R_r_frac_pos": 0.7850067531587,
+  "base_c1_R_r_mean": 4.660340502856e-09,
+  "base_c1_accum_slope": 8.844631203474909e-10,
+  "base_c1_accumulates": true,
+  "biased_class": "non-frozen cc==0 nodes (pure, chi~1e-12) near diffuse interfaces; uncorrected equilibrium-construction leak Req_r",
+  "c3_budget": {
+   "dMr": -1.2825258017983288e-05,
+   "identity_resid_r": 7.73070496506989e-12,
+   "sumR_r": 6.989666078754671e-06,
+   "sumdacc_r": -1.9814924083095536e-05
+  }
+ },
+ "gates": {
+  "a2_stationary_all": {
+   "T3+C1/A0": {
+    "gate": true,
+    "max_v": 0.0,
+    "psi_dev": 0.0
+   },
+   "T3+C1/A1": {
+    "gate": true,
+    "max_v": 0.0,
+    "psi_dev": 0.0
+   },
+   "T3+C1/A2": {
+    "gate": true,
+    "max_v": 0.0,
+    "psi_dev": 0.0
+   },
+   "T3+C1R/A0": {
+    "gate": true,
+    "max_v": 0.0,
+    "psi_dev": 0.0
+   },
+   "T3+C1X/A0": {
+    "gate": true,
+    "max_v": 0.0,
+    "psi_dev": 0.0
+   },
+   "T3+C1X/A1": {
+    "gate": true,
+    "max_v": 0.0,
+    "psi_dev": 0.0
+   },
+   "T3+C1X/A2": {
+    "gate": true,
+    "max_v": 0.0,
+    "psi_dev": 0.0
+   }
+  },
+  "c3_120k_colour": 2.692882858031712e-12,
+  "c3_120k_colour_r2": 0.4146432131592901,
+  "c3_60k_colour": 8.087972622164706e-12,
+  "c3_60k_colour_r2": 0.5825616541569933,
+  "c3_60k_total": -2.476346807214741e-11,
+  "periodic_c1_20k": -1.0778462872961096e-10,
+  "periodic_c1_240k": 1.8045553362296766e-11,
+  "periodic_c1_240k_r2": 0.27971762215059015,
+  "periodic_c1_60k": -6.400485768389908e-11
+ },
+ "improvements": {
+  "c1_60k_vs_base_x": 13.81868739894073,
+  "c3_60k_vs_base_x": 81.02244162592963,
+  "c3_60k_vs_prefix_t0_x": 836.0191503949804
+ },
+ "reproduce_all_ok": true,
+ "selected": {
+  "acc_fix": "A2",
+  "colour_fix": "C1X",
+  "total_fix": "T3"
+ },
+ "task": "BI-COLOUR-CLOSURE-001"
+}
