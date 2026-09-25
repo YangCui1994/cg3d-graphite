@@ -2267,3 +2267,149 @@ Scope is deliberately narrow:
 - A2, V1c a26/a40, V2 bilateral and T3 total-channel non-regression remain unchanged gates.
 
 V3 remains **HOLD** until this task passes fresh review and external scientific review.
+
+
+# 26. Colour Closure — BI-COLOUR-CLOSURE-001（2026-09-25）
+
+> 本节是 **SOLVER 层变更记录**（colour 通道 bookkeeping 精度与闭包；
+> T3 总通道路径字节级冻结）。变更分类：**SOLVER = 有**
+> （colour_fix=C1X 加权闭包+自然守卫；acc_fix=A2 f64 colour 管线；
+> dbg 探针）；**BC/物理参数/门槛：无变更**。Fresh review 1 轮
+> **PASS**（attempt 1，无 self-review、无 GPU）。
+
+## 26.0 记录头
+
+- **Task ID:** BI-COLOUR-CLOSURE-001；授权链 = §25.11 外审
+  CHANGES_REQUESTED（colour closure）+ §25.12 narrow follow-up。
+- **Base:** `e256b485` → 候选链 `388892e` → `71d2a4b` → `1854a58`
+  → `246a463` → **`6c30260`**（fresh review PASS）。
+- **Reviewer session:** `sess_71185c19`（fresh 无 resume；决策 PASS；
+  `REVIEW_SESSION.json` 含 253/253 MANIFEST 复核、四项独立重算）。
+
+## 26.1 问题（外审 B1/B2，改码前先诊断）
+
+- **B2（局部）**：periodic C1 两相几何下 scoped-C1 留下
+  R_r ≈ +3.9e-9、frac_pos ≈ 0.76 的单边局部残差（F0 gate 字面未闭合）。
+- **B1（全局）**：C3 60k colour 斜率 −6.43e-10/step、R²=0.983、
+  299/300 负增量 —— 单边近线性漂移，不能称为有界 floor。
+
+## 26.2 诊断（契约 B/C，先于任何改码）
+
+按 `cc>0/cc==0`、`chi`（min/(sum)，1e-6 主阈值 ±1e-7/1e-5 敏感性）、
+壁面邻接分区，并用 host f64 gather 精确复现 scatter（独立 Taichi
+replay 验证 2.4e-7 = f32 原子序噪声；置换恒等式 3.6e-12）：
+
+1. **biased class = 非冻结的 `cc==0` 纯相节点**（chi~1e-12，界面
+   邻近带）：携带未修正的 equilibrium 构造泄漏
+   （R_r = Req_r ≈ +4.66e-9，frac_pos 0.785）；远体区 bit-frozen
+   （~1e-19）；`cc>0` 类已被 scoped-C1 闭合（−7.9e-12 无偏）。
+   **不是 mixed 类** —— chi 阈值扩 scope 会漏掉它；有效判据是
+   非冻结性（dr ≠ 0）。
+2. **periodic C1 基线累积**（契约 C）：Mc +8.85e-10/step
+   （R²=0.927，后半段 +8.08e-10、R²=0.965）—— 确认累积。
+3. **C3 预算恒等式**（t=20k，200 步）：dMr = −1.2825e-5/step =
+   ΣR(+6.99e-6) + Σdacc(−1.982e-5)，恒等式闭合到 7.7e-12 ——
+   **C3 漂移由 f32 scatter-accumulate 舍入主导**，与局部泄漏
+   反号、部分抵消。逐类：`cc>0` 类 dacc −7.18e-10/节点
+   （frac_pos 0.494，0.6% 符号不对称）；`cc==0` 壁面类 +4.6e-9。
+
+**推论（被矩阵实测证实）**：两个反号机制部分抵消 ⇒ 任何单边
+干预都放大另一边：C1X/A0 → C1 周期 −3.54e-9（超 2e-9 门）；
+C1/A1 → +2.45e-9（超门）；C1X/A1 → f32 闭包算术自身残差
+−9.2e-10 仍累积；C1R（外审建议的 rest-population）被 f32 存储
+吸收（计算 Rc1 −3.79e-9，存储后残差仍在泄漏水平 —— 拒绝）。
+
+## 26.3 公式与实现（colour-only；T3 总路径字节冻结）
+
+选定 **C1X + A2**（生产默认，env `LBM_COLOUR_FIX`/`LBM_ACC_FIX`
+可复现任意组合，`C1`/`A0` = 中间已接受版本）：
+
+- **C1X 加权闭包 + 自然守卫**（f64 求和使外发和精确等于 ρ）：
+
+```python
+if ti.static(self.colour_fix == 'C1X'):
+    # A2: sr/sb 为 f64 精确和；A0/A1: 原 f32 顺序和（逐位不变）
+    drl = ti.cast(self.rho_r[i, j, k], ti.f64) - sr
+    dbl = ti.cast(self.rho_b[i, j, k], ti.f64) - sb
+    # A0/A1 分支另有守卫 (cc > 0) or (dr != 0) or (db != 0)
+    for s in ti.static(range(19)):
+        g_r[s] += w[s] * drl      # A2 下 f64：Σ w e = 0 精确保动量
+        g_b[s] += w[s] * dbl
+```
+
+- **A2 f64 colour 管线**：`g_r/g_b` 碰撞局部量与 `rhor/rhob`
+  累加器均 f64；闭包后每节点外发和 **精确等于 ρ_r/ρ_b**（f64
+  eps ~1e-24 量级）；唯一剩余舍入是 `streaming3` 的单次
+  `rho_r = f32(rhor)` 存储。bit-frozen 态被精确保持（f64 精确和
+  等于 f32 可表示的 ρ_r ⇒ 存储逐位复原；A2 均匀单相隔离 7 组合
+  max|v| 精确 0.0）。
+
+## 26.4 结果（before/after；数据源 = 候选 `6c30260` committed CSV/JSON）
+
+| 量 | base (C1/A0) | C1X+A2 | 门 |
+|---|---:|---:|---|
+| C1 周期 Mc 20k | +8.85e-10 (R²=0.93) | −1.08e-10 | ≥10× 改善 |
+| C1 周期 Mc 60k | — | −6.40e-11（分段 −1.09/−5.8/−3.6e-10 衰减） | 13.8× |
+| C1 周期 Mc **240k** | **+1.05e-9 (R²=0.9986)** | **+1.81e-11 (R²=0.28)** | 58×；残差=衰减瞬态 |
+| C3 60k colour | −6.55e-9 重跑 (R²=0.987) | **+8.09e-12 (R²=0.583)** | ≤2e-9；81× |
+| C3 120k colour | — | +2.69e-12 (R²=0.415，分段换号) | 无持续单边趋势 |
+| C3 60k total (T3) | +1.19e-11 | −2.48e-11 | ≤2e-9 ✓ |
+| 局部闭合（各类） | cc==0 +4.7e-9 偏置 | **全部 ~1e-16（f64 eps）** | 无偏类残留 |
+| A2 stationarity | 0.0 | 0.0（7 组合） | <1e-6 ✓ |
+| V1c a26/a40 | 1.0436/1.0699（V1c 基线） | 1.0618/1.0741 | ≤0.10 ✓ |
+| V2 max ε_r/ε_b | 7.49e-5 / 1.98e-4（fix 后） | **5.87e-6 / 5.16e-7**（12.7×/384×） | ≤5e-4 ✓ |
+| V2 镜像 / 拓扑 | 4.96e-4 / 单簇 | 7.40e-4 / 单簇、NOT_REACHED | g5/g7 ✓ |
+| 性能（C3/C1） | 2833/2838 steps/s | 2853/2809 | 净零（±1%） |
+
+非门控披露：V1c L0/h(h26) 3.02→2.64（门控水力比不受影响）；
+C1 240k 的 Mff 慢分量（−1.6e-10/步）在 base 同样存在（−1.58e-10，
+非候选引入）。
+
+![colour diagnosis](figures/fig_cc_diagnosis.svg)
+
+（a）periodic C1 x 剖面：biased 带 = 界面邻近非冻结 cc==0 节点；
+（b）C3 逐类预算：两个反号机制。
+
+![colour candidates](figures/fig_cc_candidates.svg)
+
+（a）C1 周期累积全臂对比；（b）C3 60k 全臂对比（含 committed
+base 与同机重跑）。数据源 `results/colour_closure/ac_*`。
+
+## 26.5 变更分类与解读
+
+- **改善了什么**：colour 通道局部闭合到 f64 eps（所有节点类）；
+  C3 长时程 colour 漂移从单边线性变为无趋势噪声（247× 余量内）；
+  periodic C1 残差从持续线性变为衰减瞬态（240k R²=0.28 vs base
+  0.9986）；V2 生产质量稳定性提升 12.7×/384×；A2 精确 0.0；
+  性能净零。
+- **没有改善什么**：单一 `rho_r` f32 存储舍入仍在（量级 ~1e-12/步
+  且晚期符号对称、随 horizon 衰减）—— **标定为 calibrated residual，
+  不声称有界 floor**；frozen no-sign-bias 条款需要 owner 在外审中
+  明确接受或改写。总通道 T3 floor（~1e-11 量级、序依赖带）不变。
+- **解读**：外审 B1/B2 的两个 blocker 均已按契约闭合（机制定位 +
+  预算归因 + 候选矩阵 + horizon/scaling 证据）；唯一剩余事项是
+  owner 对残差措辞的显式决定。
+
+## 26.6 评审与证据绑定
+
+- Fresh review（1 轮）：**PASS** ——
+  `.agent/evidence/BI-COLOUR-CLOSURE-001/{REVIEW.md, REVIEW_SESSION.json}`
+  （session `sess_71185c19`；无 self-review、无 GPU；独立重算
+  复现：C3 60k 247× 余量、C1 13.8×/58.1×、局部闭合 6–7 个量级、
+  MANIFEST 253/253）。
+- 产品证据：`agent-task/BI-COLOUR-CLOSURE-001` @ `6c30260`，
+  `results/colour_closure/`（253 文件 SHA256 MANIFEST；驱动
+  `tests/colour_closure.py`；表格/图全部脚本生成：
+  `make_report_tables.py` / `make_regression_tables.py` /
+  `figures/cc_make_figs.py`）。
+- 过程披露（PROVENANCE.md）：host gather 首版 stream/bounce 逻辑
+  错误（独立 replay 抓出后修复、C3 重跑）；一次批中途改码使 8 臂
+  失效（全部重跑）；GPU 原子序非确定性以同码双跑记录（基线 60k
+  重跑斜率带 2%）。
+
+## 26.7 对 V3 的影响
+
+_colour 前置条件在本任务证据下闭合_（外审 B1/B2 机制已定位并
+消除；剩余残差已标定并附 horizon/scaling 证据）。**V3 仍 HOLD**：
+解除路径 = owner 外部科学评审接受本包（含对 no-sign-bias 条款的
+显式决定）+ V3 contract 重写。本节不构成 V3 授权。
