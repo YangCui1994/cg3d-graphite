@@ -507,7 +507,7 @@ def main():
     dg.add_argument('--fix', default='T3', choices=['T0', 'T3'])
     dg.add_argument('--cf', default='C1',
                     choices=['C0', 'C1', 'C1R', 'C1X'])
-    dg.add_argument('--acc', default='A0', choices=['A0', 'A1'])
+    dg.add_argument('--acc', default='A0', choices=['A0', 'A1', 'A2'])
     dg.add_argument('--tag', required=True)
     dg.add_argument('--pre-steps', dest='pre_steps', type=int, default=1500)
     dg.add_argument('--probe-steps', dest='probe_steps', type=int,
@@ -518,7 +518,7 @@ def main():
     ac.add_argument('--fix', default='T3', choices=['T0', 'T3'])
     ac.add_argument('--cf', default='C1',
                     choices=['C0', 'C1', 'C1R', 'C1X'])
-    ac.add_argument('--acc', default='A0', choices=['A0', 'A1'])
+    ac.add_argument('--acc', default='A0', choices=['A0', 'A1', 'A2'])
     ac.add_argument('--tag', required=True)
     ac.add_argument('--steps', type=int, default=20000)
     ac.add_argument('--every', type=int, default=200)
@@ -528,7 +528,7 @@ def main():
     bg.add_argument('--fix', default='T3', choices=['T0', 'T3'])
     bg.add_argument('--cf', default='C1',
                     choices=['C0', 'C1', 'C1R', 'C1X'])
-    bg.add_argument('--acc', default='A0', choices=['A0', 'A1'])
+    bg.add_argument('--acc', default='A0', choices=['A0', 'A1', 'A2'])
     bg.add_argument('--tag', required=True)
     bg.add_argument('--pre-steps', dest='pre_steps', type=int, default=20000)
     bg.add_argument('--probe-steps', dest='probe_steps', type=int,

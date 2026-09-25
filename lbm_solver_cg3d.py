@@ -298,6 +298,19 @@ class ColorGradientSolver3D:
         #     f64 accumulation is exact for <=19 f32 addends and only
         #     the final rho_r/rho_b store rounds once.  'A0' keeps the
         #     original f32 fields.
+        #   acc_fix='A2' — f64 colour pipeline end to end: g_r/g_b
+        #     collision locals f64 + rhor/rhob f64.  Measured A1
+        #     residual: the closure's own f32 arithmetic (sequential
+        #     sr sum + 19 weighted adds) leaves a systematic per-node
+        #     residue that still accumulates (periodic C1 -9.2e-10/s).
+        #     With f64 locals the weighted closure makes each node's
+        #     outgoing sum EXACTLY rho_r (to f64 eps ~1e-24); with the
+        #     f64 accumulate the only remaining rounding is the single
+        #     rho_r = f32(rhor) store.  Bit-frozen states are preserved
+        #     exactly: the exact f64 sum equals the f32-representable
+        #     rho_r, so the store reproduces it bit-exactly (uniform
+        #     single-phase: rho_r = 0 or the frozen point is reproduced
+        #     from step 1 — no transient).
         # LBM_ACC_FIX env var overrides acc_fix.
         self.total_fix = total_fix if total_fix is not None else \
             os.environ.get('LBM_TOTAL_FIX', 'T3')
@@ -307,7 +320,7 @@ class ColorGradientSolver3D:
             os.environ.get('LBM_ACC_FIX', 'A0')
         assert self.total_fix in ('T0', 'T1', 'T2', 'T3', 'T4')
         assert self.colour_fix in ('C0', 'C1', 'C1R', 'C1X')
-        assert self.acc_fix in ('A0', 'A1')
+        assert self.acc_fix in ('A0', 'A1', 'A2')
         if self.total_fix == 'T1':
             project_inv_m_colsums()
         self.dbg_local = bool(dbg_local)
@@ -364,12 +377,17 @@ class ColorGradientSolver3D:
         self.psi   = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
         self.rho_r = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
         self.rho_b = ti.field(ti.f32, shape=(self.nx, self.ny, self.nz))
-        # BI-COLOUR-CLOSURE-001 acc_fix='A1': f64 colour-transport
+        # BI-COLOUR-CLOSURE-001 acc_fix: 'A1' = f64 colour-transport
         # accumulation (exact for <=19 f32 addends; one final rounding
-        # at the rho_r/rho_b store in streaming3).  'A0' = original f32.
-        acc_dt = ti.f64 if self.acc_fix == 'A1' else ti.f32
+        # at the rho_r/rho_b store in streaming3).  'A2' = f64 colour
+        # pipeline end to end (f64 g locals + f64 accumulate; the
+        # weighted closure then makes the outgoing sum exactly rho_r
+        # and only the store rounds).  'A0' = original f32.
+        acc_dt = ti.f64 if self.acc_fix in ('A1', 'A2') else ti.f32
         self.rhor = ti.field(acc_dt, shape=(self.nx, self.ny, self.nz))
         self.rhob = ti.field(acc_dt, shape=(self.nx, self.ny, self.nz))
+        # colour-local dtype in collision (A2 only; A0/A1 stay f32)
+        self.g_dt = ti.f64 if self.acc_fix == 'A2' else ti.f32
         self.solid = ti.field(ti.i8, shape=(self.nx, self.ny, self.nz))
 
         # ---- CG2 infrastructure (2D mirror; zero masks == original
@@ -416,9 +434,9 @@ class ColorGradientSolver3D:
         self.dbg_sumgr_rc = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
         self.dbg_sumb_rc = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
         self.dbg_cc = ti.field(ti.f64, shape=(self.nx, self.ny, self.nz))
-        self.dbg_gr = ti.Vector.field(19, ti.f32,
+        self.dbg_gr = ti.Vector.field(19, ti.f64,
                                       shape=(self.nx, self.ny, self.nz))
-        self.dbg_gb = ti.Vector.field(19, ti.f32,
+        self.dbg_gb = ti.Vector.field(19, ti.f64,
                                       shape=(self.nx, self.ny, self.nz))
 
     # --------------------------------------------------------
@@ -677,8 +695,12 @@ class ColorGradientSolver3D:
                     m_temp[s] += (1 - 0.5 * S_local[s]) * self.GuoF(i, j, k, s, self.v[i, j, k])
 
                 # Inverse transform: moment space -> distribution space
-                g_r = ti.Vector([0.0] * 19)
-                g_b = ti.Vector([0.0] * 19)
+                # (BI-COLOUR-CLOSURE-001 acc_fix='A2': f64 colour locals
+                # — with the f64 closure + f64 accumulate the colour
+                # channel rounds only at the final rho_r/rho_b store;
+                # 'A0'/'A1' keep the original f32 locals bit-identically)
+                g_r = ti.Vector([0.0] * 19, dt=self.g_dt)
+                g_b = ti.Vector([0.0] * 19, dt=self.g_dt)
 
                 if ti.static(self.total_fix in ('T3', 'T4')):
                     # f64-accumulated roundtrip; T3 uses the un-cast f64
@@ -759,28 +781,94 @@ class ColorGradientSolver3D:
                 # inject ulp-scale noise that breaks exact stationarity
                 # (F2 A2 gate).  rho_r/rho_b still hold the pre-collision
                 # macro values here.
+                # BI-COLOUR-CLOSURE-001 colour-closure dispatch.  Each
+                # ti.static branch is self-contained (variables defined
+                # and consumed within the same branch).  A0/A1 keep the
+                # original f32 correction arithmetic bit-identically;
+                # under A2 the closure is computed in f64 against the
+                # exact f64 sum, making the outgoing sum exactly rho_r.
+                # C1R: rest-population closure (external-review
+                #   candidate; e_0 = 0 keeps momentum exactly, but the
+                #   f32-arm correction is typically ulp-below ulp(g[0])
+                #   — its f32-storage survival is an empirical gate).
+                # C1X: weighted closure with the natural guard
+                #   (cc > 0) OR (local identity violated).  The
+                #   diagnosis located the one-sided local residual at
+                #   non-frozen cc==0 nodes near diffuse interfaces; at
+                #   bit-frozen bulk nodes dr == 0 exactly and
+                #   g_r[s] += w[s]*0.0 is an exact no-op.  Under A2 the
+                #   f64 closure fires everywhere (dr generically != 0
+                #   against the exact sum) but preserves frozen states
+                #   exactly by construction.
                 dr_loc = 0.0
                 db_loc = 0.0
                 if ti.static(self.colour_fix == 'C1'):
-                    if cc > 0:
-                        sr = 0.0
-                        sb = 0.0
+                    if ti.static(self.acc_fix == 'A2'):
+                        sr = ti.cast(0.0, ti.f64)
+                        sb = ti.cast(0.0, ti.f64)
                         for s in ti.static(range(19)):
                             sr += g_r[s]
                             sb += g_b[s]
-                        dr_loc = self.rho_r[i, j, k] - sr
-                        db_loc = self.rho_b[i, j, k] - sb
-                        for s in ti.static(range(19)):
-                            g_r[s] += w[s] * dr_loc
-                            g_b[s] += w[s] * db_loc
-
-                # BI-COLOUR-CLOSURE-001 candidates (colour-only; T3
-                # total path frozen).  C1R: rest-population closure,
-                # same cc>0 scope — e_0 = (0,0,0) keeps momentum exactly,
-                # but dr_loc is typically ulp-below ulp(g[0]) so the
-                # correction must be shown to survive f32 storage.
+                        drl = ti.cast(self.rho_r[i, j, k], ti.f64) - sr
+                        dbl = ti.cast(self.rho_b[i, j, k], ti.f64) - sb
+                        dr_loc = drl
+                        db_loc = dbl
+                        if cc > 0:
+                            for s in ti.static(range(19)):
+                                g_r[s] += w[s] * drl
+                                g_b[s] += w[s] * dbl
+                    else:
+                        if cc > 0:
+                            sr = 0.0
+                            sb = 0.0
+                            for s in ti.static(range(19)):
+                                sr += g_r[s]
+                                sb += g_b[s]
+                            dr_loc = self.rho_r[i, j, k] - sr
+                            db_loc = self.rho_b[i, j, k] - sb
+                            for s in ti.static(range(19)):
+                                g_r[s] += w[s] * dr_loc
+                                g_b[s] += w[s] * db_loc
                 if ti.static(self.colour_fix == 'C1R'):
-                    if cc > 0:
+                    if ti.static(self.acc_fix == 'A2'):
+                        sr = ti.cast(0.0, ti.f64)
+                        sb = ti.cast(0.0, ti.f64)
+                        for s in ti.static(range(19)):
+                            sr += g_r[s]
+                            sb += g_b[s]
+                        drl = ti.cast(self.rho_r[i, j, k], ti.f64) - sr
+                        dbl = ti.cast(self.rho_b[i, j, k], ti.f64) - sb
+                        dr_loc = drl
+                        db_loc = dbl
+                        if cc > 0:
+                            g_r[0] += drl
+                            g_b[0] += dbl
+                    else:
+                        if cc > 0:
+                            sr = 0.0
+                            sb = 0.0
+                            for s in ti.static(range(19)):
+                                sr += g_r[s]
+                                sb += g_b[s]
+                            dr_loc = self.rho_r[i, j, k] - sr
+                            db_loc = self.rho_b[i, j, k] - sb
+                            g_r[0] += dr_loc
+                            g_b[0] += db_loc
+                if ti.static(self.colour_fix == 'C1X'):
+                    if ti.static(self.acc_fix == 'A2'):
+                        sr = ti.cast(0.0, ti.f64)
+                        sb = ti.cast(0.0, ti.f64)
+                        for s in ti.static(range(19)):
+                            sr += g_r[s]
+                            sb += g_b[s]
+                        drl = ti.cast(self.rho_r[i, j, k], ti.f64) - sr
+                        dbl = ti.cast(self.rho_b[i, j, k], ti.f64) - sb
+                        dr_loc = drl
+                        db_loc = dbl
+                        for s in ti.static(range(19)):
+                            g_r[s] += w[s] * drl
+                            g_b[s] += w[s] * dbl
+                    else:
                         sr = 0.0
                         sb = 0.0
                         for s in ti.static(range(19)):
@@ -788,28 +876,10 @@ class ColorGradientSolver3D:
                             sb += g_b[s]
                         dr_loc = self.rho_r[i, j, k] - sr
                         db_loc = self.rho_b[i, j, k] - sb
-                        g_r[0] += dr_loc
-                        g_b[0] += db_loc
-
-                # C1X: weighted closure with the natural guard
-                # (cc > 0) OR (local identity actually violated).  The
-                # diagnosis located the one-sided local residual at
-                # non-frozen cc==0 nodes near diffuse interfaces; at
-                # bit-frozen bulk nodes dr_loc == db_loc == 0 exactly,
-                # and g_r[s] += w[s] * 0.0 is an exact no-op, so the
-                # frozen state is preserved bit-exactly.
-                if ti.static(self.colour_fix == 'C1X'):
-                    sr = 0.0
-                    sb = 0.0
-                    for s in ti.static(range(19)):
-                        sr += g_r[s]
-                        sb += g_b[s]
-                    dr_loc = self.rho_r[i, j, k] - sr
-                    db_loc = self.rho_b[i, j, k] - sb
-                    if (cc > 0) or (dr_loc != 0.0) or (db_loc != 0.0):
-                        for s in ti.static(range(19)):
-                            g_r[s] += w[s] * dr_loc
-                            g_b[s] += w[s] * db_loc
+                        if (cc > 0) or (dr_loc != 0.0) or (db_loc != 0.0):
+                            for s in ti.static(range(19)):
+                                g_r[s] += w[s] * dr_loc
+                                g_b[s] += w[s] * db_loc
 
                 # Stream colour densities; half-way bounce-back at
                 # solids; membrane nodes bounce only the blocked colour.
