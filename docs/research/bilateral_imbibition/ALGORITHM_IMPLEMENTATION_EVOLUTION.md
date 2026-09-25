@@ -2337,10 +2337,13 @@ if ti.static(self.colour_fix == 'C1X'):
         g_b[s] += w[s] * dbl
 ```
 
-- **A2 f64 colour 管线**：`g_r/g_b` 碰撞局部量与 `rhor/rhob`
-  累加器均 f64；闭包后每节点外发和 **精确等于 ρ_r/ρ_b**（f64
-  eps ~1e-24 量级）；唯一剩余舍入是 `streaming3` 的单次
-  `rho_r = f32(rhor)` 存储。bit-frozen 态被精确保持（f64 精确和
+- **A2 f64 post-equilibrium colour closure/transport 路径**：
+  `g_r/g_b` 存储与 `rhor/rhob` 累加器为 f64，局部闭包在
+  equilibrium/recoloring 之后用 f64 求和并修正；实测各节点类
+  post-closure residual 约为 (10^{-16}) 量级。equilibrium helper
+  本身仍返回 f32 populations，因此不称为“全流程全算术 f64”。
+  剩余主要舍入来自 `streaming3` 的 f64 accumulator → f32
+  `rho_r/rho_b` store。bit-frozen 态被精确保持（f64 精确和
   等于 f32 可表示的 ρ_r ⇒ 存储逐位复原；A2 均匀单相隔离 7 组合
   max|v| 精确 0.0）。
 
@@ -2351,7 +2354,7 @@ if ti.static(self.colour_fix == 'C1X'):
 | C1 周期 Mc 20k | +8.85e-10 (R²=0.93) | −1.08e-10 | ≥10× 改善 |
 | C1 周期 Mc 60k | — | −6.40e-11（分段 −1.09/−5.8/−3.6e-10 衰减） | 13.8× |
 | C1 周期 Mc **240k** | **+1.05e-9 (R²=0.9986)** | **+1.81e-11 (R²=0.28)** | 58×；残差=衰减瞬态 |
-| C3 60k colour | −6.55e-9 重跑 (R²=0.987) | **+8.09e-12 (R²=0.583)** | ≤2e-9；81× |
+| C3 60k colour | −6.55e-10 重跑 (R²=0.987) | **+8.09e-12 (R²=0.583)** | ≤2e-9；81× |
 | C3 120k colour | — | +2.69e-12 (R²=0.415，分段换号) | 无持续单边趋势 |
 | C3 60k total (T3) | +1.19e-11 | −2.48e-11 | ≤2e-9 ✓ |
 | 局部闭合（各类） | cc==0 +4.7e-9 偏置 | **全部 ~1e-16（f64 eps）** | 无偏类残留 |
@@ -2382,10 +2385,12 @@ base 与同机重跑）。数据源 `results/colour_closure/ac_*`。
   periodic C1 残差从持续线性变为衰减瞬态（240k R²=0.28 vs base
   0.9986）；V2 生产质量稳定性提升 12.7×/384×；A2 精确 0.0；
   性能净零。
-- **没有改善什么**：单一 `rho_r` f32 存储舍入仍在（量级 ~1e-12/步
-  且晚期符号对称、随 horizon 衰减）—— **标定为 calibrated residual，
-  不声称有界 floor**；frozen no-sign-bias 条款需要 owner 在外审中
-  明确接受或改写。总通道 T3 floor（~1e-11 量级、序依赖带）不变。
+- **没有改善什么**：f64 accumulator → f32 component-density store
+  的舍入仍在；其全局残差处于约 (10^{-12})–(10^{-11})/step
+  量级并在长 horizon 上失去持续单向趋势。**标定为 calibrated,
+  horizon-decaying arithmetic residual，不声称 mathematically bounded
+  floor**。Owner 外审已裁决 frozen no-sign-bias 条款本身满足，无需放宽。
+  总通道 T3 的小量级序依赖 residual 不变。
 - **解读**：外审 B1/B2 的两个 blocker 均已按契约闭合（机制定位 +
   预算归因 + 候选矩阵 + horizon/scaling 证据）；唯一剩余事项是
   owner 对残差措辞的显式决定。
@@ -2413,3 +2418,47 @@ _colour 前置条件在本任务证据下闭合_（外审 B1/B2 机制已定位�
 消除；剩余残差已标定并附 horizon/scaling 证据）。**V3 仍 HOLD**：
 解除路径 = owner 外部科学评审接受本包（含对 no-sign-bias 条款的
 显式决定）+ V3 contract 重写。本节不构成 V3 授权。
+
+
+## 26.8 External scientific review — PASS；conservation HOLD lifted
+
+External review：
+
+`.agent/evidence/BI-COLOUR-CLOSURE-001/EXTERNAL_SCIENTIFIC_REVIEW_PASS.md`
+
+Owner decision：
+
+```text
+BI-COLOUR-CLOSURE-001: PASS
+T3 total path: ACCEPTED / FROZEN
+C1X + A2 colour path: ACCEPTED
+frozen no-sign-bias clause: SATISFIED, not re-scoped
+conservation HOLD for revised V3: LIFTED
+old V3 contract: still superseded
+```
+
+关键 owner 解释：
+
+- 验收要求是“**no persistent one-sided bias**”，不是证明任意
+  (t	oinfty) 的严格 boundedness；
+- C3 120k 已无持续单向 late trend；
+- periodic C1 base 在 240k 仍保持约 (1.05	imes10^{-9}/step)、
+  (R^2approx0.9986) 的线性累积，而候选 240k 为
+  (1.80	imes10^{-11}/step)、(R^2approx0.28)，最后 60k
+  约 (-4.7	imes10^{-13}/step) 且增量符号 50/50；
+- 因此 current residual 可表述为
+  **calibrated, horizon-decaying arithmetic residual with no persistent
+  one-sided late trend**，不可表述为 mathematically proven bounded floor。
+
+外审同时记录两个非阻塞事项：
+
+1. h26 的 non-gated (L_0/h) 从约 3.02 → 2.64；主要 gate
+   (a_{26}=1.0618)、(a_{40}=1.0741) 保持通过，且 V3 closed-buffer
+   设计不依赖 open-system (L_0) 作为定量 gate；
+2. A2 后旧的 two-term colour budget
+   (Delta M=Sigma R+Sigma dacc) 不再完整；future diagnostic 应显式
+   增加 f64→f32 component-density store-rounding term。
+
+下一步只允许设计**修订后的 V3 buffer-sensitivity contract**；
+旧 isolation-time/pre-isolation V3 contract 不可直接执行。
+Graphite / separator / gap / PCS 仍未授权。
