@@ -131,16 +131,19 @@ as proof of our exact defect. It is relevant because it demonstrates that:
 
 ## 5. Existing 3D color-gradient literature
 
-Leclaire et al. presented a D3Q19 color-gradient model whose perturbation step
-is derived under mass and momentum conservation and which applies
-Latva-Kokko/Rothman recoloring.
+Liu, Valocchi & Kang presented a D3Q19 color-gradient model whose perturbation
+step is derived under mass and momentum conservation and which applies a
+recoloring step for phase segregation.
 
 Reference:
 
-S. Leclaire et al.,
+Haihu Liu, Albert J. Valocchi, Qinjun Kang,
 "Three-dimensional lattice Boltzmann model for immiscible two-phase flow
 simulations",
-Physical Review E 86 (2012).
+Physical Review E 85, 046309 (2012).
+
+DOI:
+https://doi.org/10.1103/PhysRevE.85.046309
 
 PubMed:
 https://pubmed.ncbi.nlm.nih.gov/22680576/
@@ -232,3 +235,18 @@ The selected production fix should:
 4. keep FP32 where possible;
 5. use FP64 as a reference unless evidence shows it is required in production;
 6. retain explicit per-colour conservation tests in future regressions.
+
+
+## 10. Citation errata from external solver-fix review
+
+Two metadata corrections are part of the durable record:
+
+- Dubois & Philippi, "Multiple relaxation times lattice Boltzmann schemes with
+  projection", Physics of Fluids 37, 037179 (2025), DOI
+  **10.1063/5.0254041**.
+- The 3D D3Q19 immiscible paper linked by PMID 22680576 is **Liu, Valocchi &
+  Kang**, Physical Review E **85**, 046309 (2012), DOI
+  **10.1103/PhysRevE.85.046309**; it is not a Leclaire PRE 86 paper.
+
+These papers provide model/numerical context only. Neither is evidence of the
+repository-specific f32 inverse-column-sum defect.
