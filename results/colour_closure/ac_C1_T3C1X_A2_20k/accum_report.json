@@ -1,0 +1,55 @@
+{
+ "M0": 36864.000549316406,
+ "acc": "A2",
+ "arch": "gpu",
+ "cf": "C1X",
+ "dims": [
+  64,
+  24,
+  24
+ ],
+ "drift_fits": {
+  "Mb": {
+   "frac_pos": 0.04040404040404041,
+   "r2": 0.9886749673648596,
+   "slope_per_step": -5.2551228118973594e-11
+  },
+  "Mc": {
+   "frac_pos": 0.030303030303030304,
+   "r2": 0.9834193307098873,
+   "slope_per_step": -1.0778462872961096e-10
+  },
+  "Mff": {
+   "frac_pos": 0.5050505050505051,
+   "r2": 0.6349844540199041,
+   "slope_per_step": 1.4282500708792336e-10
+  },
+  "Mr": {
+   "frac_pos": 0.020202020202020204,
+   "r2": 0.9771974580477975,
+   "slope_per_step": -5.523340065175248e-11
+  }
+ },
+ "final_views": {
+  "MFF": 36864.119537649676,
+  "Mb": 18431.962944451843,
+  "Mbacc": 0.0,
+  "Mff": 36864.119537649676,
+  "Mr": 18431.961061345064,
+  "Mracc": 0.0,
+  "Mrho": 36864.11878567934,
+  "fF_maxdiff": 0.0
+ },
+ "fix": "T3",
+ "geom": "C1",
+ "git": {
+  "dirty": "M results/colour_closure/logs/a2_candidates.log\n M results/colour_closure/logs/ac_C1_T3C1X_20k.log\n M results/colour_closure/logs/ac_C1_T3C1_A1_20k.log\n M results/colour_closure/logs/ac_C3_T3C1X_60k.log\n M results/colour_closure/logs/ac_C3_T3C1_A1_60k.log\n M results/colour_closure/logs/ac_C3_T3C1s_60k_rerun.log\n M results/colour_closure/logs/dx_C1_T3C1R.log\n M results/colour_closure/logs/dx_C1_T3C1X.log\n M results/colour_closure/logs/dx_C3_T3C1R.log\n M results/colour_closure/logs/dx_C3_T3C1X.log\n?? results/colour_closure/a2_candidates.json\n?? results/colour_closure/ac_C1_T3C1X_20k/\n?? results/colour_closure/ac_C1_T3C1_A1_20k/\n?? results/colour_closure/ac_C3_T3C1X_60k/\n?? results/colour_closure/ac_C3_T3C1_A1_60k/\n?? results/colour_closure/ac_C3_T3C1s_60k_rerun/\n?? results/colour_closure/dx_C1_T3C1R/\n?? results/colour_closure/dx_C1_T3C1X/\n?? results/colour_closure/dx_C1_T3C1X_A2/\n?? results/colour_closure/dx_C3_T3C1R/\n?? results/colour_closure/dx_C3_T3C1X/\n?? results/colour_closure/dx_C3_T3C1X_A2/\n?? results/colour_closure/logs/ac_C1_T3C1X_A2_20k.log\n?? results/colour_closure/logs/dx_C1_T3C1X_A2.log\n?? results/colour_closure/logs/dx_C3_T3C1X_A2.log\n?? results/colour_closure/run_regression_batch.sh",
+  "head": "1854a58fa2fd942d1b58f7bd8be2829e0e7d495f"
+ },
+ "horizon_every": 200,
+ "nfluid": 36864,
+ "stage": "C_accum",
+ "started": "2026-09-25T18:03:07",
+ "steps": 20000,
+ "task": "BI-COLOUR-CLOSURE-001"
+}

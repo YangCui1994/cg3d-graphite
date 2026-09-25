@@ -1,0 +1,32 @@
+{
+ "acc": "A2",
+ "arch": "gpu",
+ "cf": "C1X",
+ "dims": [
+  126,
+  46,
+  6
+ ],
+ "fix": "T3",
+ "geom": "C3",
+ "git": {
+  "dirty": "M results/colour_closure/logs/a2_candidates.log\n M results/colour_closure/logs/ac_C1_T3C1X_20k.log\n M results/colour_closure/logs/ac_C1_T3C1_A1_20k.log\n M results/colour_closure/logs/ac_C3_T3C1X_60k.log\n M results/colour_closure/logs/ac_C3_T3C1_A1_60k.log\n M results/colour_closure/logs/ac_C3_T3C1s_60k_rerun.log\n M results/colour_closure/logs/dx_C1_T3C1R.log\n M results/colour_closure/logs/dx_C1_T3C1X.log\n M results/colour_closure/logs/dx_C3_T3C1R.log\n M results/colour_closure/logs/dx_C3_T3C1X.log\n?? results/colour_closure/a2_candidates.json\n?? results/colour_closure/ac_C1_T3C1X_20k/\n?? results/colour_closure/ac_C1_T3C1X_A2_20k/\n?? results/colour_closure/ac_C1_T3C1X_A2_60k/\n?? results/colour_closure/ac_C1_T3C1_A1_20k/\n?? results/colour_closure/ac_C3_T3C1X_60k/\n?? results/colour_closure/ac_C3_T3C1X_A2_60k/\n?? results/colour_closure/ac_C3_T3C1_A1_60k/\n?? results/colour_closure/ac_C3_T3C1s_60k_rerun/\n?? results/colour_closure/dx_C1_T3C1R/\n?? results/colour_closure/dx_C1_T3C1X/\n?? results/colour_closure/dx_C1_T3C1X_A2/\n?? results/colour_closure/dx_C3_T3C1R/\n?? results/colour_closure/dx_C3_T3C1X/\n?? results/colour_closure/dx_C3_T3C1X_A2/\n?? results/colour_closure/logs/ac_C1_T3C1X_A2_20k.log\n?? results/colour_closure/logs/ac_C1_T3C1X_A2_60k.log\n?? results/colour_closure/logs/ac_C3_T3C1X_A2_60k.log\n?? results/colour_closure/logs/bg_C3_T3C1X_A2.log\n?? results/colour_closure/logs/dx_C1_T3C1X_A2.log\n?? results/colour_closure/logs/dx_C3_T3C1X_A2.log\n?? results/colour_closure/run_regression_batch.sh",
+  "head": "1854a58fa2fd942d1b58f7bd8be2829e0e7d495f"
+ },
+ "means": {
+  "dMb": -2.17846900341101e-08,
+  "dMr": 6.775897963962052e-07,
+  "identity_resid_b": 1.663308619072324e-05,
+  "identity_resid_r": 3.549643704591739e-05,
+  "sumR_b": -1.6442092643351354e-12,
+  "sumR_r": -2.2660578292379202e-12,
+  "sumdacc_b": 7.386000329818706e-16,
+  "sumdacc_r": -4.4139473451737564e-15
+ },
+ "nfluid": 28800,
+ "pre_steps": 20000,
+ "probe_steps": 200,
+ "stage": "budget",
+ "started": "2026-09-25T18:09:37",
+ "task": "BI-COLOUR-CLOSURE-001"
+}

@@ -1,0 +1,55 @@
+{
+ "M0": 36864.000549316406,
+ "acc": "A0",
+ "arch": "gpu",
+ "cf": "C1X",
+ "dims": [
+  64,
+  24,
+  24
+ ],
+ "drift_fits": {
+  "Mb": {
+   "frac_pos": 0.0,
+   "r2": 0.9979074166951523,
+   "slope_per_step": -1.7981242377176576e-09
+  },
+  "Mc": {
+   "frac_pos": 0.0,
+   "r2": 0.9975964870102543,
+   "slope_per_step": -3.5400748768547772e-09
+  },
+  "Mff": {
+   "frac_pos": 0.7272727272727273,
+   "r2": 0.9761513252035816,
+   "slope_per_step": 1.2618505066683321e-09
+  },
+  "Mr": {
+   "frac_pos": 0.020202020202020204,
+   "r2": 0.9963017324585183,
+   "slope_per_step": -1.7419506391627027e-09
+  }
+ },
+ "final_views": {
+  "MFF": 36864.923155678436,
+  "Mb": 18430.738087451773,
+  "Mbacc": 0.0,
+  "Mff": 36864.923155678436,
+  "Mr": 18430.785543616235,
+  "Mracc": 0.0,
+  "Mrho": 36864.92320513725,
+  "fF_maxdiff": 0.0
+ },
+ "fix": "T3",
+ "geom": "C1",
+ "git": {
+  "dirty": "M results/colour_closure/logs/ac_C1_T3C1X_20k.log\n M results/colour_closure/logs/dx_C1_T3C1X.log\n M results/colour_closure/logs/dx_C3_T3C1X.log\n?? results/colour_closure/dx_C1_T3C1X/\n?? results/colour_closure/dx_C3_T3C1X/\n?? results/colour_closure/run_regression_batch.sh",
+  "head": "1854a58fa2fd942d1b58f7bd8be2829e0e7d495f"
+ },
+ "horizon_every": 200,
+ "nfluid": 36864,
+ "stage": "C_accum",
+ "started": "2026-09-25T16:30:24",
+ "steps": 20000,
+ "task": "BI-COLOUR-CLOSURE-001"
+}

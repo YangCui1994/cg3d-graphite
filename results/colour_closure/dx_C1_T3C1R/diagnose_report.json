@@ -1,0 +1,32 @@
+{
+ "acc": "A0",
+ "arch": "gpu",
+ "cf": "C1R",
+ "chi_primary": 1e-06,
+ "chi_sensitivity": [
+  1e-07,
+  1e-05
+ ],
+ "dims": [
+  64,
+  24,
+  24
+ ],
+ "fix": "T3",
+ "geom": "C1",
+ "git": {
+  "dirty": "M results/colour_closure/logs/ac_C1_T3C1X_20k.log\n M results/colour_closure/logs/ac_C1_T3C1_A1_20k.log\n M results/colour_closure/logs/ac_C3_T3C1X_60k.log\n M results/colour_closure/logs/ac_C3_T3C1_A1_60k.log\n M results/colour_closure/logs/dx_C1_T3C1R.log\n M results/colour_closure/logs/dx_C1_T3C1X.log\n M results/colour_closure/logs/dx_C3_T3C1X.log\n?? results/colour_closure/ac_C1_T3C1X_20k/\n?? results/colour_closure/ac_C1_T3C1_A1_20k/\n?? results/colour_closure/ac_C3_T3C1X_60k/\n?? results/colour_closure/ac_C3_T3C1_A1_60k/\n?? results/colour_closure/dx_C1_T3C1X/\n?? results/colour_closure/dx_C3_T3C1X/\n?? results/colour_closure/run_regression_batch.sh",
+  "head": "1854a58fa2fd942d1b58f7bd8be2829e0e7d495f"
+ },
+ "nfluid": 36864,
+ "pre_steps": 1500,
+ "pre_wall_s": 312.1719946861267,
+ "probe_steps": 40,
+ "scatter_identity_max_abs": {
+  "b": 7.275957614183426e-12,
+  "r": 3.637978807091713e-12
+ },
+ "stage": "B_diagnose",
+ "started": "2026-09-25T16:51:27",
+ "task": "BI-COLOUR-CLOSURE-001"
+}
