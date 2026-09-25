@@ -2244,3 +2244,26 @@ PMID 22680576 对应 Liu–Valocchi–Kang, PRE 85, 046309 (2012),
 DOI `10.1103/PhysRevE.85.046309`。
 
 V3 继续 HOLD。
+
+
+## 25.12 Narrow colour-closure follow-up authorized
+
+Task:
+
+`BI-COLOUR-CLOSURE-001`
+
+Entry point:
+
+`.agent/episodes/bilateral-imbibition-v0.1/START_COLOUR_CLOSURE.md`
+
+Scope is deliberately narrow:
+
+- accepted T3 total-distribution fix is frozen;
+- total T0-T4 candidate selection is not reopened;
+- current blocker is colour-channel local/global residual closure only;
+- first action is residual partition by `cc>0/cc==0`, pure/mixed and wall/bulk;
+- periodic-C1 accumulation must be measured before changing the colour fix;
+- at least one diagnosis-informed colour-only alternative must be compared with current scoped-C1;
+- A2, V1c a26/a40, V2 bilateral and T3 total-channel non-regression remain unchanged gates.
+
+V3 remains **HOLD** until this task passes fresh review and external scientific review.
