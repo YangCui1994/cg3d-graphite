@@ -1,0 +1,96 @@
+{
+  "task": "BI-DEEPSEEK-TRANSITION-001",
+  "stage": "read_only_periodic_seam_probe",
+  "kind": "analysis of committed artifacts; no simulation executed",
+  "generator": "results/model_transition/periodic_seam_probe.py",
+  "probe": {
+    "source_dir": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-DEEPSEEK-TRANSITION-001\\results\\colour_closure\\levelc_v2_fix\\v2_primary",
+    "geometry": {
+      "layout": {
+        "wall": [
+          0,
+          3
+        ],
+        "liq_left": [
+          3,
+          83
+        ],
+        "gas": [
+          83,
+          243
+        ],
+        "liq_right": [
+          243,
+          323
+        ],
+        "wall_r": [
+          323,
+          326
+        ],
+        "h": 40,
+        "nz": 6,
+        "B": 80,
+        "G0": 160
+      },
+      "nx": 326,
+      "periodic_axes": "z only in the fluid sense; x and y are closed by solid walls while their bc flags remain periodic",
+      "solid_crosses_z_seam": false,
+      "interface_crosses_z_seam": false
+    },
+    "fields": {
+      "fields_initial.npz": {
+        "z_spread_psi_max": 0.0,
+        "z_spread_psi_mean_fluid": 0.0,
+        "z_spread_rho_max": 0.0,
+        "z_spread_rho_mean_fluid": 0.0,
+        "z_spread_psi_argmax": {
+          "i": 0,
+          "j": 1,
+          "region": "wall_adjacent"
+        },
+        "x_mirror_E_psi_mean_fluid": 0.0,
+        "x_mirror_psi_max_fluid": 0.0,
+        "x_mirror_E_rho_mean_fluid": 0.0
+      },
+      "fields_mid.npz": {
+        "z_spread_psi_max": 0.0004978179931640625,
+        "z_spread_psi_mean_fluid": 0.00017048419977072626,
+        "z_spread_rho_max": 1.239776611328125e-05,
+        "z_spread_rho_mean_fluid": 3.941135673812823e-06,
+        "z_spread_psi_argmax": {
+          "i": 245,
+          "j": 3,
+          "region": "liquid_buffer"
+        },
+        "x_mirror_E_psi_mean_fluid": 7.99697227193974e-05,
+        "x_mirror_psi_max_fluid": 0.004273712635040283,
+        "x_mirror_E_rho_mean_fluid": 1.0770837434392888e-05
+      },
+      "fields_final.npz": {
+        "z_spread_psi_max": 0.0005066394805908203,
+        "z_spread_psi_mean_fluid": 0.00019068102119490504,
+        "z_spread_rho_max": 1.3232231140136719e-05,
+        "z_spread_rho_mean_fluid": 4.400483703648206e-06,
+        "z_spread_psi_argmax": {
+          "i": 245,
+          "j": 38,
+          "region": "liquid_buffer"
+        },
+        "x_mirror_E_psi_mean_fluid": 8.565920143155381e-05,
+        "x_mirror_psi_max_fluid": 0.001041710376739502,
+        "x_mirror_E_rho_mean_fluid": 3.045997345907381e-06
+      }
+    },
+    "z_structure_persistence": {
+      "definition": "correlation of the per-(i,j) z-spread maps between the mid and final committed fields",
+      "pearson_r_mid_vs_final": 0.9957490891284624,
+      "interpretation": "persistent systematic mode"
+    },
+    "cross_check": {
+      "source": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-DEEPSEEK-TRANSITION-001\\results\\colour_closure\\levelc_v2_fix\\v2_primary/front_series.csv:E_psi",
+      "committed_E_psi_max": 9.038323536515235e-05,
+      "committed_E_psi_final": 8.646225556731224e-05,
+      "note": "committed column is the running diagnostic; the field-based values above are for the three archived snapshots only"
+    }
+  }
+}

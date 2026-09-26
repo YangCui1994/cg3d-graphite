@@ -1,0 +1,435 @@
+{
+  "task": "BI-DEEPSEEK-TRANSITION-001",
+  "stage": "A_evidence_recomputation",
+  "kind": "independent recomputation from committed raw evidence",
+  "generator": "results/model_transition/recompute_metrics.py",
+  "accepted_candidate": "6c30260dfe0c8b61ea9609e6bffa5c487312cf06",
+  "repository_root": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-DEEPSEEK-TRANSITION-001",
+  "inputs_are_committed_artifacts_only": true,
+  "headline_values_used_as_inputs": false,
+  "A1_periodic_C1_240k": {
+    "label": "periodic C1 (64x24x24, 240k steps)",
+    "source_series": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-DEEPSEEK-TRANSITION-001\\results\\colour_closure\\ac_C1_T3C1X_A2_240k\\mass_series.csv",
+    "source_M0": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-DEEPSEEK-TRANSITION-001\\results\\colour_closure\\ac_C1_T3C1X_A2_240k\\accum_report.json:M0",
+    "M0": 36864.000549316406,
+    "n_samples": 600,
+    "step_first": 400.0,
+    "step_last": 240000.0,
+    "sampling_stride": 400.0,
+    "series_definition": "(Mr + Mb) / M0 - 1",
+    "window_convention": "lo <= step <= hi (inclusive; repo convention)",
+    "full": {
+      "slope_per_step": 1.8045553292119586e-11,
+      "intercept": 7.434791738333862e-06,
+      "r2": 0.27971762117410215,
+      "n": 600,
+      "frac_pos": 0.5492487479131887
+    },
+    "segments": [
+      {
+        "slope_per_step": 1.9307721482768067e-10,
+        "intercept": 1.852134946335419e-06,
+        "r2": 0.6615017892716659,
+        "n": 150,
+        "frac_pos": 0.5234899328859061,
+        "lo": 400.0,
+        "hi": 60000.0
+      },
+      {
+        "slope_per_step": -5.037902832382697e-12,
+        "intercept": 1.0265177920194752e-05,
+        "r2": 0.2096370765778206,
+        "n": 151,
+        "frac_pos": 0.4866666666666667,
+        "lo": 60000.0,
+        "hi": 120000.0
+      },
+      {
+        "slope_per_step": 1.244884488908713e-11,
+        "intercept": 8.310396609195442e-06,
+        "r2": 0.957923289599566,
+        "n": 151,
+        "frac_pos": 0.6866666666666666,
+        "lo": 120000.0,
+        "hi": 180000.0
+      },
+      {
+        "slope_per_step": -4.658758398072605e-13,
+        "intercept": 1.0839858400368369e-05,
+        "r2": 0.05583559285169082,
+        "n": 151,
+        "frac_pos": 0.5,
+        "lo": 180000.0,
+        "hi": 240000.0
+      }
+    ],
+    "segments_disjoint_bounds": [
+      {
+        "slope_per_step": 1.953394971844497e-10,
+        "intercept": 1.806587661552466e-06,
+        "r2": 0.6651986004371255,
+        "n": 149,
+        "frac_pos": 0.5202702702702703,
+        "lo": 400.0,
+        "hi": 60000.0
+      },
+      {
+        "slope_per_step": -5.133955134208178e-12,
+        "intercept": 1.027284929736721e-05,
+        "r2": 0.21341276783465735,
+        "n": 150,
+        "frac_pos": 0.48322147651006714,
+        "lo": 60000.0,
+        "hi": 120000.0
+      },
+      {
+        "slope_per_step": 1.2359906555154242e-11,
+        "intercept": 8.322836117501514e-06,
+        "r2": 0.9589262370225926,
+        "n": 150,
+        "frac_pos": 0.6845637583892618,
+        "lo": 120000.0,
+        "hi": 180000.0
+      },
+      {
+        "slope_per_step": -4.3314604768771996e-13,
+        "intercept": 1.0833316805916744e-05,
+        "r2": 0.04838786833257758,
+        "n": 150,
+        "frac_pos": 0.5033557046979866,
+        "lo": 180000.0,
+        "hi": 240000.0
+      }
+    ],
+    "increment_sign_fractions": {
+      "full": 0.5492487479131887,
+      "segments": [
+        0.5234899328859061,
+        0.4866666666666667,
+        0.6866666666666666,
+        0.5
+      ],
+      "first_difference_count_full": 599
+    },
+    "cross_check": {
+      "source": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-DEEPSEEK-TRANSITION-001\\results\\colour_closure\\ac_C1_T3C1X_A2_240k\\accum_report.json:drift_fits.Mc",
+      "committed_slope_per_step": 1.8045553362296766e-11,
+      "committed_r2": 0.27971762215059015,
+      "committed_frac_pos": 0.5492487479131887,
+      "tolerance": {
+        "slope_rel": 1e-07,
+        "r2_abs": 1e-07,
+        "frac_pos_abs": 1e-12,
+        "basis": "13-significant-digit CSV text quantisation (~1e-8 relative on a fitted slope); not a physical tolerance"
+      },
+      "slope_rel_diff": 3.888890399237317e-09,
+      "r2_abs_diff": 9.764880015694644e-10,
+      "frac_pos_abs_diff": 0.0,
+      "reproduces_within_tolerance": true,
+      "reproduces_bitwise": false
+    },
+    "segment_convention_sensitivity": {
+      "shared_boundary_sample_vs_disjoint": [
+        {
+          "lo": 400.0,
+          "hi": 60000.0,
+          "inclusive_slope": 1.9307721482768067e-10,
+          "disjoint_slope": 1.953394971844497e-10,
+          "abs_diff": 2.2622823567690335e-12
+        },
+        {
+          "lo": 60000.0,
+          "hi": 120000.0,
+          "inclusive_slope": -5.037902832382697e-12,
+          "disjoint_slope": -5.133955134208178e-12,
+          "abs_diff": 9.605230182548168e-14
+        },
+        {
+          "lo": 120000.0,
+          "hi": 180000.0,
+          "inclusive_slope": 1.244884488908713e-11,
+          "disjoint_slope": 1.2359906555154242e-11,
+          "abs_diff": 8.893833393288829e-14
+        },
+        {
+          "lo": 180000.0,
+          "hi": 240000.0,
+          "inclusive_slope": -4.658758398072605e-13,
+          "disjoint_slope": -4.3314604768771996e-13,
+          "abs_diff": 3.2729792119540564e-14
+        }
+      ],
+      "note": "differences are at the last significant digits of a noise-level slope; the material content is the sign pattern (large first-window transient, then sign-mixed near-zero)."
+    }
+  },
+  "A2_C3_120k": {
+    "label": "C3 (126x46x6, 120k steps)",
+    "source_series": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-DEEPSEEK-TRANSITION-001\\results\\colour_closure\\ac_C3_T3C1X_A2_120k\\mass_series.csv",
+    "source_M0": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-DEEPSEEK-TRANSITION-001\\results\\colour_closure\\ac_C3_T3C1X_A2_120k\\accum_report.json:M0",
+    "M0": 28800.000429153442,
+    "n_samples": 300,
+    "step_first": 400.0,
+    "step_last": 120000.0,
+    "sampling_stride": 400.0,
+    "series_definition": "(Mr + Mb) / M0 - 1",
+    "window_convention": "lo <= step <= hi (inclusive; repo convention)",
+    "full": {
+      "slope_per_step": 2.692882838463627e-12,
+      "intercept": 2.130294384240868e-07,
+      "r2": 0.4146432365106122,
+      "n": 300,
+      "frac_pos": 0.5585284280936454
+    },
+    "segments": [
+      {
+        "slope_per_step": 2.227086829197751e-11,
+        "intercept": -1.239491721429866e-07,
+        "r2": 0.894548835456694,
+        "n": 75,
+        "frac_pos": 0.6756756756756757,
+        "lo": 400.0,
+        "hi": 30000.0
+      },
+      {
+        "slope_per_step": -4.109490838371698e-12,
+        "intercept": 6.051269372652051e-07,
+        "r2": 0.5033639694815353,
+        "n": 76,
+        "frac_pos": 0.4666666666666667,
+        "lo": 30000.0,
+        "hi": 60000.0
+      },
+      {
+        "slope_per_step": 3.699376223414175e-12,
+        "intercept": 1.2431144802647332e-07,
+        "r2": 0.7715461017923655,
+        "n": 76,
+        "frac_pos": 0.56,
+        "lo": 60000.0,
+        "hi": 90000.0
+      },
+      {
+        "slope_per_step": 3.849924370234669e-12,
+        "intercept": 5.975862699311633e-08,
+        "r2": 0.5874508513132799,
+        "n": 76,
+        "frac_pos": 0.5333333333333333,
+        "lo": 90000.0,
+        "hi": 120000.0
+      }
+    ],
+    "segments_disjoint_bounds": [
+      {
+        "slope_per_step": 2.2462712911122262e-11,
+        "intercept": -1.2589319761698682e-07,
+        "r2": 0.8938218257565311,
+        "n": 74,
+        "frac_pos": 0.6712328767123288,
+        "lo": 400.0,
+        "hi": 30000.0
+      },
+      {
+        "slope_per_step": -4.189184510047298e-12,
+        "intercept": 6.083040583093387e-07,
+        "r2": 0.5053938547911317,
+        "n": 75,
+        "frac_pos": 0.4594594594594595,
+        "lo": 30000.0,
+        "hi": 60000.0
+      },
+      {
+        "slope_per_step": 3.798633308442369e-12,
+        "intercept": 1.1737668635250347e-07,
+        "r2": 0.7845058488143493,
+        "n": 75,
+        "frac_pos": 0.5540540540540541,
+        "lo": 60000.0,
+        "hi": 90000.0
+      },
+      {
+        "slope_per_step": 3.936501484698186e-12,
+        "intercept": 5.1112459162026556e-08,
+        "r2": 0.5929313975550717,
+        "n": 75,
+        "frac_pos": 0.5405405405405406,
+        "lo": 90000.0,
+        "hi": 120000.0
+      }
+    ],
+    "increment_sign_fractions": {
+      "full": 0.5585284280936454,
+      "segments": [
+        0.6756756756756757,
+        0.4666666666666667,
+        0.56,
+        0.5333333333333333
+      ],
+      "first_difference_count_full": 299
+    },
+    "cross_check": {
+      "source": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-DEEPSEEK-TRANSITION-001\\results\\colour_closure\\ac_C3_T3C1X_A2_120k\\accum_report.json:drift_fits.Mc",
+      "committed_slope_per_step": 2.692882858031712e-12,
+      "committed_r2": 0.4146432131592901,
+      "committed_frac_pos": 0.5585284280936454,
+      "tolerance": {
+        "slope_rel": 1e-07,
+        "r2_abs": 1e-07,
+        "frac_pos_abs": 1e-12,
+        "basis": "13-significant-digit CSV text quantisation (~1e-8 relative on a fitted slope); not a physical tolerance"
+      },
+      "slope_rel_diff": 7.266593349020497e-09,
+      "r2_abs_diff": 2.3351322098186245e-08,
+      "frac_pos_abs_diff": 0.0,
+      "reproduces_within_tolerance": true,
+      "reproduces_bitwise": false
+    },
+    "segment_convention_sensitivity": {
+      "shared_boundary_sample_vs_disjoint": [
+        {
+          "lo": 400.0,
+          "hi": 30000.0,
+          "inclusive_slope": 2.227086829197751e-11,
+          "disjoint_slope": 2.2462712911122262e-11,
+          "abs_diff": 1.9184461914475272e-13
+        },
+        {
+          "lo": 30000.0,
+          "hi": 60000.0,
+          "inclusive_slope": -4.109490838371698e-12,
+          "disjoint_slope": -4.189184510047298e-12,
+          "abs_diff": 7.969367167560044e-14
+        },
+        {
+          "lo": 60000.0,
+          "hi": 90000.0,
+          "inclusive_slope": 3.699376223414175e-12,
+          "disjoint_slope": 3.798633308442369e-12,
+          "abs_diff": 9.925708502819335e-14
+        },
+        {
+          "lo": 90000.0,
+          "hi": 120000.0,
+          "inclusive_slope": 3.849924370234669e-12,
+          "disjoint_slope": 3.936501484698186e-12,
+          "abs_diff": 8.657711446351692e-14
+        }
+      ],
+      "note": "differences are at the last significant digits of a noise-level slope; the material content is the sign pattern (large first-window transient, then sign-mixed near-zero)."
+    }
+  },
+  "A3_V2_bilateral": {
+    "source_dir": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-DEEPSEEK-TRANSITION-001\\results\\colour_closure\\levelc_v2_fix\\v2_primary",
+    "mirror_error": {
+      "definition": "e_x = |x_left - ((nx-1) - x_right)|, nx from symmetry_check.json",
+      "nx": 326,
+      "n_samples": 240,
+      "t_first": 250.0,
+      "t_last": 60000.0,
+      "max_e_x_lu_derived_from_columns": 0.0007449999999948886,
+      "rms_e_x_lu_derived_from_columns": 0.0003969822099281845,
+      "argmax_t": 12000.0,
+      "max_e_x_lu_from_committed_column": 0.00074005127,
+      "committed_report_max_e_x": 0.00074005126953125,
+      "column_check": {
+        "max_abs_diff_vs_reported_e_x": 1.0083000009958971e-05,
+        "max_abs_diff_vs_reported_x_right_star": 1.0000000017384991e-05,
+        "text_quantum_note": "front_series.csv stores positions at 8 significant digits; the derived-vs-column difference is at that text quantisation level and is not a numerical difference",
+        "expected_text_quantum_lu": 0.0001
+      }
+    },
+    "blue_mass_drift": {
+      "definition": "max over samples of |m_b / m_b0 - 1|",
+      "m_b0": 38400.0,
+      "n_samples": 60,
+      "t_first": 1000.0,
+      "t_last": 60000.0,
+      "max_eps_b_independent": 5.158358210577418e-07,
+      "argmax_t": 60000.0,
+      "final_eps_b_independent": 5.158358210577418e-07,
+      "column_check": {
+        "max_abs_diff_vs_reported_eps_b": 5.477100325403518e-17,
+        "reported_max_eps_b": 5.158358211095522e-07
+      },
+      "committed_report_max_eps_b": 5.158358211095522e-07
+    },
+    "trapped_cluster_history": {
+      "definition": "cluster count / largest cluster from gas_series.csv; 6-neighbour labelling, z-periodic merge only",
+      "n_samples": 60,
+      "t_first": 1000.0,
+      "t_last": 60000.0,
+      "n_clusters_min": 1,
+      "n_clusters_max": 1,
+      "n_clusters_final": 1,
+      "n_clusters_unique_values": [
+        1
+      ],
+      "largest_cluster_min": 38304.0,
+      "largest_cluster_max": 38400.0,
+      "fragmentation_detected": false,
+      "t0_topology": {
+        "n_clusters": 1,
+        "largest": 38400,
+        "mean_rho_largest": 1.0,
+        "note": "6-neighbour, z-periodic-only; central gas trapped from t=0 by construction"
+      },
+      "committed_report_cluster_count_max": 1,
+      "committed_report_cluster_count_final": 1
+    },
+    "interaction_status": {
+      "definition": "INTERACTION_ONSET = first sample with no bulk-gas column (G_bulk == 0)",
+      "G_bulk_first": 146.0,
+      "G_bulk_last": 146.0,
+      "G_bulk_min": 146.0,
+      "recomputed": "NOT_REACHED",
+      "committed_report": "NOT_REACHED",
+      "agrees_with_committed": true
+    }
+  },
+  "summary": {
+    "A1_full_slope_per_step": 1.8045553292119586e-11,
+    "A1_full_r2": 0.27971762117410215,
+    "A1_segment_slopes": [
+      1.9307721482768067e-10,
+      -5.037902832382697e-12,
+      1.244884488908713e-11,
+      -4.658758398072605e-13
+    ],
+    "A1_frac_pos": {
+      "full": 0.5492487479131887,
+      "segments": [
+        0.5234899328859061,
+        0.4866666666666667,
+        0.6866666666666666,
+        0.5
+      ],
+      "first_difference_count_full": 599
+    },
+    "A1_cross_check_reproduces": true,
+    "A2_full_slope_per_step": 2.692882838463627e-12,
+    "A2_full_r2": 0.4146432365106122,
+    "A2_segment_slopes": [
+      2.227086829197751e-11,
+      -4.109490838371698e-12,
+      3.699376223414175e-12,
+      3.849924370234669e-12
+    ],
+    "A2_frac_pos": {
+      "full": 0.5585284280936454,
+      "segments": [
+        0.6756756756756757,
+        0.4666666666666667,
+        0.56,
+        0.5333333333333333
+      ],
+      "first_difference_count_full": 299
+    },
+    "A2_cross_check_reproduces": true,
+    "A3_max_blue_rel_drift": 5.158358210577418e-07,
+    "A3_max_mirror_error_lu_derived": 0.0007449999999948886,
+    "A3_max_mirror_error_lu_committed_column": 0.00074005127,
+    "A3_cluster_count_unique": [
+      1
+    ],
+    "A3_interaction_status": "NOT_REACHED"
+  }
+}
