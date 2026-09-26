@@ -230,6 +230,23 @@ droplet-registry value `2 sigma cos(theta)/h = 2.6213e-3` predicts `+3.9319e-3`,
 - the V1c same-slit static calibration is the right capillary pressure for this
   geometry, which is an independent cross-check of that calibration.
 
+**One caveat, stated explicitly.** The balance explains the *density* jump; it
+does not explain the whole subsequent evolution. Between t = 1000 and
+t = 60000 the committed V2 run shows the pocket's `psi > 0` region slowly
+**expanding** — continuum pocket sum `38288 -> 38379` nodes, gas mass proxy
+`38421 -> 38509` — while the mean density holds at `1.0034`. The system is
+closed and total mass is conserved, so that growth is a *redistribution*
+(liquid-region nodes becoming gas-region nodes as the diffuse profile drifts
+outward), not new mass. Two things follow, and both are design inputs rather
+than objections:
+
+- the balance is a statement about the pocket *state* at meniscus formation,
+  **not** a closed-form model of the slow mode that continues afterwards;
+- this is precisely why §3.5 adds compartment masses and a fitted slow mode,
+  and why the interface-position observable must not be leaned on: the V2
+  review already flagged a `d(t)` identity defect that remains unfixed on the
+  accepted candidate.
+
 ### 3.3 Predicted buffer dependence (the design target)
 
 ```text
