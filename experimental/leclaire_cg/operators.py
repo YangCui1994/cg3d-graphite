@@ -359,7 +359,7 @@ PAIRS = [(i, int(L.OPP[i])) for i in range(1, 10)]
 
 
 def recolor(N, rho_r, rho_b, F, beta, u=None, alpha=L.ALPHA_UNIT,
-            form="paper", fluid=None):
+            form="paper", fluid=None, prev=None):
     """Split the colour-blind N into (N_r, N_b).
 
     R1 Eqs. (19)-(20), pairwise form derived in PAPER_FORMULATION.md
@@ -391,8 +391,21 @@ def recolor(N, rho_r, rho_b, F, beta, u=None, alpha=L.ALPHA_UNIT,
     fb = np.zeros_like(rho)
     fr[safe] = rho_r[safe] / rho[safe]
     fb[safe] = rho_b[safe] / rho[safe]
-    Nr = fr[..., None] * N
-    Nb = fb[..., None] * N
+    Nr_new = fr[..., None] * N
+    Nb_new = fb[..., None] * N
+    if fluid is None:
+        Nr, Nb = Nr_new, Nb_new
+    else:
+        if prev is None:
+            raise ValueError("fluid mask given without the incoming colour fields")
+
+        # R1 step (5) acts on x in X_F only.  At a solid node the streamed
+        # colour populations must pass through UNCHANGED; recomputing them
+        # as (rho_k/rho) N there would divide by a rho that is at the f64
+        # floor and silently destroy the colour mass the streaming
+        # delivered.  ``prev`` supplies those untouched values.
+        Nr = np.where(fluid[..., None], Nr_new, prev[0])
+        Nb = np.where(fluid[..., None], Nb_new, prev[1])
 
     mag = np.linalg.norm(F, axis=-1)
     live = safe & (mag > EPS)

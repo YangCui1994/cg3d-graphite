@@ -94,6 +94,7 @@ class LeclaireCG3D:
         self._wall = np.zeros(shape, dtype=bool)
         self._prepared = False
         self.time = 0
+        self.n_nonfinite_equilibrium = 0
 
     # ------------------------------------------------------------------
     #  Setup
@@ -135,6 +136,7 @@ class LeclaireCG3D:
         self.rho_r[self.solid] = 0.0
         self.rho_b[self.solid] = 0.0
         self.time = 0
+        self.n_nonfinite_equilibrium = 0
 
     # ------------------------------------------------------------------
     #  Diagnostics
@@ -163,7 +165,14 @@ class LeclaireCG3D:
         fluid = self.fluid
 
         # ---- step (2): single-phase MRT collision on the colour-blind N
+        # R1 applies steps (2), (4) and (5) to x in X_F only.  Honouring
+        # that is not cosmetic: a solid node holds only what streaming
+        # brought in, so its rho can sit near the f64 floor and u = mom/rho
+        # then explodes, which poisons the equilibrium and, through the
+        # bounce-back, the whole domain.  Solid nodes therefore keep their
+        # streamed distributions through the collision and the perturbation.
         N = self.Nr + self.Nb
+        N = np.where(fluid[..., None], N, 0.0)
         rho, u = op.macroscopic(N)
         grad_rho = op.gradient_isotropic(rho, fluid,
                                          renormalize=self.grad_renormalize)
@@ -172,7 +181,14 @@ class LeclaireCG3D:
         nu = np.where(np.isfinite(nu), nu, 0.5 * (self.nu_r + self.nu_b))
         omega = op.omega_eff(nu)
 
+        # shear-rate guard: a handful of wall-adjacent nodes can still
+        # carry a large u/rho ratio; cap nothing physical, but refuse to
+        # let a non-finite equilibrium entry spread.  Recorded, not silent.
         Neq = op.equilibrium(rho, u, grad_rho, nu)
+        bad = ~np.isfinite(Neq)
+        if np.any(bad):
+            self.n_nonfinite_equilibrium += int(bad.sum())
+            Neq = np.where(bad, 0.0, Neq)
         m = N @ L.M.T
         meq = Neq @ L.M.T
 
@@ -188,7 +204,8 @@ class LeclaireCG3D:
             for a, idx in enumerate(L.MOMENTUM_INDEXES):
                 m[..., idx] += rho * self.force[a]
 
-        N = m @ L.M_INV.T
+        N_post = m @ L.M_INV.T
+        N = np.where(fluid[..., None], N_post, N)
 
         # ---- step (3): wetting boundary condition
         F = op.gradient_isotropic(self.psi(), fluid,
@@ -202,13 +219,16 @@ class LeclaireCG3D:
         else:
             raise ValueError(f"unknown wetting mode {self.wetting!r}")
 
-        # ---- step (4): perturbation, added to N directly (unrelaxed)
-        N = N + op.perturbation(F, omega, self.sigma,
-                                coeff_mode=self.perturbation_coeff)
+        # ---- step (4): perturbation, added to N directly (unrelaxed),
+        # on fluid sites only (R1: "for all i and for all x in X_F")
+        dN = op.perturbation(F, omega, self.sigma,
+                             coeff_mode=self.perturbation_coeff)
+        N = N + np.where(fluid[..., None], dN, 0.0)
 
         # ---- step (5): recoloring (R1 restricts it to x in X_F)
         Nr, Nb = op.recolor(N, self.rho_r, self.rho_b, F, self.beta, u=u,
-                            form=self.recolor_form, fluid=fluid)
+                            form=self.recolor_form, fluid=fluid,
+                            prev=(self.Nr, self.Nb))
 
         if self.conservation_overlay == "f64_arithmetic":
             # Optional project-style closure: force the per-node colour sums
