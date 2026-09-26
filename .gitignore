@@ -13,6 +13,10 @@ frames/
 geo_graphite_228b14.npz
 *.log.tmp
 
+# Agent runtime scratch (task copies, reports, run logs)
+.agent_runtime/
+.agent/controller/config.json
+
 # Editors / OS
 .vscode/
 .idea/

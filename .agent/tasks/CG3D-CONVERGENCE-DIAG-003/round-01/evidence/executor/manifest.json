@@ -1,0 +1,41 @@
+{
+  "schema_version": "v1",
+  "files": [
+    {
+      "path": "termination_diagnostics.log",
+      "kind": "validation_log",
+      "description": "New deterministic fake-system test for row[\"termination\"] / row[\"numerical_health\"]: 62 checks, 0 failures, ALL PASS. Covers quasi-steady (sat and multi), max-steps, umax-cap with finite metrics, non-finite observation, the independence of convergence and numerical health, legacy reason / convergence[\"exit\"] consistency, and the helper units. No Taichi kernel, no GPU, no LBM step.",
+      "command": "python tests/test_termination_diagnostics.py"
+    },
+    {
+      "path": "postprocessing.log",
+      "kind": "validation_log",
+      "description": "Existing PR-3 post-processing regression (label_periodic connectivity/periodic merge + eval_convergence): 20 checks, 0 failures, ALL PASS. Rerun because this task touches cg3d/diagnostics.py; eval_convergence was left unchanged.",
+      "command": "python tests/test_postprocessing.py"
+    },
+    {
+      "path": "periodic_connectivity.log",
+      "kind": "validation_log",
+      "description": "Accepted Task CG3D-PERIODIC-CONN-002 regression, including the brute-force oracle comparison over 252 mask/axis/connectivity combos: 34 checks, 0 failures, ALL PASS. Rerun to confirm that accepted fix is retained after this task's edits to cg3d/diagnostics.py.",
+      "command": "python tests/test_periodic_connectivity.py"
+    },
+    {
+      "path": "termination_examples.json",
+      "kind": "schema_example",
+      "description": "Deterministic example records for quasi-steady, max-steps, umax-cap, and non-finite-observation cases: the exact run_hold termination / numerical_health records asserted by the new test, each shown next to the legacy row reason and convergence[\"exit\"].",
+      "command": "python - <<'PY' (see execution_report.md) : import test_termination_diagnostics as t; t.example_records()"
+    },
+    {
+      "path": "stopping_equivalence.log",
+      "kind": "validation_log",
+      "description": "A/B replay of 16 scripted fake-system cases through the pre-change run_hold (cg3d/protocol.py at base commit 0ca191c7cd6f8970fc8af7e20261f4d7f246fda0) and the candidate: every legacy row field, plus the dump_frame and live_ckpt callback sequences, compare identical; only the two new keys are added and the derived termination flags match the legacy reason. 16 cases, 0 mismatches.",
+      "command": "python .agent_runtime/published_evidence/stopping_equivalence_script.txt"
+    },
+    {
+      "path": "stopping_equivalence_script.txt",
+      "kind": "reproduction_script",
+      "description": "Python source of the A/B stopping-equivalence replay that produced stopping_equivalence.log. It loads the base-commit run_hold from git and reuses the fake system in tests/test_termination_diagnostics.py; publish it so the comparison can be re-run and independently verified.",
+      "command": "python .agent_runtime/published_evidence/stopping_equivalence_script.txt"
+    }
+  ]
+}

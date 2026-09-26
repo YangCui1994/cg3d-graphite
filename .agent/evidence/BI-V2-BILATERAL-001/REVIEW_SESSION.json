@@ -1,0 +1,8 @@
+{
+ "attempt": 1,
+ "session_id": "sess_cb89ddea-76ab-46f2-a66a-e8c43fc03262",
+ "exit_code": 0,
+ "resumed_from": null,
+ "mode": "yolo",
+ "launched_by": "START_V2.md section 5 (fresh headless, no --resume)"
+}

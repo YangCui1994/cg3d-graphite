@@ -1,0 +1,5 @@
+3e49087 agent(CG3D-CONVERGENCE-DIAG-003): report termination and numerical health
+ cg3d/diagnostics.py                   | 111 +++++++++++
+ cg3d/protocol.py                      |  18 +-
+ tests/test_termination_diagnostics.py | 363 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 490 insertions(+), 2 deletions(-)

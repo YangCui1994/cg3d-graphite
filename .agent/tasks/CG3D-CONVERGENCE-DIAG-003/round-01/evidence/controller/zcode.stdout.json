@@ -1,0 +1,26 @@
+{
+  "sessionId": "sess_f4a954a0-0375-4bf1-b95d-674e0fb4a75e",
+  "traceId": "4bb205cb-eaf3-4be6-943d-a0a3338ed4bf",
+  "turnId": "turn_5116e758-2ea9-4435-b689-1d0bf9b11d0c",
+  "response": "Task `CG3D-CONVERGENCE-DIAG-003` is complete: the diagnostics layer is implemented, validated, committed as `3e49087`, pushed to the task branch, and the execution report plus evidence bundle are in place. Nothing was merged.\n\n**What changed** (3 files, all inside the allowed scope):\n\n- `cg3d/diagnostics.py` — added `termination_record(reason, qs_mode)` and a small `NumericalHealthTracker` (`observe`/`record`). This file is purely additive: 111 insertions, 0 deletions, so `eval_convergence` and `label_periodic` are byte-identical to the base.\n- `cg3d/protocol.py` — `run_hold` now attaches `row[\"termination\"]` and `row[\"numerical_health\"]`, and feeds the tracker at the existing sampling point. 16 insertions, 2 deletions, and both deletions are non-executable (one import line, one docstring line); no logic line was removed or altered.\n- `tests/test_termination_diagnostics.py` — new deterministic test (363 lines) driving the real `run_hold` loop against a fake system that implements only `s.step`, `set_ladder`, `measure` and `pore_cells`.\n\n**Validation** — all three requested commands pass against the frozen commit, exit code 0 in each case: `test_termination_diagnostics.py` 62 checks / 0 failures, `test_postprocessing.py` 20 / 0, `test_periodic_connectivity.py` 34 / 0 (including the 252-combo brute-force oracle, so the accepted Task 2 topology fix is retained). The six required semantics all pass, including the deliberate case where `termination.converged=true` coexists with `numerical_health.finite=false`.\n\nOne caveat worth knowing: the machine's default-PATH `python` (Anaconda base) has no Taichi, so the literal commands fail at `import cg3d` — that is pre-existing and identical on the untouched base tree. I ran them with the project's `lbm` conda environment (Taichi 1.7.4) first on `PATH`, and documented this in the report.\n\n**Beyond what was asked**, I added an A/B replay of 16 scripted cases through the pre-change `run_hold` (loaded from base `0ca191c`) and the candidate: every legacy row field and both callback sequences (`dump_frame`, `live_ckpt`) compare identical in all 16, with only the two new keys added. That is the evidence that the stopping logic, thresholds, window rules, `qs_mode` selection, `umax_cap` check and loop ordering are untouched, rather than just my assertion of it.\n\nThe evidence bundle at `.agent_runtime/published_evidence/` contains the three requested logs, the requested `termination_examples.json`, plus that A/B log and a re-runnable copy of its script. I checked it with the Controller's own `validate_published_evidence` (6 files, 25 KB, all constraints satisfied) and did not create `provenance.json`. Summary: `.agent_runtime/execution_report.md`.",
+  "usage": {
+    "source": "provider",
+    "modelRequestCount": 62,
+    "inputTokens": 6077399,
+    "outputTokens": 63366,
+    "totalTokens": 6140765,
+    "cacheReadTokens": 5998208,
+    "cacheWriteTokens": 0,
+    "reasoningTokens": 31990,
+    "webFetchRequests": 0,
+    "webSearchRequests": 0
+  },
+  "eventCount": 35604,
+  "projection": {
+    "status": "idle",
+    "turnCount": 1,
+    "totalTokenCount": 6140765,
+    "contextUsed": 138126,
+    "contextWindow": 200000
+  }
+}

@@ -1,0 +1,316 @@
+diff --git a/cg3d/__init__.py b/cg3d/__init__.py
+index 64b2938..608c5b0 100644
+--- a/cg3d/__init__.py
++++ b/cg3d/__init__.py
+@@ -1,6 +1,7 @@
+ """cg3d package — experiment-protocol layer (Plan_20260919_v2 Phase 4).
+ 
+-Hosts configuration / protocol / diagnostics / post-processing modules.
++Hosts configuration / protocol / diagnostics / post-processing modules and
++the explicit Taichi runtime boundary (``init_runtime``, CG3D-TAICHI-INIT-001).
+ The Taichi solver itself stays in the root-level ``lbm_solver_cg3d.py``
+ (single module holding the hot kernels — the plan explicitly warns
+ against fragmenting them; a file move is deferred until after the
+@@ -8,7 +9,9 @@ numerical-audit reruns so PR-6 compares against a frozen code layout).
+ """
+ from .diagnostics import (region_stats, eval_convergence, label_periodic)
+ from .protocol import OpenSystem, run_hold, run_equil
++from .runtime import init_runtime, is_runtime_initialized
+ from . import checkpoint
+ 
+ __all__ = ['region_stats', 'eval_convergence', 'label_periodic',
+-           'OpenSystem', 'run_hold', 'run_equil', 'checkpoint']
++           'OpenSystem', 'run_hold', 'run_equil', 'checkpoint',
++           'init_runtime', 'is_runtime_initialized']
+diff --git a/cg3d/runtime.py b/cg3d/runtime.py
+new file mode 100644
+index 0000000..2a574f3
+--- /dev/null
++++ b/cg3d/runtime.py
+@@ -0,0 +1,46 @@
++"""cg3d.runtime — the explicit Taichi runtime initialization boundary.
++
++Importing ``lbm_solver_cg3d`` must not touch the Taichi runtime
++(CG3D-TAICHI-INIT-001).  Module import used to call ``ti.init()`` and
++allocate the shared lattice/MRT fields as a side effect, which pinned
++every importer — test collection, tooling, probes — to a live Taichi
++program.  The runtime is now started by exactly one call,
++:func:`init_runtime`, on the path that is about to use Taichi fields or
++kernels (``ColorGradientSolver3D.__init__`` -> ``ensure_lattice_tables``,
++or any script that calls it directly).
++
++Backend contract unchanged: ``LBM_ARCH=cpu`` selects CPU, anything else
++keeps the historical GPU default, ``offline_cache=True`` is preserved.
++"""
++import os
++
++import taichi as ti
++
++_INITIALIZED = False
++
++
++def select_arch():
++    """LBM_ARCH contract: 'cpu' -> CPU, otherwise the existing GPU default."""
++    return ti.cpu if os.environ.get('LBM_ARCH', 'gpu') == 'cpu' else ti.gpu
++
++
++def init_runtime():
++    """Start the Taichi runtime — the project's one explicit init path.
++
++    Idempotent; returns True only for the call that actually ran
++    ``ti.init``.  Later calls must be no-ops: a second ``ti.init``
++    silently re-creates the program and invalidates the fields of the
++    first one.  The runtime is therefore owned by this module — do not
++    call ``ti.init``/``ti.reset`` around a live solver.
++    """
++    global _INITIALIZED
++    if _INITIALIZED:
++        return False
++    ti.init(arch=select_arch(), offline_cache=True)
++    _INITIALIZED = True
++    return True
++
++
++def is_runtime_initialized():
++    """True once this module started the runtime in this process."""
++    return _INITIALIZED
+diff --git a/lbm_solver_cg3d.py b/lbm_solver_cg3d.py
+index 582b284..4036565 100644
+--- a/lbm_solver_cg3d.py
++++ b/lbm_solver_cg3d.py
+@@ -54,30 +54,41 @@ Timestep (identical order to 2D):
+   streaming3 -> Boundary_condition_psi -> apply_reservoirs.
+ 
+ Backend: LBM_ARCH env var — default ti.gpu (CUDA), 'cpu' forces CPU.
++The runtime itself is started by the explicit boundary in
++``cg3d.runtime``; importing this module does not call ``ti.init()``.
+ """
+ import os
+ 
+ import numpy as np
+ import taichi as ti
+ 
+-if os.environ.get('LBM_ARCH', 'gpu') == 'cpu':
+-    ti.init(arch=ti.cpu, offline_cache=True)
+-else:
+-    ti.init(arch=ti.gpu, offline_cache=True)
++from cg3d.runtime import init_runtime
+ 
+ # ============================================================
+ #  Shared D3Q19 lattice tables + MRT matrix (module level)
+ # ============================================================
++# Taichi fields cannot be created before ti.init() (1.7.4 raises
++# "Cannont create field, maybe you forgot to call ti.init() first?"), so
++# the tables are allocated lazily by ensure_lattice_tables() instead of
++# at import.  Same names, same contents, only the creation time moved.
+ 
+-e   = ti.Vector.field(3, ti.i32, shape=(19,))
+-e_f = ti.Vector.field(3, ti.f32, shape=(19,))
+-w   = ti.field(ti.f32, shape=(19,))
+-LR  = ti.field(ti.i32, shape=(19,))     # bounce-back opposite-direction map
+-M   = ti.field(ti.f32, shape=(19, 19))  # upstream :124-142
+-inv_M = ti.field(ti.f32, shape=(19, 19))
++e   = None    # ti.Vector.field(3, ti.i32, shape=(19,))
++e_f = None    # ti.Vector.field(3, ti.f32, shape=(19,))
++w   = None    # ti.field(ti.f32, shape=(19,))
++LR  = None    # ti.field(ti.i32, shape=(19,))     # bounce-back opposite map
++M   = None    # ti.field(ti.f32, shape=(19, 19))  # upstream :124-142
++inv_M = None  # ti.field(ti.f32, shape=(19, 19))
+ 
+ 
+ def _init_lattice_tables():
++    """Create + fill the shared tables; the runtime must be up already."""
++    global e, e_f, w, LR, M, inv_M
++    e   = ti.Vector.field(3, ti.i32, shape=(19,))
++    e_f = ti.Vector.field(3, ti.f32, shape=(19,))
++    w   = ti.field(ti.f32, shape=(19,))
++    LR  = ti.field(ti.i32, shape=(19,))
++    M   = ti.field(ti.f32, shape=(19, 19))
++    inv_M = ti.field(ti.f32, shape=(19, 19))
+     e_np = np.array(
+         [[0, 0, 0],
+          [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1],
+@@ -115,7 +126,25 @@ def _init_lattice_tables():
+     inv_M.from_numpy(np.linalg.inv(M_np).astype(np.float32))
+ 
+ 
+-_init_lattice_tables()
++_TABLES_READY = False
++
++
++def ensure_lattice_tables():
++    """Explicit initialization boundary for the shared module tables.
++
++    Starts the Taichi runtime (``cg3d.runtime.init_runtime``) and then
++    creates and fills the D3Q19/MRT tables — the order the old import-time
++    code used.  Idempotent.  ``ColorGradientSolver3D.__init__`` calls it,
++    so any solver use passes through here; call it directly before reading
++    the module-level tables (``mod.M``, ``mod.inv_M``, ...) without
++    constructing a solver.
++    """
++    global _TABLES_READY
++    if _TABLES_READY:
++        return
++    init_runtime()
++    _init_lattice_tables()
++    _TABLES_READY = True
+ 
+ 
+ # ============================================================
+@@ -212,6 +241,7 @@ class ColorGradientSolver3D:
+                  psi_x_left=-1.0, psi_x_right=1.0,
+                  psi_y_left=1.0, psi_y_right=1.0,
+                  psi_z_left=1.0, psi_z_right=1.0):
++        ensure_lattice_tables()
+         self.nx, self.ny, self.nz = int(nx), int(ny), int(nz)
+ 
+         # ---- runtime-tunable physics scalars (0-d fields) ----
+diff --git a/tests/README.md b/tests/README.md
+index 52098b2..1f05fde 100644
+--- a/tests/README.md
++++ b/tests/README.md
+@@ -13,6 +13,7 @@
+ 
+ ```bash
+ python tests/run_level_a.py            # A1-A5, one 32^3 instance
++python tests/test_import_no_taichi_init.py  # import has no Taichi side effect
+ python tests/test_postprocessing.py    # 11 numpy checks
+ python tests/test_compute_c_bulk.py    # PR-2 1.1 regression
+ python tests/test_poiseuille_cg3d.py   # PR-2 1.2 regression (eff ~ 1.0)
+diff --git a/tests/run_level_a.py b/tests/run_level_a.py
+index a35a907..e0c0602 100644
+--- a/tests/run_level_a.py
++++ b/tests/run_level_a.py
+@@ -46,7 +46,10 @@ def reset(s, psi, solid):
+ def main():
+     t00 = time.time()
+ 
+-    # A1 — M / inv_M consistency (pure numpy on the module tables)
++    # A1 — M / inv_M consistency (pure numpy on the module tables).
++    # The tables are allocated by the explicit runtime boundary now, not at
++    # import (CG3D-TAICHI-INIT-001) — read them only after calling it.
++    mod.ensure_lattice_tables()
+     M = mod.M.to_numpy().astype(np.float64)
+     iM = mod.inv_M.to_numpy().astype(np.float64)
+     err = float(np.abs(M @ iM - np.eye(19)).max())
+diff --git a/tests/test_import_no_taichi_init.py b/tests/test_import_no_taichi_init.py
+new file mode 100644
+index 0000000..e35452a
+--- /dev/null
++++ b/tests/test_import_no_taichi_init.py
+@@ -0,0 +1,115 @@
++"""Import-side-effect regression (CG3D-TAICHI-INIT-001, validation A).
++
++Importing ``lbm_solver_cg3d`` must not initialize the Taichi runtime.  The
++module used to call ``ti.init()`` and allocate + fill its lattice/MRT
++fields at import time; this test imports it in fresh child processes where
++``taichi.init`` is replaced by a trap that raises, so a reintroduced
++import-time initialization fails the import itself instead of passing
++silently.
++
++Child 1 (plain import) — must succeed and leave the runtime alone:
++  * ``lbm_solver_cg3d`` imports with ``ti.init`` booby-trapped;
++  * the six module tables (``e``, ``e_f``, ``w``, ``LR``, ``M``, ``inv_M``)
++    are still unallocated — no runtime-dependent allocation at import;
++  * no Taichi program is materialized (checked through Taichi's runtime
++    object when that internal is available, reported otherwise).
++Child 2 (boundary) — after the same clean import, the project's explicit
++  boundary ``cg3d.runtime.init_runtime()`` DOES reach ``ti.init``: the
++  runtime is started by the project call, not by the import.
++
++The trap fires before any backend is selected, so neither child initializes
++a backend; ``LBM_ARCH=cpu`` is set anyway and no GPU is required.
++
++Run:  python tests/test_import_no_taichi_init.py   (exit 0 = pass)
++"""
++import os
++import subprocess
++import sys
++
++REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++
++TRAP = '''
++import taichi
++
++
++def _forbidden(*args, **kwargs):
++    raise AssertionError('ti.init() was called during import of '
++                         'lbm_solver_cg3d')
++
++
++taichi.init = _forbidden
++'''
++
++CHILD_IMPORT = TRAP + '''
++import lbm_solver_cg3d
++
++for name in ('e', 'e_f', 'w', 'LR', 'M', 'inv_M'):
++    assert getattr(lbm_solver_cg3d, name) is None, (
++        'import allocated the module table ' + name)
++
++try:
++    from taichi.lang.impl import get_runtime
++    assert get_runtime().prog is None, (
++        'import materialized the Taichi program')
++    state = 'no Taichi program (prog is None)'
++except ImportError:                     # taichi internals moved: best effort
++    state = 'UNCHECKED (taichi.lang.impl.get_runtime unavailable)'
++
++print('IMPORT_OK: lbm_solver_cg3d imported with ti.init trapped; ' + state)
++'''
++
++CHILD_BOUNDARY = TRAP + '''
++import lbm_solver_cg3d
++
++from cg3d import runtime
++
++try:
++    runtime.init_runtime()
++except AssertionError as exc:           # the trap fired: correct owner
++    print('BOUNDARY_OK: init_runtime() reaches ti.init (' + str(exc) + ')')
++else:
++    raise AssertionError('init_runtime() did not call ti.init()')
++'''
++
++FAIL = []
++
++
++def check(name, cond, detail=''):
++    print(('PASS ' if cond else 'FAIL ') + name
++          + ('  ' + detail if detail else ''), flush=True)
++    if not cond:
++        FAIL.append(name)
++
++
++def run_child(label, code):
++    env = dict(os.environ)
++    env['LBM_ARCH'] = 'cpu'             # belt and braces: never a GPU backend
++    env['PYTHONPATH'] = REPO + os.pathsep + env.get('PYTHONPATH', '')
++    proc = subprocess.run([sys.executable, '-c', code], cwd=REPO, env=env,
++                          capture_output=True, text=True)
++    print(f'--- {label} (exit {proc.returncode}) ---', flush=True)
++    print(proc.stdout.rstrip(), flush=True)
++    if proc.stderr.strip():
++        print('stderr:', proc.stderr.rstrip(), flush=True)
++    return proc
++
++
++def main():
++    p1 = run_child('child 1: plain import, ti.init trapped', CHILD_IMPORT)
++    check('import lbm_solver_cg3d does not call ti.init()',
++          p1.returncode == 0 and 'IMPORT_OK' in p1.stdout,
++          f'exit={p1.returncode}')
++
++    p2 = run_child('child 2: explicit boundary', CHILD_BOUNDARY)
++    check('cg3d.runtime.init_runtime() is the path that calls ti.init()',
++          p2.returncode == 0 and 'BOUNDARY_OK' in p2.stdout,
++          f'exit={p2.returncode}')
++
++    if FAIL:
++        print(f'FAIL: {FAIL}')
++        sys.exit(1)
++    print('PASS: module import is free of Taichi runtime side effects')
++
++
++if __name__ == '__main__':
++    main()

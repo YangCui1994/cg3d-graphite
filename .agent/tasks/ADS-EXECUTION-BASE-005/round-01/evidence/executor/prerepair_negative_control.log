@@ -1,0 +1,203 @@
+# Negative control: new test suite vs PRE-REPAIR controller source
+# controller.py is byte-identical to the pre-repair file: git show HEAD:.agent/controller/controller.py (> dbecc71898131cc6545bf314dc2f7ba56d1df337)
+# tests are the post-repair .agent/controller/tests/test_controller.py
+# command: PYTHONPATH=.agent/controller/tests python -m unittest -v test_controller
+
+test_absolute_path_rejected (test_controller.PublishedEvidenceValidationTests.test_absolute_path_rejected) ... ok
+test_directory_listed_as_evidence_rejected (test_controller.PublishedEvidenceValidationTests.test_directory_listed_as_evidence_rejected) ... ok
+test_duplicate_path_rejected (test_controller.PublishedEvidenceValidationTests.test_duplicate_path_rejected) ... ok
+test_file_count_limit_rejected (test_controller.PublishedEvidenceValidationTests.test_file_count_limit_rejected) ... ok
+test_missing_file_rejected (test_controller.PublishedEvidenceValidationTests.test_missing_file_rejected) ... ok
+test_path_traversal_rejected (test_controller.PublishedEvidenceValidationTests.test_path_traversal_rejected) ... ok
+test_single_file_limit_rejected (test_controller.PublishedEvidenceValidationTests.test_single_file_limit_rejected) ... ok
+test_symlink_rejected (test_controller.PublishedEvidenceValidationTests.test_symlink_rejected) ... ok
+test_total_size_limit_rejected (test_controller.PublishedEvidenceValidationTests.test_total_size_limit_rejected) ... ok
+test_unlisted_file_rejected (test_controller.PublishedEvidenceValidationTests.test_unlisted_file_rejected) ... ok
+test_unsupported_binary_extension_rejected (test_controller.PublishedEvidenceValidationTests.test_unsupported_binary_extension_rejected) ... ok
+test_valid_manifest_and_text_log (test_controller.PublishedEvidenceValidationTests.test_valid_manifest_and_text_log) ... ok
+test_active_state_missing_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_missing_execution_base_commit_is_rejected) ... FAIL
+test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) ... 
+  test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value=None) ... FAIL
+  test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value='') ... FAIL
+  test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value='000000000000000000000000000000000000000') ... FAIL
+  test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value='00000000000000000000000000000000000000000') ... FAIL
+  test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA') ... FAIL
+  test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value='zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz') ... FAIL
+  test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value='dbecc71') ... FAIL
+test_allowed_path_parser_and_matcher (test_controller.StateValidationTests.test_allowed_path_parser_and_matcher) ... ok
+test_draft_state_may_use_null_execution_base_commit (test_controller.StateValidationTests.test_draft_state_may_use_null_execution_base_commit) ... ok
+test_rejects_more_than_three_rounds_in_policy (test_controller.StateValidationTests.test_rejects_more_than_three_rounds_in_policy) ... ok
+test_evidence_publication_failure_preserves_candidate_and_sets_error (test_controller.TwoRoundIntegrationTest.test_evidence_publication_failure_preserves_candidate_and_sets_error) ... [2026-09-23T03:11:09Z] claimed ADS-DUMMY-001 round 1
+[2026-09-23T03:11:11Z] published ADS-DUMMY-001 round 1 as ERROR
+ok
+test_executor_evidence_end_to_end_publication_and_provenance (test_controller.TwoRoundIntegrationTest.test_executor_evidence_end_to_end_publication_and_provenance) ... [2026-09-23T03:11:12Z] claimed ADS-DUMMY-001 round 1
+[2026-09-23T03:11:14Z] published ADS-DUMMY-001 round 1 as AWAITING_REVIEW
+ERROR
+test_missing_session_id_publishes_error (test_controller.TwoRoundIntegrationTest.test_missing_session_id_publishes_error) ... [2026-09-23T03:11:15Z] claimed ADS-DUMMY-001 round 1
+[2026-09-23T03:11:17Z] published ADS-DUMMY-001 round 1 as ERROR
+ok
+test_out_of_scope_change_is_not_pushed_as_candidate (test_controller.TwoRoundIntegrationTest.test_out_of_scope_change_is_not_pushed_as_candidate) ... [2026-09-23T03:11:18Z] claimed ADS-DUMMY-001 round 1
+[2026-09-23T03:11:19Z] published ADS-DUMMY-001 round 1 as ERROR
+ok
+test_ready_round_above_cap_stops_without_executor (test_controller.TwoRoundIntegrationTest.test_ready_round_above_cap_stops_without_executor) ... [2026-09-23T03:11:21Z] stopped ADS-DUMMY-001 at max round limit
+ok
+test_round1_candidate_at_base_without_branch_publishes_error (test_controller.TwoRoundIntegrationTest.test_round1_candidate_at_base_without_branch_publishes_error) ... [2026-09-23T03:11:22Z] claimed ADS-DUMMY-001 round 1
+[2026-09-23T03:11:23Z] published ADS-DUMMY-001 round 1 as ERROR
+ok
+test_round1_preexisting_branch_at_declared_base_continues_from_base (test_controller.TwoRoundIntegrationTest.test_round1_preexisting_branch_at_declared_base_continues_from_base) ... [2026-09-23T03:11:24Z] claimed ADS-DUMMY-001 round 1
+[2026-09-23T03:11:25Z] published ADS-DUMMY-001 round 1 as ERROR
+FAIL
+test_round1_preexisting_branch_at_wrong_base_fails_before_executor (test_controller.TwoRoundIntegrationTest.test_round1_preexisting_branch_at_wrong_base_fails_before_executor) ... [2026-09-23T03:11:26Z] claimed ADS-DUMMY-001 round 1
+[2026-09-23T03:11:27Z] published ADS-DUMMY-001 round 1 as ERROR
+FAIL
+test_round1_state_candidate_outside_the_base_publishes_error (test_controller.TwoRoundIntegrationTest.test_round1_state_candidate_outside_the_base_publishes_error) ... [2026-09-23T03:11:29Z] claimed ADS-DUMMY-001 round 1
+[2026-09-23T03:11:29Z] published ADS-DUMMY-001 round 1 as ERROR
+FAIL
+test_timeout_terminates_executor_before_publishing_error (test_controller.TwoRoundIntegrationTest.test_timeout_terminates_executor_before_publishing_error) ... [2026-09-23T03:11:31Z] claimed ADS-DUMMY-001 round 1
+Exception in thread Thread-871 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\yangc\anaconda3\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\yangc\anaconda3\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\yangc\anaconda3\Lib\subprocess.py", line 1615, in _readerthread
+    buffer.append(fh.read())
+                  ~~~~~~~^^
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xb3 in position 0: invalid start byte
+[2026-09-23T03:11:33Z] published ADS-DUMMY-001 round 1 as ERROR
+ok
+test_two_rounds_claim_execute_resume_and_publish (test_controller.TwoRoundIntegrationTest.test_two_rounds_claim_execute_resume_and_publish) ... [2026-09-23T03:11:34Z] claimed ADS-DUMMY-001 round 1
+[2026-09-23T03:11:35Z] published ADS-DUMMY-001 round 1 as AWAITING_REVIEW
+FAIL
+
+======================================================================
+ERROR: test_executor_evidence_end_to_end_publication_and_provenance (test_controller.TwoRoundIntegrationTest.test_executor_evidence_end_to_end_publication_and_provenance)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 714, in test_executor_evidence_end_to_end_publication_and_provenance
+    self.assertEqual(provenance["execution_base_commit"], self.execution_base)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'execution_base_commit'
+
+======================================================================
+FAIL: test_active_state_missing_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_missing_execution_base_commit_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 99, in test_active_state_missing_execution_base_commit_is_rejected
+    with self.assertRaisesRegex(ControllerError, "execution_base_commit"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ControllerError not raised
+
+======================================================================
+FAIL: test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 108, in test_active_state_null_and_malformed_execution_base_commit_is_rejected
+    with self.assertRaisesRegex(ControllerError, "execution_base_commit"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ControllerError not raised
+
+======================================================================
+FAIL: test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 108, in test_active_state_null_and_malformed_execution_base_commit_is_rejected
+    with self.assertRaisesRegex(ControllerError, "execution_base_commit"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ControllerError not raised
+
+======================================================================
+FAIL: test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value='000000000000000000000000000000000000000')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 108, in test_active_state_null_and_malformed_execution_base_commit_is_rejected
+    with self.assertRaisesRegex(ControllerError, "execution_base_commit"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ControllerError not raised
+
+======================================================================
+FAIL: test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value='00000000000000000000000000000000000000000')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 108, in test_active_state_null_and_malformed_execution_base_commit_is_rejected
+    with self.assertRaisesRegex(ControllerError, "execution_base_commit"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ControllerError not raised
+
+======================================================================
+FAIL: test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 108, in test_active_state_null_and_malformed_execution_base_commit_is_rejected
+    with self.assertRaisesRegex(ControllerError, "execution_base_commit"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ControllerError not raised
+
+======================================================================
+FAIL: test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value='zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 108, in test_active_state_null_and_malformed_execution_base_commit_is_rejected
+    with self.assertRaisesRegex(ControllerError, "execution_base_commit"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ControllerError not raised
+
+======================================================================
+FAIL: test_active_state_null_and_malformed_execution_base_commit_is_rejected (test_controller.StateValidationTests.test_active_state_null_and_malformed_execution_base_commit_is_rejected) (value='dbecc71')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 108, in test_active_state_null_and_malformed_execution_base_commit_is_rejected
+    with self.assertRaisesRegex(ControllerError, "execution_base_commit"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ControllerError not raised
+
+======================================================================
+FAIL: test_round1_preexisting_branch_at_declared_base_continues_from_base (test_controller.TwoRoundIntegrationTest.test_round1_preexisting_branch_at_declared_base_continues_from_base)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 512, in test_round1_preexisting_branch_at_declared_base_continues_from_base
+    self.assertEqual(state["status"], "AWAITING_REVIEW")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'ERROR' != 'AWAITING_REVIEW'
+- ERROR
++ AWAITING_REVIEW
+
+
+======================================================================
+FAIL: test_round1_preexisting_branch_at_wrong_base_fails_before_executor (test_controller.TwoRoundIntegrationTest.test_round1_preexisting_branch_at_wrong_base_fails_before_executor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 477, in test_round1_preexisting_branch_at_wrong_base_fails_before_executor
+    self.assertIn("execution_base_commit", str(state["last_error"]))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'execution_base_commit' not found in "ControllerError: remote task branch 'agent-task/ADS-DUMMY-001' exists but state has no candidate_commit"
+
+======================================================================
+FAIL: test_round1_state_candidate_outside_the_base_publishes_error (test_controller.TwoRoundIntegrationTest.test_round1_state_candidate_outside_the_base_publishes_error)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 535, in test_round1_state_candidate_outside_the_base_publishes_error
+    self.assertIn("execution_base_commit", str(result["last_error"]))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'execution_base_commit' not found in "ControllerError: state names candidate 0000000000000000000000000000000000000000, but remote task branch 'agent-task/ADS-DUMMY-001' is missing"
+
+======================================================================
+FAIL: test_two_rounds_claim_execute_resume_and_publish (test_controller.TwoRoundIntegrationTest.test_two_rounds_claim_execute_resume_and_publish)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\2026_agent_work\09_cg3d_controller\worktrees\ADS-EXECUTION-BASE-005\.agent_runtime\prefix_control\.agent\controller\tests\test_controller.py", line 383, in test_two_rounds_claim_execute_resume_and_publish
+    self.assertEqual(round1_process["before_head"], self.execution_base)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '1bfda4c5ce4963c2f532890a15dec6ab83821d05' != 'dbc73a79a8823f2882d4c09df1e4b69b048167b9'
+- 1bfda4c5ce4963c2f532890a15dec6ab83821d05
++ dbc73a79a8823f2882d4c09df1e4b69b048167b9
+
+
+----------------------------------------------------------------------
+Ran 28 tests in 28.005s
+
+FAILED (failures=12, errors=1)
+exit_code=1

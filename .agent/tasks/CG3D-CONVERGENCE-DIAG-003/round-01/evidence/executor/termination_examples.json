@@ -1,0 +1,184 @@
+{
+ "task": "CG3D-CONVERGENCE-DIAG-003",
+ "schema": "row[\"termination\"] + row[\"numerical_health\"] additive records",
+ "generated_by": "python - <<PY ... import test_termination_diagnostics as t; t.example_records()",
+ "note": "Deterministic records produced by running cg3d.protocol.run_hold against the fake system in tests/test_termination_diagnostics.py (no Taichi kernel, no GPU, no LBM step). Each case shows the legacy row reason / convergence exit next to the two new records. Values are the exact ones asserted by that test.",
+ "cases": {
+  "quasi_steady": {
+   "description": "saturation slope within qs_tol, sat mode: configured criterion reached at step 9; all sampled diagnostics finite",
+   "steps": 9,
+   "reason": "quasi-steady",
+   "convergence_exit": {
+    "mode": "sat",
+    "reason": "quasi-steady"
+   },
+   "termination": {
+    "process_completed": true,
+    "reason": "quasi-steady",
+    "converged": true,
+    "step_limit_reached": false,
+    "safety_limit_triggered": false,
+    "qs_mode": "sat"
+   },
+   "numerical_health": {
+    "finite": true,
+    "nonfinite_fields": [],
+    "first_nonfinite_step": null,
+    "sample_count": 9,
+    "nonfinite_counts": {},
+    "first_nonfinite_fields": [],
+    "fields_observed": [
+     "inj_b",
+     "inj_m",
+     "inj_r",
+     "p_in_mean",
+     "p_out_mean",
+     "pc_band_in",
+     "pc_band_out",
+     "pc_measured",
+     "rho_in_mean",
+     "rho_out_mean",
+     "s_nw",
+     "s_nw_binary",
+     "u_bulk_x",
+     "u_rms",
+     "umax"
+    ]
+   }
+  },
+  "max_steps": {
+   "description": "s_nw drifts 1e-2/step (> qs_tol=1e-3): criterion not reached inside max_steps=25; all sampled diagnostics finite",
+   "steps": 25,
+   "reason": "max-steps",
+   "convergence_exit": {
+    "mode": "sat",
+    "reason": "max-steps"
+   },
+   "termination": {
+    "process_completed": true,
+    "reason": "max-steps",
+    "converged": false,
+    "step_limit_reached": true,
+    "safety_limit_triggered": false,
+    "qs_mode": "sat"
+   },
+   "numerical_health": {
+    "finite": true,
+    "nonfinite_fields": [],
+    "first_nonfinite_step": null,
+    "sample_count": 25,
+    "nonfinite_counts": {},
+    "first_nonfinite_fields": [],
+    "fields_observed": [
+     "inj_b",
+     "inj_m",
+     "inj_r",
+     "p_in_mean",
+     "p_out_mean",
+     "pc_band_in",
+     "pc_band_out",
+     "pc_measured",
+     "rho_in_mean",
+     "rho_out_mean",
+     "s_nw",
+     "s_nw_binary",
+     "u_bulk_x",
+     "u_rms",
+     "umax"
+    ]
+   }
+  },
+  "umax_cap": {
+   "description": "umax=0.5 crosses umax_cap=0.1 at step 3 while every metric stays finite: safety-limit exit, not a numerical-health failure",
+   "steps": 3,
+   "reason": "umax-cap",
+   "convergence_exit": {
+    "mode": "sat",
+    "reason": "umax-cap"
+   },
+   "termination": {
+    "process_completed": true,
+    "reason": "umax-cap",
+    "converged": false,
+    "step_limit_reached": false,
+    "safety_limit_triggered": true,
+    "qs_mode": "sat"
+   },
+   "numerical_health": {
+    "finite": true,
+    "nonfinite_fields": [],
+    "first_nonfinite_step": null,
+    "sample_count": 3,
+    "nonfinite_counts": {},
+    "first_nonfinite_fields": [],
+    "fields_observed": [
+     "inj_b",
+     "inj_m",
+     "inj_r",
+     "p_in_mean",
+     "p_out_mean",
+     "pc_band_in",
+     "pc_band_out",
+     "pc_measured",
+     "rho_in_mean",
+     "rho_out_mean",
+     "s_nw",
+     "s_nw_binary",
+     "u_bulk_x",
+     "u_rms",
+     "umax"
+    ]
+   }
+  },
+  "nonfinite_observation": {
+   "description": "pc_measured=NaN from step 2 and u_bulk_x=Inf from step 4; the sat-mode criterion (saturation only) is still satisfied, so the rung exits quasi-steady while numerical health is not finite",
+   "steps": 9,
+   "reason": "quasi-steady",
+   "convergence_exit": {
+    "mode": "sat",
+    "reason": "quasi-steady"
+   },
+   "termination": {
+    "process_completed": true,
+    "reason": "quasi-steady",
+    "converged": true,
+    "step_limit_reached": false,
+    "safety_limit_triggered": false,
+    "qs_mode": "sat"
+   },
+   "numerical_health": {
+    "finite": false,
+    "nonfinite_fields": [
+     "pc_measured",
+     "u_bulk_x"
+    ],
+    "first_nonfinite_step": 2,
+    "sample_count": 9,
+    "nonfinite_counts": {
+     "pc_measured": 8,
+     "u_bulk_x": 6
+    },
+    "first_nonfinite_fields": [
+     "pc_measured"
+    ],
+    "fields_observed": [
+     "inj_b",
+     "inj_m",
+     "inj_r",
+     "p_in_mean",
+     "p_out_mean",
+     "pc_band_in",
+     "pc_band_out",
+     "pc_measured",
+     "rho_in_mean",
+     "rho_out_mean",
+     "s_nw",
+     "s_nw_binary",
+     "u_bulk_x",
+     "u_rms",
+     "umax"
+    ]
+   }
+  }
+ }
+}

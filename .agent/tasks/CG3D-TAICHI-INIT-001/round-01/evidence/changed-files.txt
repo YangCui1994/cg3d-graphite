@@ -1,0 +1,6 @@
+M	cg3d/__init__.py
+A	cg3d/runtime.py
+M	lbm_solver_cg3d.py
+M	tests/README.md
+M	tests/run_level_a.py
+A	tests/test_import_no_taichi_init.py

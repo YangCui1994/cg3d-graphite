@@ -1,0 +1,25 @@
+{
+  "command": [
+    "node",
+    "C:/Program Files/ZCode/resources/glm/zcode.cjs",
+    "--cwd",
+    "D:\\2026_agent_work\\09_cg3d_controller\\worktrees\\ADS-DUMMY-001",
+    "--mode",
+    "yolo",
+    "--json",
+    "--resume",
+    "sess_dc7d9ea7-00ac-4158-99de-3b5b3ec15fb0",
+    "-p",
+    "Read AGENTS.md, .agent/prompts/ZCODE_EXECUTOR.md, and .agent_runtime/TASK.md. Execute only that task and write .agent_runtime/execution_report.md. Do not merge any branch."
+  ],
+  "cwd": "D:\\2026_agent_work\\09_cg3d_controller\\worktrees\\ADS-DUMMY-001",
+  "started_at": "2026-09-22T09:01:37Z",
+  "finished_at": "2026-09-22T09:02:39Z",
+  "elapsed_seconds": 61.954,
+  "exit_code": 0,
+  "timed_out": false,
+  "terminated_after_timeout": false,
+  "envelope_parsed": true,
+  "session_id": "sess_dc7d9ea7-00ac-4158-99de-3b5b3ec15fb0",
+  "before_head": "6b1267df3968985ad3a99eaac359f86a266af767"
+}

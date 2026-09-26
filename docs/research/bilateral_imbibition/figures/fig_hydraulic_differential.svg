@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+<rect width="900" height="520" fill="white"/>
+<g font-family="Arial, Helvetica, sans-serif" fill="#111">
+<text x="450" y="34" text-anchor="middle" font-size="22" font-weight="700">h=26 differential hydraulic consistency</text>
+<text x="28" y="245" transform="rotate(-90 28 245)" text-anchor="middle" font-size="16">Effective hydraulic length Leff (lu)</text>
+<text x="450" y="492" text-anchor="middle" font-size="16">Geometric hydraulic length L (lu)</text>
+<line x1="100" y1="430" x2="840" y2="430" stroke="#222"/>
+<line x1="100" y1="70" x2="100" y2="430" stroke="#222"/>
+<!-- axes map L 200..520, Leff 250..650 -->
+<g stroke="#ddd">
+<line x1="100" y1="385" x2="840" y2="385"/><line x1="100" y1="295" x2="840" y2="295"/>
+<line x1="100" y1="205" x2="840" y2="205"/><line x1="100" y1="115" x2="840" y2="115"/>
+</g>
+<g font-size="13">
+<text x="90" y="434" text-anchor="end">250</text><text x="90" y="389" text-anchor="end">300</text>
+<text x="90" y="299" text-anchor="end">400</text><text x="90" y="209" text-anchor="end">500</text>
+<text x="90" y="119" text-anchor="end">600</text>
+<text x="100" y="452">200</text><text x="331" y="452">300</text><text x="562" y="452">400</text><text x="793" y="452">500</text>
+</g>
+<!-- fitted line Leff = 1.034 L + 77.5 -->
+<line x1="146.3" y1="402.5" x2="793.8" y2="106.4" stroke="#222" stroke-width="2"/>
+<!-- ideal incremental slope 1 with same intercept -->
+<line x1="146.3" y1="406.2" x2="793.8" y2="118.2" stroke="#888" stroke-dasharray="7 5"/>
+<!-- points -->
+<circle cx="194.8" cy="361.0" r="7" fill="#222"/><text x="210" y="350" font-size="14">L=241, Leff=326.7</text>
+<circle cx="740.5" cy="141.5" r="7" fill="#222"/><text x="725" y="130" text-anchor="end" font-size="14">L=477, Leff=570.6</text>
+<text x="565" y="80" font-size="14">fit slope = 1.034 → differential error = 3.4%</text>
+<text x="565" y="102" font-size="14">intercept ≈ 77.5 lu → localized resistance</text>
+<text x="565" y="124" font-size="13" fill="#555">dashed: ideal incremental slope = 1</text>
+</g></svg>

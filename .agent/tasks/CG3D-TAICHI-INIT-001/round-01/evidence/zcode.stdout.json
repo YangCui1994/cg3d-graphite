@@ -1,0 +1,26 @@
+{
+  "sessionId": "sess_5f1a8b42-e17a-4f23-9be5-c8e6d46f7314",
+  "traceId": "67a0b67c-15b5-43da-bd1f-ca80ee00ddce",
+  "turnId": "turn_c02a68b8-4256-4e75-a7bd-3da694c98714",
+  "response": "Task `CG3D-TAICHI-INIT-001` is complete: the change is implemented, validated, committed on the task branch, pushed, and reported.\n\n**What changed.** Importing `lbm_solver_cg3d` no longer touches the Taichi runtime. The import-time `ti.init(...)` block and the import-time allocation of the six shared lattice/MRT fields are gone; both now happen behind one explicit boundary, `cg3d/runtime.py:init_runtime()`, which the solver reaches via `lbm_solver_cg3d.ensure_lattice_tables()`, called as the first statement of `ColorGradientSolver3D.__init__`. `cg3d.protocol` is unchanged because `OpenSystem` constructs the solver and therefore inherits the boundary. I had to move the field creation too, not just the init call: on Taichi 1.7.4, `ti.field()` before `ti.init()` raises `TaichiRuntimeError: Cannont create field, maybe you forgot to call ti.init() first?`. Creating the tables inside the boundary after `ti.init()` also restores the original operation order (init → create fields → `from_numpy`), so table contents are untouched. `init_runtime()` is flag-guarded and idempotent — a second `ti.init()` returns normally but silently invalidates the first program's fields, so an unguarded version would have broken the first solver in a two-solver process.\n\n**Validation (all CPU-only, `LBM_ARCH=cpu`, no GPU work).**\n- Import regression `python tests/test_import_no_taichi_init.py` → exit 0; the child imports with `taichi.init` booby-trapped and reports no Taichi program materialized and all six tables still `None`. A separate negative control confirmed the trap actually trips on an import-time init, so the test is not passing vacuously.\n- CPU smoke `python tests/test_compute_c_bulk.py` → exit 0, and its four values are bit-identical to the same test run against the pre-change solver in a temp dir.\n- Base-vs-candidate dump of `e, e_f, w, LR, M, inv_M` → all six arrays identical in dtype, shape and values.\n- Static check: no executable `ti.init` remains in `lbm_solver_cg3d.py`; the only one in the repo is in `init_runtime()`.\n- Extra scratch check (gitignored, not in the commit): `cg3d.OpenSystem` on a tiny synthetic geometry left the runtime uninitialized before construction, initialized it after, and ran 10 steps with finite diagnostics.\n\n**Source state.** Commit `05de9981a9d671c866ec2135e7a470d48752f79c` on `agent-task/CG3D-TAICHI-INIT-001`, pushed to origin (no merge to `master`, tree clean, so the validated tree is exactly the committed tree). 6 files, 212 insertions / 14 deletions; the four modified files are +51/−14, the rest is the new runtime module and the new test. Report and raw logs are in `.agent_runtime/execution_report.md` and `.agent_runtime/evidence/` (both gitignored).\n\n**Two things worth your attention.** First, `tests/run_level_a.py` was updated (A1 now calls `ensure_lattice_tables()` before reading `mod.M`/`mod.inv_M`) but Level A itself was **NOT_RUN** — it was outside the one-short-smoke budget; that is the suggested next action. Second, the copy-paired tree at `D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\LBM\\source_code\\taichi_LBM3D\\2phase\\` still has its own import-time `ti.init` and has no `cg3d/` package, so syncing this change there would require bringing `cg3d/runtime.py` along — I left it untouched as it is outside this repository.",
+  "usage": {
+    "source": "provider",
+    "modelRequestCount": 58,
+    "inputTokens": 6378970,
+    "outputTokens": 61024,
+    "totalTokens": 6439994,
+    "cacheReadTokens": 6287616,
+    "cacheWriteTokens": 0,
+    "reasoningTokens": 37494,
+    "webFetchRequests": 0,
+    "webSearchRequests": 0
+  },
+  "eventCount": 41136,
+  "projection": {
+    "status": "idle",
+    "turnCount": 1,
+    "totalTokenCount": 6439994,
+    "contextUsed": 148458,
+    "contextWindow": 200000
+  }
+}

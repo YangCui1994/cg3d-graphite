@@ -1,0 +1,29 @@
+{
+ "task": "BI-CONSERVATION-AUDIT-001",
+ "attempts": [
+  {
+   "attempt": 1,
+   "session_id": "sess_c85bbfb2-c98e-4b47-b109-6ea47fd77dab",
+   "mode": "FRESH_SESSION (headless zcode CLI, no --resume)",
+   "candidate": "24b00dbe28d23c12049d05679542301ccc507eac",
+   "decision": "CHANGES_REQUESTED",
+   "review_runtime": ".agent_runtime/BI-CONSERVATION-AUDIT-001/REVIEW_ATTEMPT_1.md",
+   "stdout_log": ".agent_runtime/BI-CONSERVATION-AUDIT-001/reviewer_session_attempt1_stdout.log"
+  },
+  {
+   "attempt": 2,
+   "session_id": "sess_c5a55809-c412-43b3-8290-1385b3e547b2",
+   "mode": "FRESH_SESSION (headless zcode CLI, no --resume)",
+   "candidate": "1f5ee76fa183b42dd0ffcb291f389c3f1974a147",
+   "decision": "PASS_DIAGNOSIS_READY_FOR_FIX",
+   "review_runtime": ".agent_runtime/BI-CONSERVATION-AUDIT-001/REVIEW.md",
+   "stdout_log": ".agent_runtime/BI-CONSERVATION-AUDIT-001/reviewer_session_attempt2_stdout.log"
+  }
+ ],
+ "binding": {
+  "base": "5e679d8d99d338f9ab28565c636f021a0f9211b2",
+  "branch": "agent-task/BI-CONSERVATION-AUDIT-001",
+  "final_candidate": "1f5ee76fa183b42dd0ffcb291f389c3f1974a147"
+ },
+ "no_self_review": true
+}

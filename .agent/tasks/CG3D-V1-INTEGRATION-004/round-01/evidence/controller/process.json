@@ -1,0 +1,23 @@
+{
+  "command": [
+    "node",
+    "C:/Program Files/ZCode/resources/glm/zcode.cjs",
+    "--cwd",
+    "D:\\2026_agent_work\\09_cg3d_controller\\worktrees\\CG3D-V1-INTEGRATION-004",
+    "--mode",
+    "yolo",
+    "--json",
+    "-p",
+    "Read AGENTS.md, .agent/prompts/ZCODE_EXECUTOR.md, and .agent_runtime/TASK.md. Execute only that task and write .agent_runtime/execution_report.md. Do not merge any branch."
+  ],
+  "cwd": "D:\\2026_agent_work\\09_cg3d_controller\\worktrees\\CG3D-V1-INTEGRATION-004",
+  "started_at": "2026-09-23T00:51:59Z",
+  "finished_at": "2026-09-23T00:58:44Z",
+  "elapsed_seconds": 404.79,
+  "exit_code": 0,
+  "timed_out": false,
+  "terminated_after_timeout": false,
+  "envelope_parsed": true,
+  "session_id": "sess_59a7ace2-ae90-421b-846f-f073ef6a7db6",
+  "before_head": "3e49087e195ac98b41000bc647b115c685daa71b"
+}

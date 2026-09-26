@@ -1,0 +1,47 @@
+# requested: python tests/test_periodic_connectivity.py
+# executed : "C:\Users\yangc\anaconda3\envs\lbm\python.exe" tests/test_periodic_connectivity.py
+# cwd      : D:\2026_agent_work\09_cg3d_controller\worktrees\CG3D-V1-INTEGRATION-004
+# env      : {}
+
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+PASS single y seam face pair merges (conn=6)
+PASS single y seam face pair merges (conn=18)
+PASS single y seam face pair merges (conn=26)
+PASS y+z ring through two seams is one cluster (conn=6)
+REPRO y+z wrapped edge   conn=6  axes=(1,2): n=2 sizes=[1, 1]
+REPRO y+z wrapped edge   conn=18 axes=(1,2): n=1 sizes=[2]
+REPRO y+z wrapped edge   conn=26 axes=(1,2): n=1 sizes=[2]
+PASS y+z wrapped edge stays split for conn=6
+PASS y+z wrapped edge merges for conn=18
+PASS y+z wrapped edge merges for conn=26
+PASS x+y wrapped edge merges for conn=18 (both axes periodic)
+PASS x+y wrapped edge stays split for conn=6
+PASS x+y wrapped edge stays split for conn=18 axes=(0, 2)
+PASS x+y wrapped edge stays split for conn=26 axes=(0, 2)
+PASS x+y wrapped edge stays split for conn=18 axes=(1, 2)
+PASS x+y wrapped edge stays split for conn=26 axes=(1, 2)
+PASS x+y wrapped edge stays split for conn=18 axes=(0,)
+PASS x+y wrapped edge stays split for conn=26 axes=(0,)
+PASS x+y wrapped edge stays split for conn=18 axes=(1,)
+PASS x+y wrapped edge stays split for conn=26 axes=(1,)
+PASS x+y wrapped edge stays split for conn=18 axes=()
+PASS x+y wrapped edge stays split for conn=26 axes=()
+REPRO x+y+z wrapped corner conn=6  axes=(0,1,2): n=2 sizes=[1, 1]
+REPRO x+y+z wrapped corner conn=18 axes=(0,1,2): n=2 sizes=[1, 1]
+REPRO x+y+z wrapped corner conn=26 axes=(0,1,2): n=1 sizes=[2]
+PASS x+y+z wrapped corner stays split for conn=6
+PASS x+y+z wrapped corner stays split for conn=18
+PASS x+y+z wrapped corner merges for conn=26
+PASS x+y+z wrapped corner stays split for axes=(0, 1)
+PASS x+y+z wrapped corner stays split for axes=(1, 2)
+PASS x+y+z wrapped corner stays split for axes=(0, 2)
+PASS sizes exact after wrapped merge (3 + 1)
+PASS sizes sum to the occupied voxel count
+PASS separate clusters stay separate (conn=6)
+PASS separate clusters stay separate (conn=18)
+PASS separate clusters stay separate (conn=26)
+PASS empty periodic_axes == plain scipy label (conn=6)
+PASS empty periodic_axes == plain scipy label (conn=18)
+PASS empty periodic_axes == plain scipy label (conn=26)
+PASS brute-force oracle agreement over 252 mask/axis/conn combos
+ALL PASS

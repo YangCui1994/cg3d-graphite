@@ -1,0 +1,44 @@
+{
+ "task": "BI-COLOUR-CLOSURE-001",
+ "base": "e256b4857a6e51510b75358994d7c5bcc742781e",
+ "candidate": "6c30260dfe0c8b61ea9609e6bffa5c487312cf06",
+ "branch": "agent-task/BI-COLOUR-CLOSURE-001",
+ "selected": {
+  "acc_fix": "A2",
+  "colour_fix": "C1X",
+  "total_fix": "T3"
+ },
+ "decision": "PASS (fresh reviewer session, attempt 1; no self-review; no GPU)",
+ "headline": {
+  "reproduce_13_13": true,
+  "c3_60k_colour": 8.087972622164706e-12,
+  "c3_60k_colour_r2": 0.5825616541569933,
+  "c3_120k_colour": 2.692882858031712e-12,
+  "c3_120k_r2": 0.4146432131592901,
+  "periodic_c1_60k": -6.400485768389908e-11,
+  "periodic_c1_240k": 1.8045553362296766e-11,
+  "periodic_c1_240k_r2": 0.27971762215059015,
+  "base_c1_20k": 8.844631203474909e-10,
+  "base_c3_60k": -6.553072896514569e-10,
+  "improvements_x": {
+   "c1_60k_vs_base_x": 13.81868739894073,
+   "c3_60k_vs_base_x": 81.02244162592963,
+   "c3_60k_vs_prefix_t0_x": 836.0191503949804
+  },
+  "a2_stationarity": "exact 0.0 all 7 combos",
+  "v1c": {
+   "a26": 1.0618,
+   "a40": 1.0741
+  },
+  "v2": {
+   "max_eps_r": 5.8705e-06,
+   "max_eps_b": 5.1584e-07,
+   "mirror_err": 0.00074001,
+   "clusters": "1/1"
+  },
+  "perf": "net-zero within noise (C3 2833->2853, C1 2838->2809 steps/s)"
+ },
+ "residual_statement": "small horizon-decaying sign-symmetric residual from the single f32 rho_r store; calibrated, NOT proven bounded; frozen no-sign-bias clause requires explicit owner acceptance via external scientific review",
+ "evidence": "agent-task/BI-COLOUR-CLOSURE-001 results/colour_closure/ (253-file SHA256 MANIFEST)",
+ "v3": "HOLD"
+}
