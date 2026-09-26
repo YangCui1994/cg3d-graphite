@@ -24,3 +24,6 @@ tests_output/
 
 # BI-COLOUR-CLOSURE-001: per-node snapshots are evidence (reviewer recomputation)
 !results/colour_closure/**/*.npz
+
+# Leclaire reference PDFs (copyrighted/CC-BY publisher versions; not redistributed)
+docs/research/leclaire_cg/_refs/
