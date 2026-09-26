@@ -1,0 +1,36 @@
+{
+  "runs": [
+    {
+      "gap": 10,
+      "meniscus_z": 7,
+      "rho_wetting_side": 0.9524565616468522,
+      "rho_nonwetting_side": 0.9524565616468494,
+      "dp": -9.251858538542972e-16,
+      "pc_analytic": 0.004,
+      "pc_ratio": -2.312964634635743e-13,
+      "psi_peak": 0.9665046742307815,
+      "max_abs_v": 1.7340297509408806e-14
+    },
+    {
+      "gap": 12,
+      "meniscus_z": 8,
+      "rho_wetting_side": 0.9597580621083378,
+      "rho_nonwetting_side": 0.9597580621083348,
+      "dp": -9.992007221626409e-16,
+      "pc_analytic": 0.0033333333333333335,
+      "pc_ratio": -2.9976021664879227e-13,
+      "psi_peak": 0.9904250474564678,
+      "max_abs_v": 2.42917929772321e-14
+    }
+  ],
+  "steps": 1500,
+  "grid": [
+    12,
+    12,
+    32
+  ],
+  "verdict": "FAIL",
+  "acceptance": "each slit keeps |psi|peak > 0.9 AND a positive pressure difference across the meniscus is measured; the ratio to 2 sigma cos(theta)/gap is reported but not gated, because the contact angle here is the model's own (wetting='none') rather than a prescribed one",
+  "wall_seconds": 43.96052002906799,
+  "exit_code": 0
+}

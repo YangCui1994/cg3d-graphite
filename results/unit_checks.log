@@ -1,0 +1,43 @@
+[PASS] table.weights.sum_W: residual 0.0
+[PASS] table.weights.mom2_W: residual 5.551115123125783e-17
+[PASS] table.weights.phi_collapse: residual 0.0
+[PASS] table.weights.sum_B: residual 5.551115123125783e-17
+[PASS] table.weights.zeta_cs2: residual 5.551115123125783e-17
+[PASS] table.weights.opp_involution: residual 0.0
+[PASS] table.matrix.row0_density: residual 0.0
+[PASS] table.matrix.row3_cx: residual 0.0
+[PASS] table.matrix.row5_cy: residual 0.0
+[PASS] table.matrix.row7_cz: residual 0.0
+[PASS] table.matrix.row9_2xx_yy_zz: residual 0.0
+[PASS] table.matrix.row11_yy_zz: residual 0.0
+[PASS] table.matrix.row13_xy: residual 0.0
+[PASS] table.matrix.row14_yz: residual 0.0
+[PASS] table.matrix.row15_xz: residual 0.0
+[PASS] table.matrix.invertible: residual 8.881784197001252e-16
+[PASS] table.matrix.rows_shell_constant: residual 0.0
+[PASS] table.shell_grouping: residual 0.0
+[PASS] shell.counts: residual [np.int64(0), np.int64(0), np.int64(0)]
+[PASS] shell.norms: residual [np.float64(0.0), np.float64(0.0), np.float64(0.0)]
+[PASS] equilibrium.zero_state_equals_rho_W: residual 0.0
+[PASS] equilibrium.mass: residual 0.0
+[PASS] gradient.linear_exact_axis0: residual 4.440892098500626e-16
+[PASS] gradient.linear_exact_axis1: residual 1.3322676295501877e-15
+[PASS] gradient.linear_exact_axis2: residual 3.330669073875469e-16
+[PASS] gradient.sign_is_physical: residual 0.0
+[PASS] gradient.matches_analytic_tanh: residual 0.020051037744775235
+[PASS] gradient.off_axis_is_zero: residual 2.7755575615628907e-17
+[PASS] perturbation.mass: residual 4.607859233063394e-18
+[PASS] perturbation.momentum: residual 1.0842021724855044e-18
+[PASS] perturbation.second_moment_vs_derivation: residual 2.6020852139652106e-18
+[PASS] perturbation.mass_vs_derivation: residual 4.607859233063394e-18
+[PASS] recolor.red_sum_equals_rho_r: residual 1.6653345369377348e-16
+[PASS] recolor.blue_sum_equals_rho_b: residual 2.220446049250313e-16
+[PASS] recolor.total_is_colour_blind: residual 1.3877787807814457e-17
+[PASS] bounceback.double_application_is_identity: residual 0.0
+[PASS] bounceback.untouched_fluid: residual 0.0
+[PASS] bounceback.solid_is_opposite_permuted: residual 0.0
+[PASS] stream.forward_shift_x: residual 0.0
+[PASS] stream.non_forward_directions_differ: residual 0.0
+[PASS] stream.total_mass_preserved: residual 7.105427357601002e-15
+
+41/41 checks passed

@@ -1,0 +1,91 @@
+{
+  "steps": 1500,
+  "grid": [
+    28,
+    16,
+    16
+  ],
+  "band": 3,
+  "wall_band_red_initial": 580.0,
+  "wall_band_red_final": 587.0305986232278,
+  "wall_band_red_change": 7.030598623227775,
+  "wall_band_red_relative": 0.012121721764185819,
+  "red_drift": 102.09960124625513,
+  "blue_drift": 138.84767083598422,
+  "n_components_initial": 1,
+  "n_components_final": 1,
+  "component_sizes_final": [
+    1224
+  ],
+  "max_abs_v": 0.021043345875021862,
+  "trace": [
+    {
+      "t": 0,
+      "wall_band_red": 580.0,
+      "red_total": 1500.0,
+      "blue_total": 1640.0,
+      "max_abs_v": 2.7755575615628914e-17
+    },
+    {
+      "t": 187,
+      "wall_band_red": 533.4242841219414,
+      "red_total": 1461.5688816991656,
+      "blue_total": 1599.9587983081908,
+      "max_abs_v": 0.020872513951673263
+    },
+    {
+      "t": 374,
+      "wall_band_red": 540.8170510711318,
+      "red_total": 1480.7052773817745,
+      "blue_total": 1624.315570411,
+      "max_abs_v": 0.020901786332609945
+    },
+    {
+      "t": 561,
+      "wall_band_red": 548.3011624369872,
+      "red_total": 1500.146383168753,
+      "blue_total": 1649.0586733198293,
+      "max_abs_v": 0.020925936633410986
+    },
+    {
+      "t": 748,
+      "wall_band_red": 555.8360516279027,
+      "red_total": 1519.9026300844594,
+      "blue_total": 1674.1938731220098,
+      "max_abs_v": 0.02094988247262463
+    },
+    {
+      "t": 935,
+      "wall_band_red": 563.4686431820508,
+      "red_total": 1539.9731493612721,
+      "blue_total": 1699.732209068419,
+      "max_abs_v": 0.020973639408355924
+    },
+    {
+      "t": 1122,
+      "wall_band_red": 571.2151458113553,
+      "red_total": 1560.359786188092,
+      "blue_total": 1725.6826199130956,
+      "max_abs_v": 0.02099712573987254
+    },
+    {
+      "t": 1309,
+      "wall_band_red": 579.0693791166377,
+      "red_total": 1581.0670946729624,
+      "blue_total": 1752.0522028479368,
+      "max_abs_v": 0.021020342943457775
+    },
+    {
+      "t": 1496,
+      "wall_band_red": 587.0305986232278,
+      "red_total": 1602.0996012462551,
+      "blue_total": 1778.8476708359842,
+      "max_abs_v": 0.021043345875021862
+    }
+  ],
+  "verdict": "PASS",
+  "acceptance": "wall-band red mass changes by < 2% AND the domain stays single-component, with no imposed pressure difference and a non-cancelling geometry",
+  "note": "R2 warns that periodic closure can hide wall-directed mass transfer; the ledge geometry is one-sided, closed on all four lateral faces, and driven by no pressure difference, so a wall-directed transfer cannot cancel",
+  "wall_seconds": 38.64064025878906,
+  "exit_code": 0
+}

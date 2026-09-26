@@ -1,0 +1,17 @@
+{
+  "max_abs_v": 8.799988168382003e-14,
+  "max_abs_drho": 7.4495964952348e-14,
+  "red_mass_drift": 3.808509063674137e-11,
+  "blue_mass_drift": 0.0,
+  "blue_max": 0.0,
+  "steps": 400,
+  "grid": [
+    8,
+    8,
+    8
+  ],
+  "verdict": "PASS",
+  "acceptance": "max|v| < 1e-12 and max|drho| < 1e-12 (machine precision)",
+  "wall_seconds": 0.8928060531616211,
+  "exit_code": 0
+}

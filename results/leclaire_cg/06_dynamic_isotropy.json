@@ -1,0 +1,41 @@
+{
+  "runs": [
+    {
+      "wave_axis": 0,
+      "normal_axis": 2,
+      "amplitude_trace": [
+        0.9988962690261783,
+        0.9667040177864084,
+        0.9715603515413931,
+        0.9730274292247167,
+        0.9718224401230153
+      ],
+      "amplitude_final": 0.9718224401230153,
+      "max_abs_v": 0.000666659096001366
+    },
+    {
+      "wave_axis": 1,
+      "normal_axis": 2,
+      "amplitude_trace": [
+        0.9988962690261769,
+        0.9703415552309602,
+        0.9752748343718147,
+        0.9766656513736087,
+        0.9763157794305622
+      ],
+      "amplitude_final": 0.9763157794305622,
+      "max_abs_v": 0.00048400232203473816
+    }
+  ],
+  "steps": 600,
+  "grid": [
+    32,
+    16,
+    16
+  ],
+  "amplitude_asymmetry": 0.004602342195234891,
+  "verdict": "PASS",
+  "acceptance": "the terminal interface response agrees for a wave vector along x and along y to within 5% relative",
+  "wall_seconds": 36.032992124557495,
+  "exit_code": 0
+}

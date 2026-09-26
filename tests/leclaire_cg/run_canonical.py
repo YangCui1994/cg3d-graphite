@@ -64,6 +64,21 @@ def z_profile(psi):
     return psi[psi.shape[0] // 2, psi.shape[1] // 2, :]
 
 
+def max_fluid_velocity(s):
+    """max |u| over FLUID nodes.
+
+    Whole-domain max|u| is misleading in any geometry with solid nodes:
+    a solid node holds only what streaming delivered, so rho there can be
+    small and u = mom/rho large, and the number is not a physical
+    velocity.  Measured on the asymmetric-ledge geometry: whole-domain
+    1.41 versus fluid-only 0.021.  Only the fluid value is a spurious-
+    current diagnostic.
+    """
+    _, u = s.macroscopic()
+    sp = np.linalg.norm(u, axis=-1)
+    return float(sp[s.fluid].max()) if np.any(s.fluid) else 0.0
+
+
 # ======================================================================
 #  test 1 -- uniform single-phase stationarity
 # ======================================================================
@@ -76,7 +91,7 @@ def test_01_uniform(steps=400, n=(8, 8, 8)):
     rho, u = s.macroscopic()
     m1 = masses(s)
     res = dict(
-        max_abs_v=float(np.abs(u).max()),
+        max_abs_v=max_fluid_velocity(s),
         max_abs_drho=float(np.abs(rho - rho0).max()),
         red_mass_drift=abs(m1[0] - m0[0]),
         blue_mass_drift=abs(m1[1] - m0[1]),
@@ -106,7 +121,7 @@ def test_02_planar(steps=1000, n=(6, 6, 32)):
         trace.append(dict(t=s.time,
                           pos=float(G.interface_position_1d(p)),
                           amp=float(np.abs(p).max()),
-                          spurious_v=float(np.abs(s.macroscopic()[1]).max())))
+                          spurious_v=max_fluid_velocity(s)))
     c1 = trace[-1]["pos"]
     res = dict(
         interface_pos_initial=float(c0),
@@ -161,7 +176,7 @@ def test_03_laplace(steps=1200, n=(26, 26, 26), radii=(5.0, 7.0, 9.0)):
                         psi_peak_ratio=psi1 / psi0 if psi0 else None,
                         interface_width=float(wfit),
                         R_over_w=float(R / wfit) if wfit > 0 else None,
-                        max_abs_v=float(np.abs(u).max())))
+                        max_abs_v=max_fluid_velocity(s)))
     res = dict(runs=out, steps=steps, grid=list(n), sigma_input=SIGMA)
     ratios = [o["sigma_ratio"] for o in out]
     res["sigma_ratio_range"] = [min(ratios), max(ratios)]
@@ -307,7 +322,7 @@ def test_06_isotropy(steps=600, n=(32, 16, 16)):
             amps.append(float(np.abs(prof).max()))
         out.append(dict(wave_axis=wave_axis, normal_axis=normal_axis,
                         amplitude_trace=amps, amplitude_final=amps[-1],
-                        max_abs_v=float(np.abs(s.macroscopic()[1]).max())))
+                        max_abs_v=max_fluid_velocity(s)))
     res = dict(runs=out, steps=steps, grid=list(n))
     a0, a1 = out[0]["amplitude_final"], out[1]["amplitude_final"]
     res["amplitude_asymmetry"] = float(abs(a0 - a1) / max(a0, a1, 1e-30))
@@ -320,35 +335,65 @@ def test_06_isotropy(steps=600, n=(32, 16, 16)):
 # ======================================================================
 #  test 7 -- static slit capillary pressure
 # ======================================================================
-def test_07_slit_pc(steps=1500, gaps=(6, 8), n=(12, 12, 24)):
+def test_07_slit_pc(steps=1500, gaps=(10, 12), n=(12, 12, 32)):
+    """Static capillary pressure in a sealed slit.
+
+    The slit is closed at both ends by solid, so there is no "top" and
+    "bottom" reservoir: the only meaningful pressure difference is the one
+    ACROSS the meniscus, between the wetting fluid on one side and the
+    non-wetting fluid on the other.  The meniscus is located from the
+    psi = 0 crossing and the two sides are sampled inside the fluid
+    region only, three nodes clear of it.
+    """
     out = []
     for gap in gaps:
         solid = G.slit(n[0], n[1], n[2], gap=gap, wall=2)
         s = make(n, solid=solid, wetting="none")
+        z0 = 2 + gap // 2
         psi = np.full(n, -1.0)
-        z = np.arange(n[2])[None, None, :]
-        lo = 2 + gap // 2
-        psi[:, :, :lo] = 1.0
+        psi[:, :, :z0] = 1.0
         s.init_psi(psi)
         s.run(steps)
-        rho, u = s.macroscopic()
-        fluid = ~solid
+        rho, _ = s.macroscopic()
         zz = np.arange(n[2])[None, None, :] * np.ones(n)
-        top = fluid & (zz > 2 + gap)
-        bot = fluid & (zz < 2)
-        dtop = float(rho[top].mean()) if top.any() else None
-        dbot = float(rho[bot].mean()) if bot.any() else None
-        dp = (dbot - dtop) / 3.0 if (dtop is not None and dbot is not None) \
-            else None
-        out.append(dict(gap=gap, rho_bottom=dbot, rho_top=dtop, dp=dp,
+        col = s.psi()[n[0] // 2, n[1] // 2, :]
+        fluid_col = ~solid[n[0] // 2, n[1] // 2, :]
+        zi = int(np.argmin(np.where(fluid_col, np.abs(col), np.inf)))
+        wet_solid = solid[n[0] // 2, n[1] // 2, :]
+        # sampling windows must fit inside the slit AND clear the
+        # interface by more than its own width; a too-thin slit yields
+        # empty windows, which is a measurement defect and is reported as
+        # INCONCLUSIVE rather than as a physics failure.
+        lo = fluid_col & (zz[0, 0] < zi - 3) & (zz[0, 0] >= 2)
+        hi = fluid_col & (zz[0, 0] > zi + 3) & (zz[0, 0] < 2 + gap)
+        bot = np.broadcast_to(lo, n) if lo.any() else None
+        top = np.broadcast_to(hi, n) if hi.any() else None
+        rb = float(rho[bot].mean()) if bot is not None else None
+        rt = float(rho[top].mean()) if top is not None else None
+        dp = (rt - rb) / 3.0 if (rt is not None and rb is not None) else None
+        out.append(dict(gap=gap, meniscus_z=zi,
+                        rho_wetting_side=rb, rho_nonwetting_side=rt, dp=dp,
                         pc_analytic=2.0 * SIGMA / gap,
+                        pc_ratio=(dp / (2.0 * SIGMA / gap))
+                        if dp is not None else None,
                         psi_peak=float(np.abs(s.psi()).max()),
-                        max_abs_v=float(np.abs(u).max())))
+                        max_abs_v=max_fluid_velocity(s)))
     res = dict(runs=out, steps=steps, grid=list(n))
-    ok = all(o["dp"] is not None and o["psi_peak"] > 0.9 for o in out)
-    res["verdict"] = "PASS" if ok else "FAIL"
-    res["acceptance"] = ("each slit keeps |psi|peak > 0.9 AND a measurable "
-                         "pressure difference is obtained")
+    measurable = all(o["dp"] is not None for o in out)
+    ok = measurable and all(o["psi_peak"] > 0.9 and o["dp"] > 0 for o in out)
+    if not measurable:
+        res["verdict"] = "INCONCLUSIVE"
+        res["reason"] = ("the sampling windows inside the slit are empty, so "
+                         "the pressure difference was not measured at all; "
+                         "this is a measurement defect, not a physics result")
+    else:
+        res["verdict"] = "PASS" if ok else "FAIL"
+    res["acceptance"] = ("each slit keeps |psi|peak > 0.9 AND a positive "
+                         "pressure difference across the meniscus is "
+                         "measured; the ratio to 2 sigma cos(theta)/gap is "
+                         "reported but not gated, because the contact angle "
+                         "here is the model's own (wetting='none') rather "
+                         "than a prescribed one")
     return res
 
 
@@ -404,7 +449,7 @@ def test_09_killer(steps=1500, n=(28, 16, 16), band=3):
             wall_band_red=float(rho_r_now[wb].sum()),
             red_total=float(s.rho_r.sum()),
             blue_total=float(s.rho_b.sum()),
-            max_abs_v=float(np.abs(s.macroscopic()[1]).max()),
+            max_abs_v=max_fluid_velocity(s),
         ))
     m1 = masses(s)
     ncomp1, sizes1 = G.labelled_components(np.where(solid, -1.0, s.psi()), 0.5)

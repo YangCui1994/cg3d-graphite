@@ -1,0 +1,61 @@
+{
+  "runs": [
+    {
+      "R": 5.0,
+      "dp": 0.005901723792244999,
+      "sigma_measured": 0.014754309480612498,
+      "sigma_input": 0.02,
+      "sigma_ratio": 0.7377154740306249,
+      "psi_peak_initial": 0.9999999998561716,
+      "psi_peak_final": 0.9999999992140589,
+      "psi_peak_ratio": 0.9999999993578873,
+      "interface_width": 0.12272027049586555,
+      "R_over_w": 40.74306534525158,
+      "max_abs_v": 0.00040059132644450565
+    },
+    {
+      "R": 7.0,
+      "dp": 0.004025991256030907,
+      "sigma_measured": 0.014090969396108174,
+      "sigma_input": 0.02,
+      "sigma_ratio": 0.7045484698054086,
+      "psi_peak_initial": 0.9999999979300337,
+      "psi_peak_final": 0.9999999911557008,
+      "psi_peak_ratio": 0.9999999932256671,
+      "interface_width": 0.3268928296502344,
+      "R_over_w": 21.413745928565614,
+      "max_abs_v": 0.00026781029713005065
+    },
+    {
+      "R": 9.0,
+      "dp": 0.0030320181132299506,
+      "sigma_measured": 0.013644081509534778,
+      "sigma_input": 0.02,
+      "sigma_ratio": 0.6822040754767389,
+      "psi_peak_initial": 0.9999999702092184,
+      "psi_peak_final": 0.9999998974902103,
+      "psi_peak_ratio": 0.9999999272809897,
+      "interface_width": 0.8669467468786717,
+      "R_over_w": 10.381260478112782,
+      "max_abs_v": 0.0009577158286158741
+    }
+  ],
+  "steps": 1200,
+  "grid": [
+    26,
+    26,
+    26
+  ],
+  "sigma_input": 0.02,
+  "sigma_ratio_range": [
+    0.6822040754767389,
+    0.7377154740306249
+  ],
+  "droplet_survived": true,
+  "sigma_ratio_spread": 0.05551139855388598,
+  "laplace_law_demonstrated": true,
+  "verdict": "FAIL",
+  "acceptance": "droplet survives every radius AND the implied sigma is radius-independent within 15% AND the calibration ratio sigma_meas/sigma_input >= 0.7",
+  "wall_seconds": 243.38269972801208,
+  "exit_code": 0
+}

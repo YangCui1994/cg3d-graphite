@@ -1,0 +1,35 @@
+{
+  "runs": [
+    {
+      "theta_prescribed_deg": 60.0,
+      "rb": 5.656854249492381,
+      "apex": 4.0,
+      "theta_measured_deg": 70.52877936550931,
+      "psi_peak": 0.9999999999456909
+    },
+    {
+      "theta_prescribed_deg": 90.0,
+      "rb": 4.47213595499958,
+      "apex": 6.0,
+      "theta_measured_deg": 106.60154959902025,
+      "psi_peak": 0.9999999999080117
+    },
+    {
+      "theta_prescribed_deg": 120.0,
+      "rb": 0.0,
+      "apex": 10.0,
+      "theta_measured_deg": null,
+      "psi_peak": 0.9999999970897089
+    }
+  ],
+  "steps": 2000,
+  "grid": [
+    24,
+    24,
+    20
+  ],
+  "verdict": "FAIL",
+  "acceptance": "every prescribed angle keeps |psi|peak > 0.9 AND measured theta within 15 deg",
+  "wall_seconds": 253.26270747184753,
+  "exit_code": 0
+}

@@ -1,0 +1,11 @@
+[        PASS] 01_uniform_single_phase  (0.9 s, exit 0)
+[        PASS] 02_planar_interface  (4.2 s, exit 0)
+[        FAIL] 03_laplace_droplet  (243.4 s, exit 0)
+[        FAIL] 04_static_contact_angle  (253.3 s, exit 0)
+[        PASS] 05_interface_width_vs_beta  (13.1 s, exit 0)
+[        PASS] 06_dynamic_isotropy  (36.0 s, exit 0)
+[        FAIL] 07_static_slit_capillary_pressure  (31.2 s, exit 0)
+[        FAIL] 08_simple_imbibition  (19.2 s, exit 0)
+[        PASS] 09_asymmetric_killer  (38.6 s, exit 0)
+[        PASS] 10_conservation_audit  (9.2 s, exit 0)
+EXIT=0

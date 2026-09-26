@@ -1,0 +1,73 @@
+{
+  "runs": [
+    {
+      "beta": 0.0,
+      "width": 19.99999999999994,
+      "psi_peak": 0.05733943963426627,
+      "slope": 0.005115215182073807
+    },
+    {
+      "beta": 0.5,
+      "width": 1.838714844750914,
+      "psi_peak": 0.9970032621592774,
+      "slope": 0.37579875808844665
+    },
+    {
+      "beta": 0.7,
+      "width": 1.4690258314034206,
+      "psi_peak": 0.9998668653544003,
+      "slope": 0.4947962419458847
+    },
+    {
+      "beta": 1.0,
+      "width": 1.1230447586313694,
+      "psi_peak": 0.9999998452806443,
+      "slope": 0.6399570373721603
+    },
+    {
+      "beta": 1.5,
+      "width": 0.6646710830446018,
+      "psi_peak": 1.0168378666505165,
+      "slope": 0.8603478221530029
+    },
+    {
+      "beta": 2.0,
+      "width": 0.4047727958447533,
+      "psi_peak": 1.1140932156182055,
+      "slope": 1.0009593561224932
+    }
+  ],
+  "steps": 600,
+  "grid": [
+    6,
+    6,
+    32
+  ],
+  "psi_peak_min": 0.05733943963426627,
+  "psi_peak_max": 1.1140932156182055,
+  "n_beta_with_physical_interface": 5,
+  "widths_physical": [
+    1.838714844750914,
+    1.4690258314034206,
+    1.1230447586313694,
+    0.6646710830446018,
+    0.4047727958447533
+  ],
+  "betas_physical": [
+    0.5,
+    0.7,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "monotone_in_beta": true,
+  "betas_with_psi_above_one": [
+    1.5,
+    2.0
+  ],
+  "verdict": "PASS",
+  "acceptance": "at least one beta keeps |psi|max > 0.95 in both bulks, i.e. a physical diffuse interface exists; the report states that eta (R1 Eq.19 refinement law) is NOT determined by this test",
+  "note": "widths are the fitted tanh width of the TERMINAL state; see EXECUTION_REPORT.md for the terminal-state characterisation at these parameters",
+  "wall_seconds": 13.128572463989258,
+  "exit_code": 0
+}
