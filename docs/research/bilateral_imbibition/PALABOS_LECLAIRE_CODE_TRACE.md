@@ -245,3 +245,194 @@ secondary Leclaire-like code     FOUND
 
 This is a provenance result, not evidence that the published algorithm is
 incorrect or that Palabos never contained the code in any branch.
+
+
+---
+
+## 10. Second bounded archaeology round
+
+The second search round targeted evidence that could distinguish between:
+
+1. a merely planned Palabos implementation;
+2. a working research implementation that never entered the standard public
+   release lineage;
+3. a once-public implementation that was later removed.
+
+### 10.1 Same-group 2017 CGM-vs-PPM benchmark: working Palabos CGM confirmed
+
+A second 2017 paper by the same group is especially important:
+
+S. Leclaire, A. Parmigiani, B. Chopard, J. Latt,
+"Three-dimensional lattice Boltzmann method benchmarks between color-gradient
+and pseudo-potential immiscible multi-component models",
+International Journal of Modern Physics C 28 (2017),
+DOI 10.1142/S0129183117500851.
+
+The paper explicitly states that **both the pseudo-potential model and the
+color-gradient model were implemented in the open-source Palabos library**, and
+that both models were implemented for D3Q15, D3Q19 and D3Q27.
+
+It also reports Palabos performance measurements for the CGM itself. For the
+D3Q19 case the reported throughput is approximately:
+
+- CGM: 0.31 MLUPS on one core;
+- CGM: 23.8 MLUPS on 128 cores;
+- parallel efficiency: about 60%.
+
+These measurements are strong evidence that the authors had a real,
+runnable Palabos CGM code path in their research environment. The code was not
+merely a paper-level proposal.
+
+### 10.2 Same benchmark paper: periodic boundaries can hide wetting defects
+
+The same benchmark paper makes a scientifically important observation for this
+project: periodic boundary conditions can conceal deficiencies in a wetting
+boundary condition because artificial wall-directed mass transfers can balance
+one another under periodic closure.
+
+This is directly relevant to future validation of cg3d-graphite. A wetting
+scheme must not be accepted solely because a periodic or symmetric geometry
+looks stationary. Complex-wall validation should include a geometry in which a
+one-sided wall-transfer artifact cannot cancel through periodic symmetry.
+
+This is an algorithm-validation consequence, not evidence that the current
+cg3d-graphite periodic implementation is itself wrong.
+
+### 10.3 2017 magma-reservoir paper: public release was still future work
+
+A 2017 paper from the same research group using the color-gradient model in
+Palabos states in its data/code-availability wording that the LBM calculations
+used the open-source Palabos framework and that the authors **intended to make
+their CGM code available to the public under the same license soon**, referring
+readers to the Leclaire work.
+
+This is the clearest timestamped evidence separating:
+
+- "implemented using/in Palabos" from
+- "present in the public standard Palabos distribution."
+
+It strongly supports an internal/research extension interpretation.
+
+### 10.4 2018 acknowledgement: Leclaire was the main author of the Palabos recoloring implementation
+
+A 2018 follow-up publication acknowledges S. Leclaire as the **main author of
+the LB recoloring-method implementation in Palabos**.
+
+This further confirms that a concrete Palabos implementation existed and
+identifies Leclaire as its principal implementation author.
+
+The acknowledgement does not provide a public repository, patch, tag or source
+archive.
+
+### 10.5 2019 same-group use: internal Palabos CGM persisted
+
+A 2019 paper from the same broader author group states that its CGM code is
+implemented in Palabos and reports HPC use.
+
+Thus the research implementation appears to have remained in active use at
+least through the period when the public Palabos Git repository was being
+created.
+
+### 10.6 Public Palabos Git history starts too late
+
+The official Palabos GitLab project became public in October 2019. The v2.1r0
+tag is described as the first release after hosting at the University of Geneva
+and after the Git repository went public.
+
+The public Git history therefore does not contain a recoverable 2016-2018
+commit chain from which an internal paper branch can simply be checked out.
+
+Inspection of the public release lineage from v2.1r0 onward still finds no
+Leclaire CG/recoloring module.
+
+### 10.7 Old public forks do not recover the missing module
+
+Recursive source-tree inspections were also performed on several public
+Palabos forks / vendored copies, including:
+
+- CFDEMproject/Palabos-fork;
+- gladk/palabos;
+- corning-incorporated/flowMeld;
+- the complete v2.0r0 snapshot already documented above.
+
+These trees contain the standard multiphase families
+(Shan-Chen, free-surface, He-Lee, etc.) but no identifiable Leclaire
+color-gradient/recoloring module.
+
+This weakens the hypothesis that the code was once part of an ordinary public
+release and simply survived in an old standard fork.
+
+### 10.8 Supplemental material is not a source-code archive
+
+The PRE paper's supplemental material is referenced for animations / movie
+material. The available record does not identify a source-code package as
+supplemental material.
+
+No research-data attachment or source archive associated with the PRE paper
+was recovered in this bounded search.
+
+### 10.9 Search for author/public branches
+
+Searches by:
+
+- Leclaire's name and historical email;
+- Leclaire + Palabos + recoloring / color-gradient terms;
+- Parmigiani / Latt + Palabos CG terms;
+- old public Palabos forks;
+
+did not recover a public 2016-2019 author branch containing the missing CG
+module.
+
+The current public Palabos source does preserve a historical comment crediting
+Sébastien Leclaire for D3Q15 and D2Q27 lattice definitions. This shows that
+some generic Leclaire contributions entered the public code base, but it does
+not expose the CG/recoloring implementation.
+
+## 11. Updated provenance inference
+
+After the second bounded search, the evidence supports a stronger inference
+than after round one:
+
+```text
+working Palabos CGM research implementation       CONFIRMED
+D3Q15 / D3Q19 / D3Q27 Palabos CGM implementations CONFIRMED by same-group paper
+Leclaire main author of Palabos recoloring code    CONFIRMED by later acknowledgement
+
+standard v1.5r1 public release                     CG module not found
+standard v2.0r0 full source                        CG module not found
+public v2.1r0+ Git/release lineage                 CG module not found
+old standard Palabos forks inspected               CG module not found
+
+public source archive / patch / author branch      NOT RECOVERED
+```
+
+The highest-probability history is now:
+
+> The Leclaire CGM existed as a working Palabos research/development extension
+> used by the authors for published calculations, but it was not merged into
+> the normal public release lineage (or was distributed through a separate
+> channel that is no longer publicly indexed).
+
+The alternative hypothesis — that it entered a standard public release and was
+later deleted — is now substantially less likely.
+
+## 12. Archaeology stop rule
+
+Further broad web/code search now has low expected value.
+
+The only high-yield remaining route to the original author implementation is a
+direct archival request to the original authors / Palabos maintainers
+(Sébastien Leclaire, Jonas Latt, Andrea Parmigiani, or the University of Geneva
+Palabos group) asking specifically for the 2016-2019 CGM/recoloring Palabos
+branch or patch associated with PRE 95, 033306.
+
+Unless such a source is obtained, the engineering path for cg3d-graphite
+should move to a clean-room equation-level audit using:
+
+1. Leclaire 2017 as the canonical formulation;
+2. same-group papers as validation/behavior evidence;
+3. independent implementations (Cranfield 2017, LBPM, CGLBM, etc.) only as
+   cross-checks;
+4. our own regression/conservation framework for acceptance.
+
+No further source archaeology is required before that audit.
