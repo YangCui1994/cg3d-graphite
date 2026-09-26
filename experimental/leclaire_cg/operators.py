@@ -121,7 +121,20 @@ def omega_eff(nu):
 #  Colour gradient, R1 Eq. (17) with the fourth-order isotropic stencil
 # ======================================================================
 def _shift(arr, c):
+    """``out[x] = arr[x - c]`` -- the STREAMING direction convention."""
     return np.roll(arr, shift=(int(c[0]), int(c[1]), int(c[2])), axis=(0, 1, 2))
+
+
+def _shift_fwd(arr, c):
+    """``out[x] = arr[x + c]`` -- the GRADIENT-sampling convention.
+
+    These two are easy to confuse and the consequence is a silent sign
+    flip of the whole colour gradient, which inverts the recoloring's
+    segregation direction.  ``test_lattice_tables.py`` therefore asserts
+    the gradient sign explicitly.
+    """
+    return np.roll(arr, shift=(-int(c[0]), -int(c[1]), -int(c[2])),
+                   axis=(0, 1, 2))
 
 
 def gradient_isotropic(field, fluid, renormalize=True):
@@ -133,9 +146,17 @@ def gradient_isotropic(field, fluid, renormalize=True):
     gradient is built "using only the currently known information from the
     bulk fluid lattice sites", i.e. solid neighbours carry no phase-field
     value.  Whether the stencil is then renormalised is NOT stated by R1;
-    ``renormalize=True`` (the default) divides by the available weight so
-    that a linear field is reproduced exactly at an isolated wall.  The
-    switch exists so the sensitivity can be measured rather than assumed.
+    ``renormalize=True`` (the default) divides by the trace factor
+
+        (1/3) sum_i 3 W_i |c_i|^2 = sum_i W_i |c_i|^2
+
+    which is exactly 1 for the complete D3Q19 stencil (so the operator is
+    unchanged in the bulk) and restores the leading-order gradient at a
+    partially truncated wall stencil.  Dividing by ``sum_i 3 W_i``
+    instead would be wrong: that sum is 2, not 1, and would scale every
+    gradient by 0.5 -- which is a real error, because the perturbation
+    uses |F| (PAPER_FORMULATION.md Eq. 16) while the recolouring uses
+    only the orientation.
 
     Isotropy of this operator on D3Q19 is derived in PAPER_FORMULATION.md
     section 4.3 (identity second-rank sum, isotropic fourth-rank sum).
@@ -148,11 +169,11 @@ def gradient_isotropic(field, fluid, renormalize=True):
     for i in range(19):
         if i == 0:
             continue
-        fs = _shift(field, L.E[i])
-        ms = _shift(fluid, L.E[i]).astype(bool)
+        fs = _shift_fwd(field, L.E[i])
+        ms = _shift_fwd(fluid, L.E[i]).astype(bool)
         coeff = 3.0 * L.W_I[i]
         out += ms[..., None] * coeff * ci[i][None, None, None, :] * fs[..., None]
-        wsum += ms * coeff
+        wsum += ms * coeff * float(np.dot(L.E[i], L.E[i])) / 3.0
     if renormalize:
         ok = wsum > EPS
         out[ok] /= wsum[ok, None]

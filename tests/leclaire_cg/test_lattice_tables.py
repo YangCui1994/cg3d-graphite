@@ -65,7 +65,50 @@ def main():
     results.append(check("equilibrium.mass",
                          np.abs(neq.sum(axis=-1) - rho).max(), 1e-14))
 
-    # ---- perturbation conservation (R1 Eq.16) -------------------------
+    # ---- gradient sign and linear exactness ---------------------------
+    # The gradient stencil samples field(x + c_i) while streaming moves
+    # field(x) to x + c_i.  Confusing the two silently flips the sign of
+    # the whole colour gradient, which inverts the recolouring's
+    # segregation direction.  This check exists because that bug was made
+    # once and must not come back.
+    #
+    # Evaluated on INTERIOR nodes only: the boxes are periodic, so a
+    # globally linear test field is not linear across the wrap.
+    n = 16
+    X, Y, Z = np.meshgrid(np.arange(n), np.arange(n), np.arange(n),
+                          indexing="ij")
+    fluid = np.ones((n, n, n), dtype=bool)
+    interior = np.zeros((n, n, n), dtype=bool)
+    interior[2:-2, 2:-2, 2:-2] = True
+    for axis, coef in ((0, 0.7), (1, -1.3), (2, 0.25)):
+        lin = coef * (X, Y, Z)[axis].astype(float)
+        g = op.gradient_isotropic(lin, fluid)
+        want = np.zeros((n, n, n, 3))
+        want[..., axis] = coef
+        results.append(check(f"gradient.linear_exact_axis{axis}",
+                             np.abs((g - want)[interior]).max(), 1e-12))
+
+    # a monotonically DECREASING profile must give a negative gradient
+    prof = -np.tanh((Z - n / 2.0) / 2.5)
+    g = op.gradient_isotropic(prof, fluid)
+    gz = g[..., 2][interior]
+    results.append(check("gradient.sign_is_physical",
+                         0.0 if gz.max() < 0 else 1.0, 0.0))
+    # and it must match the analytic derivative to the stencil's own
+    # truncation order.  The D3Q19 isotropic operator is exact for linear
+    # fields and has a leading isotropic O(grad^3) error of (1/6)d^3/dz^3,
+    # which for tanh(z/2.5) is ~0.011; the tolerance below reflects that
+    # truncation, not an implementation defect.
+    analytic = -(1.0 / 2.5) * (1.0 - np.tanh((Z - n / 2.0) / 2.5) ** 2)
+    results.append(check("gradient.matches_analytic_tanh",
+                         np.abs(g[..., 2][interior]
+                                - analytic[interior]).max(), 5e-2))
+    results.append(check("gradient.off_axis_is_zero",
+                         np.abs(np.concatenate([g[..., 0][interior],
+                                                g[..., 1][interior]])).max(),
+                         1e-12))
+
+
     rng = np.random.default_rng(0)
     F = rng.normal(size=(3, 3, 3, 3))
     om = np.full((3, 3, 3), 1.0 / 3.0)
