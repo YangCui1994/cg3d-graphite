@@ -73,20 +73,30 @@ consistent with its colour-blind field, which is precisely the point of the
 
 ### A.2 Row 8 — `DIFFERENT` (MRT basis)
 
-Under the paper's Table IV ordering, the paper's `M` (`PAPER_FORMULATION.md`
-§2.5) and the current `M` agree **only** on: the density row, the three momentum
-rows, and the five stress rows. They differ on the energy rows.
+Both matrices are described by their value on each of the three D3Q19 shells,
+which makes the comparison independent of the two index orderings (the paper's
+Table IV ordering is not shell-major; see the correction note in
+`PAPER_FORMULATION.md` §0.1). The paper's `M` and the current `M` agree
+**only** on: the density row, the three momentum rows, and the five stress rows.
+They differ on the energy rows.
 
-Explicit relation for the energy row (`shell1` = indices 1–6, `shell2` = 7–18):
+Explicit relation for the energy row, expressed per shell (shell 0 = rest,
+shell 1 = the six axes, shell 2 = the twelve face diagonals):
 
-`paper_row1 = 19 · current_row1 − 11 · current_row0`
+| shell | paper row 1 | current row 1 | current row 0 |
+|---|---|---|---|
+| 0 | −30 | −1 | 1 |
+| 1 | −11 | 0 | 1 |
+| 2 | 8 | 1 | 1 |
 
-(verified algebraically: index 0 gives `−19−11 = −30`; the six axis entries give
-`0−11 = −11`; the twelve diagonal entries give `19−11 = 8` — all matching the
-published row). So the paper's energy moment lies in the span of the current
-line's density and energy rows, but it is a **different basis vector**, and the
-two matrices are not related by a permutation or scaling. A change of MRT basis
-is only physics-neutral if the relaxation matrix is transformed with it
+so `paper_row1 = 19 · current_row1 − 11 · current_row0`, verified entry by
+entry on the shells: shell 0 gives `−19 − 11 = −30`; shell 1 gives `0 − 11 = −11`;
+shell 2 gives `19 − 11 = 8`.
+
+So the paper's energy moment lies in the span of the current line's density and
+energy rows, but it is a **different basis vector**, and the two matrices are not
+related by a permutation or scaling. A change of MRT basis is only
+physics-neutral if the relaxation matrix is transformed with it
 (`K' = T K T⁻¹`); the current line instead pairs its basis with an independently
 chosen diagonal `K` (row 9). The two collision operators are therefore genuinely
 different, not a notational variant.

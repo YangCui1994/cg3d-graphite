@@ -45,7 +45,20 @@ same ordering"*).
 | 9 | (0, −1, 1) | | |
 
 Grouping used by the weight tables:
-`{|c_i|² = 0} = {0}`; `{|c_i|² = 1} = {1…6}`; `{|c_i|² = 2} = {7…18}`.
+`{|c_i|² = 0} = {0}`;
+`{|c_i|² = 1} = {1, 2, 3, 10, 11, 12}`;
+`{|c_i|² = 2} = {4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 18}`.
+
+> **CORRECTION (see commit `formulation-fix:`).** The first version of this
+> document stated the grouping as shell-major ("1–6 axes, 7–18 diagonals").
+> That is wrong: R1's Table IV ordering is **not** shell-major, because
+> indices 10, 11, 12 are the *positive* axis directions. The error was caught
+> during implementation by a cross-check against Table XI row 1, whose 19
+> entries are constant within a shell **only** under the grouping above
+> (−30 / −11 ×6 / 8 ×12). The correction changes no equation, no weight and
+> no ordering in the formulation; it corrects the shell membership derived
+> from the ordering. The original statement is left visible in the commit
+> history rather than rewritten.
 
 Opposite direction map: `opp(1)=10, opp(2)=11, opp(3)=12, opp(4)=13, opp(5)=14,
 opp(6)=15, opp(7)=16, opp(8)=17, opp(9)=18`; `opp(0)=0`.
