@@ -206,18 +206,31 @@ def smooth_solid(solid, passes=L.SMOOTH_PASSES):
 def wall_normals(solid, sign=+1.0):
     """n_w = grad(g_smoothed) at fluid sites (R1 Eqs. 34-38).
 
+    The gradient is taken over ALL neighbours, not fluid neighbours only.
+    This is a real distinction and not a detail: the smoothed image is
+    defined on every site, and for a flat wall it is ~0 and nearly
+    constant across the fluid nodes, so a fluid-only stencil returns a
+    wall normal of ZERO and the entire wetting condition becomes a silent
+    no-op -- measured at 1152 wall nodes.  Contrast section II.E's
+    phase-field gradient, which is explicitly built from "the bulk fluid
+    lattice sites" and therefore IS fluid-sampled.
+
     R1 does not fix whether ``n_w`` points into the fluid or into the
     solid; ``sign`` selects the convention and the validation reports
     which one reproduces the prescribed contact angle.
     """
     g = smooth_solid(solid)
-    fluid = (np.asarray(solid) == 0)
-    nw = gradient_isotropic(g, fluid, renormalize=False)
+    solid = np.asarray(solid)
+    fluid = (solid == 0)
+    everywhere = np.ones(solid.shape, dtype=bool)
+    nw_all = gradient_isotropic(g, everywhere, renormalize=False)
+    nw = np.zeros_like(nw_all)
+    nw[fluid] = nw_all[fluid]
     nrm = np.linalg.norm(nw, axis=-1, keepdims=True)
     ok = nrm[..., 0] > EPS
-    nw = np.zeros_like(nw)
-    nw[ok] = sign * nw[ok] / nrm[ok]
-    return nw
+    out = np.zeros_like(nw)
+    out[ok] = sign * nw[ok] / nrm[ok]
+    return out
 
 
 # ======================================================================
