@@ -123,17 +123,34 @@ def asymmetric_ledge(nx, ny, nz, ledge_thickness=3, ledge_height=None,
 #  Measurement helpers
 # ----------------------------------------------------------------------
 def interface_position_1d(psi_prof):
-    """Zero crossing of a monotone periodic-ish profile, by linear
-    interpolation on the (possibly wrapped) profile."""
+    """Zero crossing of a profile, by linear interpolation on the
+    mid-level crossing.
+
+    A naive sign-change search fails when the profile takes the value
+    exactly 0 at a node (which a symmetric tanh profile does at the
+    midpoint), so the crossing is located from the value nearest zero
+    instead.
+    """
     p = np.asarray(psi_prof, dtype=np.float64)
     n = p.size
     idx = np.where(np.sign(p[:-1]) * np.sign(p[1:]) < 0)[0]
+    if idx.size == 0 and np.sign(p[-1]) * np.sign(p[0]) < 0:
+        f = p[-1] / (p[-1] - p[0])
+        return n - 1 + f
     if idx.size == 0:
-        # try the periodic wrap
-        if np.sign(p[-1]) * np.sign(p[0]) < 0:
-            f = p[-1] / (p[-1] - p[0])
-            return n - 1 + f
-        return np.nan
+        # no strict sign change: take the interior node closest to zero
+        # and interpolate with whichever neighbour has the opposite sign
+        s = np.abs(p[1:-1])
+        if s.size == 0:
+            return np.nan
+        i = int(np.argmin(s)) + 1
+        if abs(p[i]) < 1e-12:
+            return float(i)
+        for j in (i - 1, i + 1):
+            if np.sign(p[j]) * np.sign(p[i]) < 0:
+                f = p[i] / (p[i] - p[j])
+                return float(i + f * (j - i))
+        return float(i)
     i = idx[0]
     f = p[i] / (p[i] - p[i + 1])
     return i + f

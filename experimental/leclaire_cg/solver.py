@@ -206,9 +206,9 @@ class LeclaireCG3D:
         N = N + op.perturbation(F, omega, self.sigma,
                                 coeff_mode=self.perturbation_coeff)
 
-        # ---- step (5): recoloring
+        # ---- step (5): recoloring (R1 restricts it to x in X_F)
         Nr, Nb = op.recolor(N, self.rho_r, self.rho_b, F, self.beta, u=u,
-                            form=self.recolor_form)
+                            form=self.recolor_form, fluid=fluid)
 
         if self.conservation_overlay == "f64_arithmetic":
             # Optional project-style closure: force the per-node colour sums

@@ -359,7 +359,7 @@ PAIRS = [(i, int(L.OPP[i])) for i in range(1, 10)]
 
 
 def recolor(N, rho_r, rho_b, F, beta, u=None, alpha=L.ALPHA_UNIT,
-            form="paper"):
+            form="paper", fluid=None):
     """Split the colour-blind N into (N_r, N_b).
 
     R1 Eqs. (19)-(20), pairwise form derived in PAPER_FORMULATION.md
@@ -373,6 +373,12 @@ def recolor(N, rho_r, rho_b, F, beta, u=None, alpha=L.ALPHA_UNIT,
     The rest population i = 0 is untouched (c_0 = 0 => cos(theta_0) := 0),
     which is the convention that makes sum_i N_r,i == rho_r exactly.
 
+    ``fluid`` restricts the recolouring to x in X_F as R1 step (5) states.
+    It is not cosmetic: at a solid node the colour fractions are
+    meaningless (rho can be at the f64 floor) and an unmasked evaluation
+    both overflows and injects non-R1 colour arithmetic into the
+    bounce-back.
+
     ``form='min_variant'`` replaces the amplitude with the current
     production law ``min(g_r[i], g_r[j], g_b[i], g_b[j])`` evaluated from
     the equilibrium colour split at (rho_r, u) / (rho_b, u).  It exists
@@ -380,7 +386,7 @@ def recolor(N, rho_r, rho_b, F, beta, u=None, alpha=L.ALPHA_UNIT,
     and is never a paper-faithful arm.
     """
     rho = rho_r + rho_b
-    safe = np.abs(rho) > EPS
+    safe = np.abs(rho) > 1e-12
     fr = np.zeros_like(rho)
     fb = np.zeros_like(rho)
     fr[safe] = rho_r[safe] / rho[safe]
@@ -390,6 +396,8 @@ def recolor(N, rho_r, rho_b, F, beta, u=None, alpha=L.ALPHA_UNIT,
 
     mag = np.linalg.norm(F, axis=-1)
     live = safe & (mag > EPS)
+    if fluid is not None:
+        live = live & np.asarray(fluid)
     if not np.any(live):
         return Nr, Nb
 
@@ -398,8 +406,11 @@ def recolor(N, rho_r, rho_b, F, beta, u=None, alpha=L.ALPHA_UNIT,
 
     if form == "paper":
         N0 = equilibrium_zero_velocity(rho, alpha)
+        # written as (rho_r/rho)(rho_b/rho) rather than
+        # (rho_r rho_b)/rho^2 so that a small-but-finite rho cannot
+        # underflow the denominator and produce inf/NaN
         pref = np.zeros_like(rho)
-        pref[live] = beta * (rho_r[live] * rho_b[live]) / (rho[live] ** 2)
+        pref[live] = beta * fr[live] * fb[live]
     elif form == "min_variant":
         if u is None:
             raise ValueError("min_variant needs the local velocity u")
