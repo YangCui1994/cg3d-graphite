@@ -94,28 +94,56 @@ def slit(nx, ny, nz, gap, wall=2):
 
 def asymmetric_ledge(nx, ny, nz, ledge_thickness=3, ledge_height=None,
                      side="left"):
-    """One-sided top ledge: a floor slab plus an overhang covering part of
-    the box in x, attached to one wall only.
+    """One-sided top ledge inside a fully closed box.
 
-    Deliberately NOT translation-symmetric under the periodic wrap and
-    NOT mirror-symmetric about any interior plane, so a wall-directed
-    mass transfer cannot cancel (R2's warning).  The two x-faces are
-    closed by solid walls.
+    A floor slab, an overhang covering only ONE half in x, and **all four
+    lateral faces closed**.  The geometry is deliberately not
+    translation-symmetric under the periodic wrap and not mirror-symmetric
+    about any interior plane, so a wall-directed mass transfer cannot
+    cancel.
+
+    Correction history: the first version closed only the x face on the
+    chosen ``side`` and left the opposite x face linked through the
+    periodic ``np.roll`` streaming topology, while the docstring claimed
+    "the two x-faces are closed".  External review B6 caught the false
+    claim.  Both x faces are now closed and ``assert_closed_box()``
+    verifies it in code.
     """
     s = np.zeros((nx, ny, nz), dtype=bool)
-    s[:, :, :2] = True                                   # floor
+    t = int(ledge_thickness)
+    s[:, :, :2] = True                                    # floor
     if ledge_height is None:
         ledge_height = max(4, nz // 3)
     half = nx // 2
     if side == "left":
-        s[:half + 1, :, nz - ledge_thickness:] = True    # overhang, left half
-        s[:ledge_thickness, :, :] = True                 # closed left face
+        s[:half + 1, :, nz - t:] = True                   # overhang, left half
     else:
-        s[half:, :, nz - ledge_thickness:] = True
-        s[nx - ledge_thickness:, :, :] = True
-    # close the y faces as well so the box is truly closed
-    s[:, :ledge_thickness, :] = True
-    s[:, ny - ledge_thickness:, :] = True
+        s[half:, :, nz - t:] = True
+    s[:t, :, :] = True                                    # close -x face
+    s[nx - t:, :, :] = True                               # close +x face
+    s[:, :t, :] = True                                    # close -y face
+    s[:, ny - t:, :] = True                               # close +y face
+    return s
+
+
+def assert_closed_box(solid):
+    """Verify no fluid site can wrap around through the periodic streaming
+    topology in any lateral direction."""
+    solid = np.asarray(solid).astype(bool)
+    out = {}
+    out["x_minus"] = bool(solid[0].all())
+    out["x_plus"] = bool(solid[-1].all())
+    out["y_minus"] = bool(solid[:, 0].all())
+    out["y_plus"] = bool(solid[:, -1].all())
+    out["all_closed"] = all(out.values())
+    return out
+
+
+def tube(nx, ny, nz, wall=1):
+    """A vertical square capillary: solid everywhere except the interior
+    column, closed (non-periodic) laterally."""
+    s = np.ones((nx, ny, nz), dtype=bool)
+    s[wall:nx - wall, wall:ny - wall, :] = False
     return s
 
 
@@ -204,6 +232,141 @@ def wall_band(shape, solid, thickness=3):
     for i in range(1, 19):
         wall |= op._shift(np.asarray(solid) != 0, L.E[i]).astype(bool)
     return wall & ~np.asarray(solid)
+
+
+def interface_radius_profile(psi, solid):
+    """Interface geometry of an axisymmetric blob sitting on a wall.
+
+    Returns ``(zs, rs)``: for each fluid layer height ``z``, the radius at
+    which the polar-averaged phase field crosses zero.  Layers whose
+    crossing is not interior to the box are omitted.
+    """
+    psi = np.asarray(psi)
+    solid = np.asarray(solid)
+    nx, ny, nz = psi.shape
+    cx, cy = (nx - 1) / 2.0, (ny - 1) / 2.0
+    X, Y = np.meshgrid(np.arange(nx), np.arange(ny), indexing="ij")
+    rr = np.sqrt((X - cx) ** 2 + (Y - cy) ** 2)
+    rmax = 0.5 * min(nx, ny) - 1.0
+    bins = np.linspace(0.0, rmax, 24)
+    centres = 0.5 * (bins[1:] + bins[:-1])
+    zs, rs = [], []
+    for k in range(nz):
+        if solid[:, :, k].mean() > 0.5:
+            continue
+        layer = psi[:, :, k]
+        prof = []
+        for lo, hi in zip(bins[:-1], bins[1:]):
+            m = (rr >= lo) & (rr < hi)
+            prof.append(layer[m].mean() if m.any() else np.nan)
+        prof = np.asarray(prof)
+        ok = np.isfinite(prof)
+        if ok.sum() < 4:
+            continue
+        c = centres[ok]
+        p = prof[ok]
+        idx = np.where(np.sign(p[:-1]) * np.sign(p[1:]) < 0)[0]
+        if idx.size == 0:
+            continue
+        i = idx[0]
+        f = p[i] / (p[i] - p[i + 1])
+        zs.append(float(k))
+        rs.append(float(c[i] + f * (c[i + 1] - c[i])))
+    return np.asarray(zs), np.asarray(rs)
+
+
+def contact_angle_circle_fit(zs, rs, z_wall):
+    """Contact angle from a circle fitted to the interface contour.
+
+    Replaces the earlier spherical-cap estimate
+    ``theta = 2 atan(apex / r_b)``, which external review B6/C2 flagged as
+    unreliable: its error changed sign between validation passes for the
+    same prescribed angle, and it returned NaN whenever the cap did not
+    reach the first fluid layer.
+
+    A sessile blob of circular cross-section has centre ``(0, z_c)`` and
+    radius ``R``, so its contour satisfies ``r^2 + (z - z_c)^2 = R^2``.
+    A least-squares fit gives
+
+        cos(theta) = (z_c - z_wall) / R
+
+    with ``theta`` measured **through the psi > 0 (red) phase**.  That
+    convention is stated wherever an angle is reported from this function.
+
+    Returns ``(theta_deg, R, z_c, rms)``; ``theta_deg`` is NaN when the fit
+    fails or the fitted circle does not meet the wall plane.
+    """
+    zs = np.asarray(zs, dtype=float)
+    rs = np.asarray(rs, dtype=float)
+    if zs.size < 5:
+        return float("nan"), float("nan"), float("nan"), float("nan")
+    A = np.stack([2.0 * zs, np.ones_like(zs)], axis=1)
+    b = rs ** 2 + zs ** 2
+    sol, *_ = np.linalg.lstsq(A, b, rcond=None)
+    z_c, c0 = sol
+    R2 = c0 + z_c ** 2
+    if R2 <= 0:
+        return float("nan"), float("nan"), float("nan"), float("nan")
+    R = float(np.sqrt(R2))
+    rms = float(np.sqrt(np.mean((A @ sol - b) ** 2)))
+    cos_t = (z_c - z_wall) / R
+    if cos_t < -1.0 or cos_t > 1.0:
+        return float("nan"), R, float(z_c), rms
+    return float(np.degrees(np.arccos(cos_t))), R, float(z_c), rms
+
+
+def interface_height_field(psi, normal_axis=2):
+    """z location of the psi = 0 crossing for every column along the other
+    two axes."""
+    p = np.moveaxis(np.asarray(psi), normal_axis, -1)
+    flat = p.reshape(-1, p.shape[-1])
+    out = np.full(flat.shape[0], np.nan)
+    for j in range(flat.shape[0]):
+        col = flat[j]
+        idx = np.where(np.sign(col[:-1]) * np.sign(col[1:]) < 0)[0]
+        if idx.size:
+            i = idx[0]
+            f = col[i] / (col[i] - col[i + 1])
+            out[j] = i + f
+    return out.reshape(p.shape[:-1])
+
+
+def fourier_mode_amplitude(psi, wave_axis=0, normal_axis=2, k=1):
+    """Amplitude of mode ``k`` of the interface height along ``wave_axis``.
+
+    Replaces the earlier ``max|psi|`` comparison, which external review B7
+    correctly identified as not a wave amplitude.
+    """
+    h = interface_height_field(psi, normal_axis=normal_axis)
+    h = np.moveaxis(h, wave_axis, -1) if h.ndim > 1 else h
+    line = h.reshape(-1, h.shape[-1]).mean(axis=0)
+    n = line.size
+    line = np.where(np.isfinite(line), line, np.nanmean(line))
+    spec = np.fft.rfft(line - line.mean())
+    if k >= spec.size:
+        return float("nan")
+    return float(2.0 * np.abs(spec[k]) / n)
+
+
+def equivalent_radius(psi, threshold=0.0):
+    """Equivalent-sphere radius of the psi > threshold region.
+
+    Used as the *measured* equilibrium radius in the Laplace test, rather
+    than the nominal initial radius that external review B8 flagged.
+    """
+    m = np.asarray(psi) > threshold
+    V = float(m.sum())
+    if V <= 0:
+        return float("nan")
+    return float((3.0 * V / (4.0 * np.pi)) ** (1.0 / 3.0))
+
+
+def max_abs_over_time(trace, key):
+    """Largest excursion (not merely the final value) of a tracked
+    quantity.  External review B6 requires the maximum time-history
+    excursion rather than an initial-to-final difference."""
+    vals = [abs(t[key]) for t in trace if key in t and np.isfinite(t[key])]
+    return float(max(vals)) if vals else float("nan")
 
 
 def contact_angle_from_profile(psi_col, z_col):

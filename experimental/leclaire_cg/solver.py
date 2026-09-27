@@ -57,7 +57,7 @@ class LeclaireCG3D:
         wetting_sign=+1.0,
         recolor_form="paper",
         perturbation_coeff="paper",
-        grad_renormalize=True,
+        gradient_variant="l17",
         conservation_overlay=None,
         fx=0.0,
         fy=0.0,
@@ -80,7 +80,11 @@ class LeclaireCG3D:
         self.wetting_sign = float(wetting_sign)
         self.recolor_form = recolor_form
         self.perturbation_coeff = perturbation_coeff
-        self.grad_renormalize = bool(grad_renormalize)
+        # 'l17' = paper-faithful (isotropic bulk + 1D Cartesian at X_W);
+        # 'isotropic_renormalised' = the previous scalar-renormalised
+        # truncated stencil, kept ONLY as a labelled experimental
+        # variant and not paper-faithful (external-review blocker B2)
+        self.gradient_variant = gradient_variant
         self.conservation_overlay = conservation_overlay
         self.force = np.array([fx, fy, fz], dtype=np.float64)
 
@@ -174,8 +178,9 @@ class LeclaireCG3D:
         N = self.Nr + self.Nb
         N = np.where(fluid[..., None], N, 0.0)
         rho, u = op.macroscopic(N)
-        grad_rho = op.gradient_isotropic(rho, fluid,
-                                         renormalize=self.grad_renormalize)
+        # R1: isotropic in the bulk, standard 1D Cartesian at X_W
+        grad_rho = op.gradient(rho, fluid, self._wall,
+                               variant=self.gradient_variant)
         nu = op.viscosity_harmonic(self.rho_r, self.rho_b,
                                    self.nu_r, self.nu_b)
         nu = np.where(np.isfinite(nu), nu, 0.5 * (self.nu_r + self.nu_b))
@@ -208,12 +213,21 @@ class LeclaireCG3D:
         N = np.where(fluid[..., None], N_post, N)
 
         # ---- step (3): wetting boundary condition
-        F = op.gradient_isotropic(self.psi(), fluid,
-                                  renormalize=self.grad_renormalize)
+        F = op.gradient(self.psi(), fluid, self._wall,
+                        variant=self.gradient_variant)
         if self.wetting == "leclaire":
+            # R1 Eqs. (30)-(33): rotate the orientation of F about n_w by the
+            # secant solve, keeping |F|
             F = op.secant_contact_angle(F, self._wall, self.nw, self.theta_c)
         elif self.wetting == "akai":
-            F = op.wetting_akai(F, self._wall, self.nw, self.theta_c)
+            # R3 Eqs. (2)-(4): boundary colour extrapolation, re-estimated
+            # normal, closed-form rotation
+            F = op.wetting_akai(F, self.psi(), self.solid, self.theta_c,
+                                self.nw)
+        elif self.wetting == "akai_rotation_only":
+            # labelled variant: R3 Eq. (4) only, on the R1 field
+            F = op.wetting_akai_rotation_only(F, self._wall, self.nw,
+                                              self.theta_c)
         elif self.wetting == "none":
             pass
         else:

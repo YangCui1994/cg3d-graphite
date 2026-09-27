@@ -45,26 +45,40 @@ def macroscopic(N):
 #  Equilibrium, R1 Eq. (4)
 # ======================================================================
 def equilibrium(rho, u, grad_rho, nu, alpha=L.ALPHA_UNIT):
-    """Colour-blind equilibrium N^(e), R1 Eq. (4) + Eq. (5).
+    """Colour-blind equilibrium N^(e), R1 Eq. (4) with G from Eq. (5).
 
-        N^(e)_i = nu [ psi_i (u . grad rho) + xi_i (G : c_i x c_i) ]
+        N^(e)_i = nu [ psi_i (u . grad rho) + xi_i (G : c_i (x) c_i) ]
                   + rho [ phi_i + phii_i * alpha
                           + W_i (3 c_i.u + 4.5 (c_i.u)^2 - 1.5 u.u) ]
 
-    with G = u x grad(rho) + (u x grad(rho))^T, so that
+    with G = u (x) grad(rho) + (u (x) grad(rho))^T, so that
 
-        G : c_i x c_i = 2 (c_i . u) (c_i . grad rho).
+        G : c_i (x) c_i = 2 (c_i . u) (c_i . grad rho).
+
+    The first bracket term is psi_i times the SCALAR (u . grad rho), which is
+    the same for every population at a node -- it is NOT psi_i (c_i . grad
+    rho).  The latter was implemented in validation passes 1 and 2 and is
+    external-review blocker B1.  The difference is invisible whenever
+    u = 0 or grad rho = 0, which is exactly why the earlier 42/42 unit
+    checks, which used the zero state, did not catch it.  The rendered R1
+    Eq. (4) reads
+
+        = nu_bar [ psi_i (u . grad rho) + xi_i (G : c_i (x) c_i) ] + rho [...]
 
     Implemented directly in distribution space and *not* in closed moment
-    form: IMPLEMENTATION_PLAN.md section 2.  The psi_i / xi_i terms are the
-    paper's density-gradient contribution and are structurally impossible
-    to drop here.
+    form: IMPLEMENTATION_PLAN.md section 2.  The psi_i / xi_i terms are
+    structurally impossible to drop here.
+
+    The result satisfies R1 Appendix Eqs. (A1)-(A4) identically at arbitrary
+    rho, u, grad rho and nu; those four invariants are asserted at non-zero
+    u and grad rho in tests/leclaire_cg/test_lattice_tables.py.
     """
     rho = np.asarray(rho)
     shape = rho.shape + (19,)
     ci = L.E.astype(rho.dtype)
     cu = np.einsum("ia,...a->...i", ci, u)                 # c_i . u
     cd = np.einsum("ia,...a->...i", ci, grad_rho)          # c_i . grad rho
+    ud = np.einsum("...a,...a->...", u, grad_rho)          # u . grad rho (SCALAR)
     uu = np.einsum("...a,...a->...", u, u)
 
     rho_e = np.asarray(rho)[..., None]
@@ -77,7 +91,7 @@ def equilibrium(rho, u, grad_rho, nu, alpha=L.ALPHA_UNIT):
         + L.W_I.astype(rho.dtype) * (3.0 * cu + 4.5 * cu * cu - 1.5 * uu[..., None])
     )
     out += nu_e * (
-        L.PSI_I.astype(rho.dtype) * cd
+        L.PSI_I.astype(rho.dtype) * ud[..., None]
         + L.XI_I.astype(rho.dtype) * 2.0 * cu * cd
     )
     return out
@@ -203,6 +217,79 @@ def smooth_solid(solid, passes=L.SMOOTH_PASSES):
     return g
 
 
+def gradient_1d_cartesian(field, fluid):
+    """Standard 1D Cartesian finite-difference gradient (R1's X_W rule).
+
+    R1 states, in three separate places, that the colour gradient F and the
+    density gradient grad(rho) use "3D fourth-order isotropic
+    discretizations on all lattice sites, except for the lattice sites in
+    X_W where a standard 1D forward, backward, and/or centered discrete
+    gradient is used" (and, for the random-network case, "a standard 1D
+    first-order forward, first-order backward, and/or second-order centered
+    discrete gradient").  X_E sites carry a zero gradient.
+
+    Implemented literally, per Cartesian axis alpha:
+
+        both x +- e_alpha fluid : (f(x+e) - f(x-e)) / 2     second-order centred
+        only x + e_alpha fluid  : f(x+e) - f(x)              first-order forward
+        only x - e_alpha fluid  : f(x) - f(x-e)              first-order backward
+        neither                 : 0
+
+    "and/or" is the availability-driven selection above.  The variants are
+    first-order one-sided because R1 says "first-order" and because a
+    higher-order one-sided stencil is not what [89] supplies.
+
+    This replaces the previous scalar-renormalised truncated D3Q19 stencil,
+    which is external-review blocker B2: deleting solid-neighbour
+    directions changes a tensor stencil anisotropically, and multiplying by
+    one scalar cannot in general reconstruct all Cartesian components.
+    """
+    field = np.asarray(field)
+    fluid = np.asarray(fluid)
+    out = np.zeros(field.shape + (3,), dtype=field.dtype)
+    for a in range(3):
+        step = np.zeros(3, dtype=int)
+        step[a] = 1
+        fp = _shift_fwd(field, step)        # f(x + e_a)
+        fm = _shift_fwd(field, -step)       # f(x - e_a)
+        mp = _shift_fwd(fluid, step).astype(bool)
+        mm = _shift_fwd(fluid, -step).astype(bool)
+        both = fluid & mp & mm
+        fwd = fluid & mp & ~mm
+        bwd = fluid & ~mp & mm
+        out[..., a][both] = 0.5 * (fp[both] - fm[both])
+        out[..., a][fwd] = fp[fwd] - field[fwd]
+        out[..., a][bwd] = field[bwd] - fm[bwd]
+    return out
+
+
+def gradient(field, fluid, wall, variant="l17"):
+    """R1's gradient: isotropic in the bulk, 1D Cartesian at X_W.
+
+    ``variant='l17'`` is the paper-faithful path used by L17_CORE.
+    ``variant='isotropic_renormalised'`` is the previous behaviour -- a
+    fluid-neighbour-only isotropic stencil rescaled by one scalar -- and is
+    retained ONLY as a separately labelled experimental variant.  It is not
+    paper-faithful (blocker B2) and must not be reported as L17_CORE.
+    """
+    field = np.asarray(field)
+    fluid = np.asarray(fluid)
+    wall = np.asarray(wall) & fluid
+    bulk = fluid & ~wall
+    if variant == "isotropic_renormalised":
+        return gradient_isotropic(field, fluid, renormalize=True)
+    if variant != "l17":
+        raise ValueError(f"unknown gradient variant {variant!r}")
+    out = np.zeros(field.shape + (3,), dtype=field.dtype)
+    # bulk sites have no solid neighbour, so every stencil direction is
+    # available and the isotropic operator needs no renormalisation
+    iso = gradient_isotropic(field, fluid, renormalize=False)
+    out[bulk] = iso[bulk]
+    one_d = gradient_1d_cartesian(field, fluid)
+    out[wall] = one_d[wall]
+    return out
+
+
 def wall_normals(solid, sign=+1.0):
     """n_w = grad(g_smoothed) at fluid sites (R1 Eqs. 34-38).
 
@@ -275,18 +362,144 @@ def secant_contact_angle(F, wall_mask, nw, theta_c, lam=0.5):
     return F
 
 
-def wetting_akai(F, wall_mask, nw, theta_c, solid_extrap=None):
-    """Later wetting variant (R3 Eqs. 2-4), switchable.
+def _site_classes(solid):
+    """R3's four site classes (their section 2.2.2).
 
-    R3 replaces R1's degenerate secant with a closed-form rotation:
-        n* = -grad(rho_N*)/|grad(rho_N*)|
-        n+/- = [(cos t -/+ sin t cos t')/sin t'] n_s + [sin t/sin t'] n*
-        t'   = arccos(n_s . n*)
-        n* <- whichever of n+/- is closer to the original n*
-    R3 also extrapolates the colour function onto the solid-boundary
-    nodes by a lattice-weighted average over adjacent boundary-fluid
-    nodes (its Eq. 2).  ``solid_extrap`` carries that estimate; it is
-    supplied by the caller because it needs the C_SB / C_FB site classes.
+        C_FB  fluid  sites in contact with >= 1 solid site
+        C_Fl  fluid  sites in contact with no solid site
+        C_SB  solid  sites in contact with >= 1 fluid site
+        C_Sl  solid  sites in contact with no fluid site
+    """
+    solid = np.asarray(solid).astype(bool)
+    fluid = ~solid
+    nbr_solid = np.zeros_like(solid)
+    nbr_fluid = np.zeros_like(solid)
+    for i in range(1, 19):
+        nbr_solid |= _shift_fwd(solid, L.E[i]).astype(bool)
+        nbr_fluid |= _shift_fwd(fluid, L.E[i]).astype(bool)
+    c_fb = fluid & nbr_solid
+    c_fl = fluid & ~nbr_solid
+    c_sb = solid & nbr_fluid
+    c_sl = solid & ~nbr_fluid
+    return c_fb, c_fl, c_sb, c_sl
+
+
+def extrapolate_to_solid_boundary(colour, solid):
+    """R3 Eq. (2): extrapolate the colour function onto C_SB from the
+    adjacent C_FB sites by a lattice-weighted average,
+
+        rho_N(x) = sum_{i : x + e_i in C_FB} w_i rho_N(x + e_i)
+                   / sum_{i : x + e_i in C_FB} w_i ,   x in C_SB
+
+    with w_i the D3Q19 lattice weights.  Sites with no C_FB neighbour
+    (C_Sl) keep zero weight and return 0.
+    """
+    colour = np.asarray(colour)
+    c_fb, _c_fl, c_sb, _c_sl = _site_classes(solid)
+    acc = np.zeros_like(colour)
+    wsum = np.zeros_like(colour)
+    ci = L.E.astype(colour.dtype)
+    for i in range(19):
+        nb = _shift_fwd(colour, L.E[i])
+        valid = _shift_fwd(c_fb, L.E[i]).astype(bool) & c_sb
+        wi = float(L.W_I[i])
+        acc += np.where(valid, wi * nb, 0.0)
+        wsum += np.where(valid, wi, 0.0)
+    out = colour.copy()
+    ok = c_sb & (wsum > 0.0)
+    out[ok] = acc[ok] / wsum[ok]
+    return out
+
+
+def wetting_akai(F, colour, solid, theta_c, nw):
+    """Complete R3 (Akai/Bijeljic/Blunt 2018) wetting boundary condition.
+
+    Implements R3 Eqs. (2)-(4) in the order R3 states them:
+
+      (2) extrapolate the colour function onto the boundary-solid sites
+          C_SB from the adjacent boundary-fluid sites C_FB;
+      (3) estimate the interface normal  n* = -grad(rho_N*)/|grad(rho_N*)|
+          in C_FB *from the extrapolated field*, so the boundary sites
+          participate in the stencil;
+      (4) rotate n* to make the prescribed angle theta with the wall normal
+          n_s, choosing whichever of n+/n- is closer to the original n*,
+          and keep |F| unchanged.
+
+    This is not R1's scheme and it is not a re-parameterisation of it: R3
+    replaces R1's degenerate secant on the *orientation of F* with a
+    boundary-field reconstruction plus a closed-form rotation.  The
+    previous version of this function implemented only Eq. (4) on the
+    already-computed R1 field; that was external-review blocker B3, because
+    FOLLOWUP_OPTIMIZATION_MAP.md claimed the variant was implemented.  The
+    partial version is still reachable as the labelled variant
+    ``wetting="akai_rotation_only"`` and must not be reported as R3.
+
+    Sign convention: R3 defines n* = -grad(rho_N)/|grad(rho_N)|, i.e. it is
+    the *negative* of the gradient direction, whereas R1's n_c is the
+    gradient direction itself.  The returned F therefore has the same
+    physical meaning as R1's F = |F| n_c with n_c = -n_chosen.
+    """
+    F = np.array(F, dtype=F.dtype, copy=True)
+    c_fb, _c_fl, _c_sb, _c_sl = _site_classes(solid)
+    mag = np.linalg.norm(F, axis=-1)
+    sel = c_fb & (mag > EPS)
+    if not np.any(sel):
+        return F
+
+    # (2) boundary colour field, then (3) its gradient
+    colour_ext = extrapolate_to_solid_boundary(colour, solid)
+    everywhere = np.ones(np.asarray(solid).shape, dtype=bool)
+    grad_ext = gradient_isotropic(colour_ext, everywhere, renormalize=False)
+
+    nstar_all = np.zeros_like(grad_ext)
+    gm = np.linalg.norm(grad_ext, axis=-1)
+    ok3 = gm > EPS
+    nstar_all[ok3] = -grad_ext[ok3] / gm[ok3, None]      # R3 Eq. (3)
+    nstar = nstar_all[sel]
+    if not np.any(np.linalg.norm(nstar, axis=-1) > EPS):
+        return F
+
+    # (4) closed-form rotation against the wall normal n_s (supplied by the
+    # caller from the same three-pass smoothed-image construction R1 uses;
+    # R3 cites Xu et al. 2017 for this quantity and does not re-derive it)
+    ns = np.asarray(nw)[sel]
+
+    cos_tp = np.clip(np.einsum("...a,...a->...", ns, nstar), -1.0, 1.0)
+    tp = np.arccos(cos_tp)
+    sin_tp = np.sin(tp)
+    good = (np.abs(sin_tp) > 1e-8) & (np.linalg.norm(ns, axis=-1) > EPS)
+    st, ct = np.sin(theta_c), np.cos(theta_c)
+    chosen = nstar.copy()
+    if np.any(good):
+        csp = np.cos(tp[good])
+        b = st / sin_tp[good]
+        n_plus = ((ct - st * csp) / sin_tp[good])[..., None] * ns[good]             + b[..., None] * nstar[good]
+        n_minus = ((ct + st * csp) / sin_tp[good])[..., None] * ns[good]             + b[..., None] * nstar[good]
+        for arr in (n_plus, n_minus):
+            nn = np.linalg.norm(arr, axis=-1, keepdims=True)
+            bad = nn[..., 0] <= 1e-14
+            if np.any(bad):
+                arr[bad] = nstar[good][bad]
+            else:
+                arr /= nn
+        d_p = np.linalg.norm(n_plus - nstar[good], axis=-1)
+        d_m = np.linalg.norm(n_minus - nstar[good], axis=-1)
+        chosen[good] = np.where((d_p <= d_m)[..., None], n_plus, n_minus)
+
+    # F keeps its magnitude; orientation becomes -n_chosen so that the
+    # convention matches R1's (n_c is the gradient direction)
+    out = F.copy()
+    out[sel] = -chosen * mag[sel, None]
+    return out
+
+
+def wetting_akai_rotation_only(F, wall_mask, nw, theta_c):
+    """LABELLED VARIANT: R3 Eq. (4) only, applied to the R1 field.
+
+    This is NOT R3's method -- it skips the boundary colour extrapolation
+    (R3 Eq. 2) and the re-estimated normal (R3 Eq. 3).  Kept because the
+    earlier pass used it and its behaviour is on record; it must never be
+    reported as an R3 implementation.
     """
     F = np.array(F, dtype=F.dtype, copy=True)
     mag = np.linalg.norm(F, axis=-1)
@@ -294,21 +507,17 @@ def wetting_akai(F, wall_mask, nw, theta_c, solid_extrap=None):
     if not np.any(sel):
         return F
     ns = nw[sel]
-    nstar = -F[sel] / mag[sel, None]          # R3 Eq. (3)
+    nstar = -F[sel] / mag[sel, None]
     cos_tp = np.clip(np.einsum("...a,...a->...", ns, nstar), -1.0, 1.0)
     tp = np.arccos(cos_tp)
     sin_tp = np.sin(tp)
     ok = np.abs(sin_tp) > 1e-8
-    st = np.sin(theta_c)
-    ct = np.cos(theta_c)
+    st, ct = np.sin(theta_c), np.cos(theta_c)
     other = np.array(nstar, copy=True)
     if np.any(ok):
         csp = np.cos(tp[ok])
-        a = (ct - st * csp) / sin_tp[ok]
-        b = st / sin_tp[ok]
-        n_plus = a[..., None] * ns[ok] + b[..., None] * nstar[ok]
-        a2 = (ct + st * csp) / sin_tp[ok]
-        n_minus = a2[..., None] * ns[ok] + b[..., None] * nstar[ok]
+        n_plus = ((ct - st * csp) / sin_tp[ok])[..., None] * ns[ok]             + (st / sin_tp[ok])[..., None] * nstar[ok]
+        n_minus = ((ct + st * csp) / sin_tp[ok])[..., None] * ns[ok]             + (st / sin_tp[ok])[..., None] * nstar[ok]
         for arr in (n_plus, n_minus):
             nn = np.linalg.norm(arr, axis=-1, keepdims=True)
             bad = nn[..., 0] <= 1e-14
@@ -316,11 +525,9 @@ def wetting_akai(F, wall_mask, nw, theta_c, solid_extrap=None):
                 arr[bad] = nstar[ok][bad]
             else:
                 arr /= nn
-        d_p = np.linalg.norm(n_plus - nstar[ok], axis=-1)
-        d_m = np.linalg.norm(n_minus - nstar[ok], axis=-1)
-        pick_plus = d_p <= d_m
-        chosen = np.where(pick_plus[..., None], n_plus, n_minus)
-        other[ok] = chosen
+        pick_plus = (np.linalg.norm(n_plus - nstar[ok], axis=-1)
+                     <= np.linalg.norm(n_minus - nstar[ok], axis=-1))
+        other[ok] = np.where(pick_plus[..., None], n_plus, n_minus)
     F[sel] = other * mag[sel, None]
     return F
 
