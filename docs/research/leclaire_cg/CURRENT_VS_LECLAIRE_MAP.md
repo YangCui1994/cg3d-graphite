@@ -23,7 +23,7 @@ Rows marked `DIFFERENT` carry a quantitative statement of the difference.
 | # | algorithmic element | paper (R1) | current production | status |
 |---|---|---|---|---|
 | 1 | lattice | D3Q19 | D3Q19 | `SAME` |
-| 2 | connectivity **ordering** | Table IV order (shell-major: 1–6 axes, 7–18 diagonals) | `_init_lattice_tables` order: axes first, then (1,1,0)-type, then (1,0,1)-type, then (0,1,1)-type | `DIFFERENT` |
+| 2 | connectivity **ordering** | Table IV order, which is **NOT shell-major**: axes are indices {1,2,3,10,11,12} | `_init_lattice_tables` order: axes first, then (1,1,0)-type, then (1,0,1)-type, then (0,1,1)-type | `DIFFERENT` |
 | 3 | lattice weights `W_i` | 1/3, 1/18, 1/36 | 1/3, 1/18, 1/36 | `SAME` |
 | 4 | component densities `ρ_k`, colour-blind `ρ`, momentum | `ρ_k = Σ_i N_i^k`; `ρu = Σ_i N_i c_i` | `rho_r/rho_b` from streamed colour sums; `rho` from `f` | `MATHEMATICALLY_EQUIVALENT` (§A.1) |
 | 5 | order parameter `ψ` | `(ρ_r−ρ_b)/(ρ_r+ρ_b)` (implied by Eq. 17) | `(rho_r−rho_b)/(rho_r+rho_b)` | `SAME` |
@@ -183,11 +183,14 @@ isotropic discretization". The current `Compute_C` is
 `C = Σ_s 3 w_s e_s ψ(x+e_s)` — the same operator.
 
 **Caveat, carried from the formulation:** R1 defers the coefficients to R5
-(Leclaire et al., J. Sci. Comput. 59, 545 (2014)), which could not be obtained.
-So the claim is "the current operator satisfies the isotropy property R1
-requires for D3Q19", not "the current operator is byte-identical to R5's". If
-R5's published operator uses a wider footprint, this row degrades to
-`UNRESOLVED`. This is stated rather than hidden.
+(Leclaire et al., J. Sci. Comput. 59, 545 (2014)). R5 was obtained via 科研通
+in pass 4, but its Table 2 has no text layer and its weight labels are printed
+twice in opposite order, so the full coefficient mapping remains `UNRESOLVED`
+(`PAPER_FORMULATION.md` §4.2). The claim here is therefore "the current
+operator satisfies the isotropy property R1 requires for D3Q19", justified by
+an independent derivation, not "byte-identical to R5's". R5's leading
+`(2,4)` entries are `1/6` axes and `1/12` face diagonals, which is what this
+operator uses. Stated rather than hidden.
 
 ### A.8 Rows 16–17 — `DIFFERENT` (perturbation and the σ calibration)
 

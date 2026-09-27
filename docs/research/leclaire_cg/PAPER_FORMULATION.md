@@ -744,11 +744,13 @@ element.
 ## 11. Items explicitly labelled UNRESOLVED
 
 1. ~~**Exact published gradient stencil coefficients** — R1 defers to R5 [88],
-   which could not be obtained.~~ **CLOSED in validation pass 2**: R5 was
-   obtained, and its `(2,4)` 3D stencil restricted to D3Q19 is exactly `3W_i`
-   (§4.2). The remaining caveat is only that R5's Table 2 is a raster table
-   whose row labels are printed twice; §4.2 states how the assignment was
-   resolved.
+   which could not be obtained.~~ **ACQUISITION CLOSED, MAPPING
+   UNRESOLVED.** R5 was obtained via 科研通 by DOI (see
+   `REFERENCE_MANIFEST.md`). The *acquisition* question is closed. The
+   *coefficient-mapping* question is not: §4.2 records it as `UNRESOLVED`
+   with the exact row/column mapping attempted, and `L17_CORE` uses the
+   D3Q19 `3W_i` operator as an independent implementation choice justified
+   by the isotropy derivation in §4.3. This entry and §4.2 now agree.
 2. **Contact-angle sign convention in Eq. (30)** — not stated in R1; reported
    with the measured phase instead of assumed (§7.4).
 3. **`η` in the `β` refinement law** — requires two physical resolutions to

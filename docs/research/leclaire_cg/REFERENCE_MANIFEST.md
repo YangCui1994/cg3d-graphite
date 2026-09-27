@@ -12,7 +12,7 @@ traceable to a row of this manifest.
 Access date for all items below: **2026-09-27** (all downloads verified by the
 `%PDF-` header and a SHA256 digest).
 
-## Acquisition note — corrected after external review B11
+## Acquisition note (current; corrected under external review B11)
 
 The first version of this file stated that no 科研通 interface existed on this
 machine and that the workflow could not be driven from the session. **That

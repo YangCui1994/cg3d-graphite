@@ -54,7 +54,7 @@ class LeclaireCG3D:
         chi=1.0,
         theta_c=np.pi / 2,
         wetting="leclaire",
-        wetting_sign=+1.0,
+        nw_sign_override=None,
         recolor_form="paper",
         perturbation_coeff="paper",
         gradient_variant="l17",
@@ -77,7 +77,17 @@ class LeclaireCG3D:
         self.chi = float(chi)
         self.theta_c = float(theta_c)
         self.wetting = wetting
-        self.wetting_sign = float(wetting_sign)
+        # CANONICAL wall normal, frozen by WETTING_PHASE_CONVENTION.md:
+        #     g = 1 in solid, 0 in fluid
+        #     n_w = -grad(g)/|grad(g)|   (solid -> fluid)
+        # With g increasing into the solid, grad(g) points INTO the solid,
+        # so the canonical n_w is the NEGATIVE gradient: sign = -1.
+        # The sign is NOT a physical parameter. nw_sign_override exists only
+        # as a labelled non-canonical debug switch for regression probing and
+        # must never be used to make a validation case pass.
+        self.nw_sign_override = nw_sign_override
+        self.nw_sign = -1.0 if nw_sign_override is None else float(
+            nw_sign_override)
         self.recolor_form = recolor_form
         self.perturbation_coeff = perturbation_coeff
         # 'l17' = paper-faithful (isotropic bulk + 1D Cartesian at X_W);
@@ -112,7 +122,7 @@ class LeclaireCG3D:
             nb = op._shift(self.solid, L.E[i]).astype(bool)
             wall |= nb
         self._wall = wall & self.fluid
-        self.nw = op.wall_normals(self.solid, sign=self.wetting_sign)
+        self.nw = op.wall_normals(self.solid, sign=self.nw_sign)
         self._prepared = True
 
     def init_uniform(self, psi=1.0, rho=1.0):

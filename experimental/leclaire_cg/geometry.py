@@ -234,14 +234,18 @@ def wall_band(shape, solid, thickness=3):
     return wall & ~np.asarray(solid)
 
 
-def interface_radius_profile(psi, solid):
-    """Interface geometry of an axisymmetric blob sitting on a wall.
+def interface_radius_profile(psi, solid, subgrid=2):
+    """Interface geometry of a blob sitting on a wall, at sub-grid heights.
 
-    Returns ``(zs, rs)``: for each fluid layer height ``z``, the radius at
-    which the polar-averaged phase field crosses zero.  Layers whose
-    crossing is not interior to the box are omitted.
+    Returns ``(zs, rs)``: for each sampled height ``z``, the radius at which
+    the polar-averaged phase field crosses zero.  ``subgrid=2`` also samples
+    the half-integer heights by linear interpolation in z, which doubles the
+    contour-point count without changing the domain -- the contract asks for
+    sub-grid extraction rather than a blindly larger box.
+
+    Heights whose crossing is not interior to the box are omitted.
     """
-    psi = np.asarray(psi)
+    psi = np.asarray(psi, dtype=np.float64)
     solid = np.asarray(solid)
     nx, ny, nz = psi.shape
     cx, cy = (nx - 1) / 2.0, (ny - 1) / 2.0
@@ -250,16 +254,34 @@ def interface_radius_profile(psi, solid):
     rmax = 0.5 * min(nx, ny) - 1.0
     bins = np.linspace(0.0, rmax, 40)
     centres = 0.5 * (bins[1:] + bins[:-1])
-    zs, rs = [], []
+    # precompute the polar-averaged radial profile of every integer layer
+    layers = []
     for k in range(nz):
         if solid[:, :, k].mean() > 0.5:
+            layers.append(None)
             continue
-        layer = psi[:, :, k]
         prof = []
         for lo, hi in zip(bins[:-1], bins[1:]):
             m = (rr >= lo) & (rr < hi)
-            prof.append(layer[m].mean() if m.any() else np.nan)
-        prof = np.asarray(prof)
+            prof.append(psi[:, :, k][m].mean() if m.any() else np.nan)
+        layers.append(np.asarray(prof))
+    # sample heights: integer layers, plus the midpoints between pairs of
+    # usable adjacent layers
+    heights = []
+    for k in range(nz):
+        heights.append((float(k), None, k))
+        if subgrid >= 2 and k + 1 < nz:
+            heights.append((k + 0.5, k, k + 1))
+    zs, rs = [], []
+    for h, ka, kb in heights:
+        if ka is None:
+            prof = layers[kb]
+        else:
+            if layers[ka] is None or layers[kb] is None:
+                continue
+            prof = 0.5 * (layers[ka] + layers[kb])
+        if prof is None or not np.any(np.isfinite(prof)):
+            continue
         ok = np.isfinite(prof)
         if ok.sum() < 4:
             continue
@@ -270,7 +292,7 @@ def interface_radius_profile(psi, solid):
             continue
         i = idx[0]
         f = p[i] / (p[i] - p[i + 1])
-        zs.append(float(k))
+        zs.append(float(h))
         rs.append(float(c[i] + f * (c[i + 1] - c[i])))
     return np.asarray(zs), np.asarray(rs)
 
@@ -293,8 +315,12 @@ def contact_angle_circle_fit(zs, rs, z_wall):
     with ``theta`` measured **through the psi > 0 (red) phase**.  That
     convention is stated wherever an angle is reported from this function.
 
-    Returns ``(theta_deg, R, z_c, rms)``; ``theta_deg`` is NaN when the fit
-    fails or the fitted circle does not meet the wall plane.
+    Returns ``(theta_deg, R, z_c, rms)`` where ``rms`` is the linearised
+    residual (radius^2 units), and ``rms_geom`` (lu) is available from
+    ``contact_angle_circle_fit.last_rms_geom`` -- the geometric deviation of
+    the contour from the circle, which is the dimensionally correct
+    fit-quality measure.  ``theta_deg`` is NaN when the fit fails or the
+    fitted circle does not meet the wall plane.
     """
     zs = np.asarray(zs, dtype=float)
     rs = np.asarray(rs, dtype=float)
@@ -308,10 +334,18 @@ def contact_angle_circle_fit(zs, rs, z_wall):
     if R2 <= 0:
         return float("nan"), float("nan"), float("nan"), float("nan")
     R = float(np.sqrt(R2))
+    # Residual of the LINEARISED equation, in units of (radius^2).  Kept for
+    # auditability but NOT used as a length gate: comparing it against a
+    # threshold in lattice units mixes dimensions and scales as R^2.
     rms = float(np.sqrt(np.mean((A @ sol - b) ** 2)))
+    # Geometric RMS distance of the contour points from the fitted circle,
+    # in LATTICE UNITS.  This is the quantity a fit-quality gate should use.
+    d = np.sqrt(rs ** 2 + (zs - z_c) ** 2) - R
+    rms_geom = float(np.sqrt(np.mean(d ** 2)))
     cos_t = (z_c - z_wall) / R
     if cos_t < -1.0 or cos_t > 1.0:
         return float("nan"), R, float(z_c), rms
+    contact_angle_circle_fit.last_rms_geom = rms_geom
     return float(np.degrees(np.arccos(cos_t))), R, float(z_c), rms
 
 

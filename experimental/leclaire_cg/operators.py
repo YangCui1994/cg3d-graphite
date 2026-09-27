@@ -302,9 +302,11 @@ def wall_normals(solid, sign=+1.0):
     phase-field gradient, which is explicitly built from "the bulk fluid
     lattice sites" and therefore IS fluid-sampled.
 
-    R1 does not fix whether ``n_w`` points into the fluid or into the
-    solid; ``sign`` selects the convention and the validation reports
-    which one reproduces the prescribed contact angle.
+    The convention is FROZEN by docs/research/leclaire_cg/
+    WETTING_PHASE_CONVENTION.md: ``g = 1`` in solid and ``0`` in fluid, and
+    ``n_w = -grad(g)/|grad(g)|`` pointing from solid into fluid, which is
+    ``sign = -1`` here.  ``sign`` is retained only as a labelled
+    non-canonical debug switch; it is not a physical parameter of L17_CORE.
     """
     g = smooth_solid(solid)
     solid = np.asarray(solid)

@@ -251,6 +251,90 @@ def main():
                          [0.0 if np.abs(bad.sum(axis=-1) - rho_r).max() > 1e-6
                           else 1.0], 0.0))
 
+    # ---- WETTING CONVENTION LOCK (normative, geometric, non-LBM) -------
+    # Authority: docs/research/leclaire_cg/WETTING_PHASE_CONVENTION.md.
+    #     g     = 1 solid, 0 fluid
+    #     n_w   = -grad(g)/|grad(g)|      -> solid into fluid
+    #     F     = grad(psi)               -> gas(blue) toward liquid(red)
+    #     theta = angle(F, n_w)           -> measured through LIQUID/red
+    # A sessile droplet must never be used to pick this sign; this block is
+    # the authority and the droplet test only consumes it.
+    n_c = 24
+    solid_w = np.zeros((n_c, n_c, n_c), dtype=bool)
+    solid_w[:, :, :3] = True                      # floor: solid for z < 3
+    fluid_w = ~solid_w
+    nw_w = op.wall_normals(solid_w, sign=-1.0)    # canonical
+    wall_nodes = np.zeros_like(solid_w)
+    for _i in range(1, 19):
+        wall_nodes |= op._shift_fwd(solid_w, L.E[_i]).astype(bool)
+    wall_nodes &= fluid_w
+    # The box is periodic, so the wrap makes the topmost layer adjacent to
+    # the solid at z = 0 as well.  Restrict to the floor band so the
+    # assertion tests the floor normal and not the wrap-implied one.
+    band = np.zeros_like(solid_w)
+    band[:, :, 3:8] = True
+    wall_nodes &= band
+    nw_at_wall = nw_w[wall_nodes]
+    # for a flat floor the canonical normal must point solid -> fluid (+z)
+    results.append(check("convention.nw_points_solid_to_fluid",
+                         [np.abs(nw_at_wall[:, 0]).max(),
+                          np.abs(nw_at_wall[:, 1]).max(),
+                          np.abs(nw_at_wall[:, 2] - 1.0).max()], 1e-9))
+
+    # the specified analytic branch: F = (-sin t, 0, cos t) with n_w = +z
+    # gives angle(F, n_w) = t, which is the angle through the liquid
+    # R1's secant is deliberately stopped at n = 2 because in a simulation it
+    # is re-applied every step from a good initial guess.  A single
+    # application is therefore a partial step, not a solver; the analytic
+    # test must verify that its FIXED POINT is the requested branch, i.e.
+    # that iterating it converges to theta and not to the complementary one.
+    for t_deg in (60.0, 90.0, 120.0):
+        t = np.deg2rad(t_deg)
+        for start_deg in (t_deg, 180.0 - t_deg, 90.0):
+            sd = np.deg2rad(start_deg)
+            Fx = np.zeros((n_c, n_c, n_c, 3))
+            Fx[..., 0] = -np.sin(sd)
+            Fx[..., 2] = np.cos(sd)
+            for _ in range(40):
+                Fx = op.secant_contact_angle(Fx, wall_nodes, nw_w, t)
+                Fx = Fx / np.maximum(np.linalg.norm(Fx, axis=-1,
+                                                    keepdims=True), 1e-30)
+            ang = np.degrees(np.arccos(np.clip(
+                np.einsum("...a,...a->...", Fx[wall_nodes], nw_w[wall_nodes]),
+                -1.0, 1.0)))
+            results.append(check(
+                f"convention.secant_fixed_point_{int(t_deg)}"
+                f"_from_{int(start_deg)}",
+                np.abs(ang - t_deg).max(), 1e-6))
+
+    # flipping n_w must produce the COMPLEMENTARY branch (180 - theta) and
+    # must therefore be rejected by the canonical convention
+    nw_flip = op.wall_normals(solid_w, sign=+1.0)
+    t60 = np.deg2rad(60.0)
+    F_analytic = np.zeros((n_c, n_c, n_c, 3))
+    F_analytic[..., 0] = -np.sin(t60)
+    F_analytic[..., 2] = np.cos(t60)
+    F_bad = op.secant_contact_angle(F_analytic.copy(), wall_nodes, nw_flip, t60)
+    ang_bad = np.degrees(np.arccos(np.clip(
+        np.einsum("...a,...a->...", F_bad[wall_nodes], nw_w[wall_nodes]),
+        -1.0, 1.0)))
+    results.append(check("convention.flipped_nw_is_complementary",
+                         0.0 if np.abs(ang_bad.mean() - (180.0 - 60.0)) < 25.0
+                         else 1.0, 0.0))
+    results.append(check("convention.flipped_nw_fails_canonical_gate",
+                         0.0 if np.abs(ang_bad.mean() - 60.0) > 15.0 else 1.0,
+                         0.0))
+
+    # the canonical sign is derived, not defaulted: the solver must expose
+    # -1 and must mark any override non-canonical
+    import inspect as _ins
+    from leclaire_cg.solver import LeclaireCG3D as _S
+    _sig = _ins.signature(_S.__init__).parameters
+    results.append(check("convention.no_physical_wetting_sign_parameter",
+                         0.0 if "wetting_sign" not in _sig else 1.0, 0.0))
+    results.append(check("convention.override_is_labelled_debug",
+                         0.0 if "nw_sign_override" in _sig else 1.0, 0.0))
+
     # ---- contact-angle instrument validated on a synthetic contour -----
     # The circle-fit instrument replaced a spherical-cap estimate whose
     # error changed sign between passes.  Before it is trusted on a
