@@ -120,7 +120,7 @@ def main():
 
     # second moment must equal (2/9) A |F| (n n - delta), derived in
     # PAPER_FORMULATION.md section 5.2
-    A = 1.5 * om * 0.05
+    A = 2.25 * om * 0.05          # R1 Eq. (18): (9/4) omega sigma
     Fmag = np.linalg.norm(F, axis=-1)
     cumsum = dN.sum(axis=-1)
     Pi = np.einsum("...i,ia,ib->...ab", dN, L.E.astype(float),
@@ -132,6 +132,25 @@ def main():
                          np.abs(Pi - pred).max(), 1e-13))
     results.append(check("perturbation.mass_vs_derivation",
                          np.abs(cumsum).max(), 1e-14))
+
+    # ---- R1 Eq. (18) constant ----------------------------------------
+    # A = (9/4) omega_eff sigma = 2.25 omega sigma, NOT 1.5 omega sigma.
+    # The 1.5 slip scales the delivered surface tension by 2/3 and is
+    # invisible to every check that does not look at the amplitude, so it
+    # is asserted here directly.
+    F3 = np.zeros((2, 2, 2, 3))
+    F3[..., 2] = 1.0
+    om3 = np.full((2, 2, 2), 1.0)
+    sig3 = 0.02
+    dN3 = op.perturbation(F3, om3, sig3)
+    # invert for A from the known bracket: with F = (0,0,|F|), the i = 3
+    # direction (c = (0,0,-1)) has (F.c)^2/|F|^2 = 1 and W_3 = 1/18,
+    # B_3 = 1/54, so dN_3 = A * 1 * (1/18 - 1/54) = A * 1/27
+    A_impl = dN3[0, 0, 0, 3] * 27.0
+    results.append(check("perturbation.A_equals_9over4_omega_sigma",
+                         [abs(A_impl - 2.25 * sig3),
+                          0.0 if abs(A_impl - 1.5 * sig3) > 1e-6 else 1.0],
+                         1e-12))
 
     # ---- recolouring conserves both components exactly ----------------
     Nr = rng.random((3, 3, 3, 19))

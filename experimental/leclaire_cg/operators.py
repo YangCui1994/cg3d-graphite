@@ -349,7 +349,12 @@ def perturbation(F, omega, sigma, coeff_mode="paper"):
         return out
     m = mag[ok]
     if coeff_mode == "paper":
-        A = 1.5 * omega[ok] * sigma        # (9/4) * omega * sigma
+        # R1 Eq. (18): A = (9/4) omega_eff sigma.  NOT 1.5 omega sigma --
+        # 9/4 = 2.25, and writing 1.5 here scales the delivered surface
+        # tension by 2/3, which is exactly the offset the first canonical
+        # run measured (sigma_measured/sigma_input = 0.67..0.74) before it
+        # was caught.  test_lattice_tables.py now asserts the constant.
+        A = 2.25 * omega[ok] * sigma
     elif coeff_mode == "capA":
         A = sigma                          # production-style, no omega
     else:
