@@ -248,7 +248,7 @@ def interface_radius_profile(psi, solid):
     X, Y = np.meshgrid(np.arange(nx), np.arange(ny), indexing="ij")
     rr = np.sqrt((X - cx) ** 2 + (Y - cy) ** 2)
     rmax = 0.5 * min(nx, ny) - 1.0
-    bins = np.linspace(0.0, rmax, 24)
+    bins = np.linspace(0.0, rmax, 40)
     centres = 0.5 * (bins[1:] + bins[:-1])
     zs, rs = [], []
     for k in range(nz):
