@@ -3,38 +3,62 @@
     {
       "beta": 0.0,
       "width": 19.99999999999994,
-      "psi_peak": 0.05733943963426651,
-      "slope": 0.005115215182073918
+      "psi_peak": 0.05733943963426529,
+      "positivity_ok": true,
+      "red_min": 0.5025802605944965,
+      "blue_min": 0.47133028018281714,
+      "component_population_negative": false,
+      "slope": 0.005115215182073734
     },
     {
       "beta": 0.5,
-      "width": 1.838714871327973,
-      "psi_peak": 0.9970032621592773,
-      "slope": 0.37579875808844554
+      "width": 1.838714819891559,
+      "psi_peak": 0.997003262159277,
+      "positivity_ok": true,
+      "red_min": 0.0022908337196226774,
+      "blue_min": 0.001498368920361229,
+      "component_population_negative": false,
+      "slope": 0.3757987580884471
     },
     {
       "beta": 0.7,
-      "width": 1.4690258700332497,
-      "psi_peak": 0.9998668653544001,
-      "slope": 0.49479624194587796
+      "width": 1.4690258335867161,
+      "psi_peak": 0.9998668653544,
+      "positivity_ok": true,
+      "red_min": 0.000125954047672139,
+      "blue_min": 6.656732279997612e-05,
+      "component_population_negative": false,
+      "slope": 0.4947962419458755
     },
     {
       "beta": 1.0,
-      "width": 1.1230447592142225,
-      "psi_peak": 0.9999998452806445,
-      "slope": 0.6399570373721233
+      "width": 1.123044756744,
+      "psi_peak": 0.9999998452806443,
+      "positivity_ok": true,
+      "red_min": 2.3517998431656598e-07,
+      "blue_min": 7.735967782446956e-08,
+      "component_population_negative": false,
+      "slope": 0.6399570373721286
     },
     {
       "beta": 1.5,
-      "width": 0.6646710794892242,
-      "psi_peak": 1.0168378666505122,
-      "slope": 0.8603478221529772
+      "width": 0.6646710755564421,
+      "psi_peak": 1.0168378666505138,
+      "positivity_ok": false,
+      "red_min": -0.007673448507684228,
+      "blue_min": -0.008418933325256004,
+      "component_population_negative": true,
+      "slope": 0.8603478221529907
     },
     {
       "beta": 2.0,
-      "width": 0.4047727609356276,
-      "psi_peak": 1.1140932155524508,
-      "slope": 1.0009593619235801
+      "width": 0.4047728102839133,
+      "psi_peak": 1.1140932155687555,
+      "positivity_ok": false,
+      "red_min": -0.057046607784371324,
+      "blue_min": -0.05461582662927566,
+      "component_population_negative": true,
+      "slope": 1.00095936553914
     }
   ],
   "steps": 600,
@@ -43,31 +67,28 @@
     6,
     32
   ],
-  "psi_peak_min": 0.05733943963426651,
-  "psi_peak_max": 1.1140932155524508,
-  "n_beta_with_physical_interface": 5,
-  "widths_physical": [
-    1.838714871327973,
-    1.4690258700332497,
-    1.1230447592142225,
-    0.6646710794892242,
-    0.4047727609356276
+  "n_positive_valid": 3,
+  "invalid_by_positivity": [
+    1.5,
+    2.0
   ],
-  "betas_physical": [
+  "invalid_by_dissolution": [
+    0.0
+  ],
+  "widths_positive_valid": [
+    1.838714819891559,
+    1.4690258335867161,
+    1.123044756744
+  ],
+  "betas_positive_valid": [
     0.5,
     0.7,
-    1.0,
-    1.5,
-    2.0
+    1.0
   ],
   "monotone_in_beta": true,
-  "betas_with_psi_above_one": [
-    1.5,
-    2.0
-  ],
   "verdict": "PASS",
-  "acceptance": "at least one beta keeps |psi|max > 0.95 in both bulks, i.e. a physical diffuse interface exists; the report states that eta (R1 Eq.19 refinement law) is NOT determined by this test",
-  "note": "widths are the fitted tanh width of the TERMINAL state; see EXECUTION_REPORT.md for the terminal-state characterisation at these parameters",
-  "wall_seconds": 12.901106119155884,
+  "acceptance": "at least one beta gives |psi| <= 1 AND separated bulks (|psi|peak > 0.95), and the width is monotone in beta over the positives; positivity violations are reported, not counted as valid",
+  "note": "the beta range is not claimed to be the model's full stability envelope; only the tested positives are used",
+  "wall_seconds": 13.572991132736206,
   "exit_code": 0
 }

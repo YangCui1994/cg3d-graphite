@@ -82,6 +82,26 @@ publisher versions.
 
 Full digests, routes and roles: `REFERENCE_MANIFEST.md`.
 
+## Validation pass 3 (post-review correction)
+
+| item | value |
+|---|---|
+| candidate | `5a3929fa1cefb7359893d6c19ed0ec8a7c80a91d` |
+| reviewed predecessor | `738e76f` |
+| review | `.agent/evidence/BI-CG-LECLAIRE-IMPLEMENTATION-001/EXTERNAL_SCIENTIFIC_REVIEW_CHANGES_REQUESTED.md` |
+| control tip read | `1c4f1a4` |
+| unit checks | 59/59 (`results/leclaire_cg/UNIT_CHECKS.log`) |
+| matrix | FAIL 3, INCONCLUSIVE 2, PASS 5, one uninterrupted run |
+
+The candidate was frozen before the matrix was launched, and the evidence
+below it is from that frozen state. Passes 1 and 2 remain in the history and
+in `summary.json`'s companion files; nothing was overwritten.
+
+**R5 provenance correction.** The earlier claim that 科研通 could not be
+driven from this session was wrong and is retracted. R5 was obtained via the
+`ablesci-paper-download` skill by DOI on 2026-09-27; the staged file's byte
+count (1,078,397) matches the delivery record.
+
 ## Scope exclusions actually honoured
 
 - `lbm_solver_cg3d.py` not modified ✓

@@ -31,6 +31,23 @@
 [PASS] perturbation.second_moment_vs_derivation: residual 3.469446951953614e-18
 [PASS] perturbation.mass_vs_derivation: residual 5.7462715141731735e-18
 [PASS] perturbation.A_equals_9over4_omega_sigma: residual [np.float64(0.0), 0.0]
+[PASS] grad_l17.bulk_linear_exact_x: residual 8.881784197001252e-16
+[PASS] grad_l17.bulk_linear_exact_y: residual 1.1102230246251565e-15
+[PASS] grad_l17.wall_centred_available_axis: residual 0.0
+[PASS] grad_l17.wall_backward_when_plus_missing: residual 0.0
+[PASS] grad_l17.wall_zero_when_both_missing: residual 0.0
+[PASS] grad_variant.experimental_reachable: residual 9.992007221626409e-16
+[PASS] grad_variant.rejects_unknown: residual 0.0
+[PASS] A1_mass: residual 2.220446049250313e-16
+[PASS] A2_momentum: residual 5.551115123125783e-17
+[PASS] A3_second_moment: residual 1.0408340855860843e-16
+[PASS] A4_third_moment: residual 6.938893903907228e-17
+[PASS] A1_would_fail_with_c_i_dot_grad_rho_form: residual [0.0]
+[PASS] instrument.circle_fit_recovers_30deg: residual 3.552713678800501e-14
+[PASS] instrument.circle_fit_recovers_60deg: residual 7.105427357601002e-15
+[PASS] instrument.circle_fit_recovers_90deg: residual 0.0
+[PASS] instrument.circle_fit_recovers_120deg: residual 2.842170943040401e-14
+[PASS] instrument.circle_fit_recovers_150deg: residual 2.842170943040401e-14
 [PASS] recolor.red_sum_equals_rho_r: residual 1.6653345369377348e-16
 [PASS] recolor.blue_sum_equals_rho_b: residual 2.220446049250313e-16
 [PASS] recolor.total_is_colour_blind: residual 1.3877787807814457e-17
@@ -41,4 +58,4 @@
 [PASS] stream.non_forward_directions_differ: residual 0.0
 [PASS] stream.total_mass_preserved: residual 7.105427357601002e-15
 
-42/42 checks passed
+59/59 checks passed

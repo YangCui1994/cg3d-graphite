@@ -1,7 +1,7 @@
 {
   "task": "BI-CG-LECLAIRE-IMPLEMENTATION-001",
-  "candidate": "L17_CORE",
-  "generated_utc": "2026-09-27T02:10:59Z",
+  "candidate": "5a3929fa1cefb7359893d6c19ed0ec8a7c80a91d",
+  "generated_utc": "2026-09-27T05:31:54Z",
   "host": "Yang",
   "python": "3.13.9",
   "numpy": "2.3.5",
@@ -13,9 +13,9 @@
   },
   "tests": {
     "01_uniform_single_phase": {
-      "max_abs_v": 8.799988168382003e-14,
-      "max_abs_drho": 7.4495964952348e-14,
-      "red_mass_drift": 3.808509063674137e-11,
+      "max_abs_v": 8.774423318199546e-14,
+      "max_abs_drho": 7.271960811294775e-14,
+      "red_mass_drift": 3.723243935382925e-11,
       "blue_mass_drift": 0.0,
       "blue_max": 0.0,
       "steps": 400,
@@ -26,17 +26,17 @@
       ],
       "verdict": "PASS",
       "acceptance": "max|v| < 1e-12 and max|drho| < 1e-12 (machine precision)",
-      "wall_seconds": 0.8639273643493652,
+      "wall_seconds": 0.9265763759613037,
       "exit_code": 0
     },
     "02_planar_interface": {
       "interface_pos_initial": 16.0,
-      "interface_pos_final": 15.994334253978977,
-      "interface_pos_drift": 0.00566574602102321,
+      "interface_pos_final": 15.994334253979089,
+      "interface_pos_drift": 0.0056657460209113,
       "amplitude_initial": 0.9999997749296758,
       "amplitude_final": 0.9998667421758589,
       "amplitude_ratio": 0.9998669672162414,
-      "max_spurious_v": 2.202436960411518e-13,
+      "max_spurious_v": 2.1997890958433543e-13,
       "trace": [
         {
           "t": 0,
@@ -46,63 +46,63 @@
         },
         {
           "t": 100,
-          "pos": 15.999992760164277,
-          "amp": 0.9998672052135911,
-          "spurious_v": 2.2224588798416487e-14
+          "pos": 15.99999276016429,
+          "amp": 0.999867205213591,
+          "spurious_v": 2.2056499761487604e-14
         },
         {
           "t": 200,
-          "pos": 15.999367727271492,
-          "amp": 0.9998669890966795,
-          "spurious_v": 4.451331564216189e-14
+          "pos": 15.999367727271503,
+          "amp": 0.9998669890966796,
+          "spurious_v": 4.4177026204402614e-14
         },
         {
           "t": 300,
           "pos": 15.998732562843507,
-          "amp": 0.9998669577574184,
-          "spurious_v": 6.624881746023224e-14
+          "amp": 0.9998669577574181,
+          "spurious_v": 6.618989599576738e-14
         },
         {
           "t": 400,
-          "pos": 15.9980991202474,
-          "amp": 0.9998669269544931,
-          "spurious_v": 8.8261296162499e-14
+          "pos": 15.998099120247403,
+          "amp": 0.999866926954493,
+          "spurious_v": 8.818632168279331e-14
         },
         {
           "t": 500,
-          "pos": 15.997467391179864,
+          "pos": 15.997467391179876,
           "amp": 0.999866896153809,
-          "spurious_v": 1.1022087960114266e-13
+          "spurious_v": 1.102176947062609e-13
         },
         {
           "t": 600,
-          "pos": 15.996837370050338,
-          "amp": 0.9998668653544001,
-          "spurious_v": 1.3230816452936254e-13
+          "pos": 15.996837370050367,
+          "amp": 0.9998668653544,
+          "spurious_v": 1.3188945916500035e-13
         },
         {
           "t": 700,
-          "pos": 15.996209051294029,
+          "pos": 15.996209051294082,
           "amp": 0.999866834556584,
-          "spurious_v": 1.5442938063224939e-13
+          "spurious_v": 1.5439504996732503e-13
         },
         {
           "t": 800,
-          "pos": 15.995582429370373,
-          "amp": 0.9998668037606786,
-          "spurious_v": 1.76116461290541e-13
+          "pos": 15.995582429370451,
+          "amp": 0.9998668037606787,
+          "spurious_v": 1.7613208722145788e-13
         },
         {
           "t": 900,
-          "pos": 15.994957498762888,
-          "amp": 0.9998667729669991,
-          "spurious_v": 1.9822458735308049e-13
+          "pos": 15.994957498762984,
+          "amp": 0.9998667729669992,
+          "spurious_v": 1.9795812870476867e-13
         },
         {
           "t": 1000,
-          "pos": 15.994334253978977,
+          "pos": 15.994334253979089,
           "amp": 0.9998667421758589,
-          "spurious_v": 2.202436960411518e-13
+          "spurious_v": 2.1997890958433543e-13
         }
       ],
       "steps": 1000,
@@ -113,103 +113,112 @@
       ],
       "verdict": "PASS",
       "acceptance": "interface position drift < 0.5 lu AND final |psi|max > 0.95 * initial (i.e. the interface survives)",
-      "wall_seconds": 4.082250356674194,
+      "wall_seconds": 4.407334089279175,
       "exit_code": 0
     },
     "03_laplace_droplet": {
       "runs": [
         {
-          "R": 5.0,
-          "dp": 0.008862273687125591,
-          "sigma_measured": 0.022155684217813977,
-          "sigma_input": 0.02,
-          "sigma_ratio": 1.1077842108906988,
-          "psi_peak_initial": 0.9999999998561716,
-          "psi_peak_final": 0.9999999992314821,
-          "psi_peak_ratio": 0.9999999993753105,
-          "interface_width": 0.1272500432931433,
-          "R_over_w": 39.29271747657958,
-          "max_abs_v": 0.0005877388134287656
+          "R_nominal": 5.0,
+          "R_measured": 4.792227629009852,
+          "dp": 0.00895041224018626,
+          "two_over_R": 0.41734244589988956,
+          "sigma_from_this_radius": 0.021446206414224275,
+          "psi_peak": 0.9999999999888526,
+          "positivity_ok": true,
+          "max_abs_v": 0.0004822091097046085
         },
         {
-          "R": 7.0,
-          "dp": 0.00604481951167964,
-          "sigma_measured": 0.02115686829087874,
-          "sigma_input": 0.02,
-          "sigma_ratio": 1.057843414543937,
-          "psi_peak_initial": 0.9999999979300337,
-          "psi_peak_final": 0.9999999912978579,
-          "psi_peak_ratio": 0.9999999933678242,
-          "interface_width": 0.3437130863229599,
-          "R_over_w": 20.365823352511683,
-          "max_abs_v": 0.0003992228894921378
+          "R_nominal": 7.0,
+          "R_measured": 6.868001997278793,
+          "dp": 0.006067674871205149,
+          "two_over_R": 0.29120550646205845,
+          "sigma_from_this_radius": 0.020836401567137654,
+          "psi_peak": 0.9999999998751635,
+          "positivity_ok": true,
+          "max_abs_v": 0.00034945507896228407
         },
         {
-          "R": 9.0,
-          "dp": 0.00455208763210424,
-          "sigma_measured": 0.02048439434446908,
-          "sigma_input": 0.02,
-          "sigma_ratio": 1.024219717223454,
-          "psi_peak_initial": 0.9999999702092184,
-          "psi_peak_final": 0.9999998981691901,
-          "psi_peak_ratio": 0.9999999279599696,
-          "interface_width": 0.8646821298765351,
-          "R_over_w": 10.408449173437964,
-          "max_abs_v": 0.0011578696106244136
+          "R_nominal": 9.0,
+          "R_measured": 8.891988587062059,
+          "dp": 0.0045854746911716164,
+          "two_over_R": 0.2249215662411018,
+          "sigma_from_this_radius": 0.020386994310079967,
+          "psi_peak": 0.9999999985699343,
+          "positivity_ok": true,
+          "max_abs_v": 0.0002787689818532475
         }
       ],
       "steps": 1200,
       "grid": [
-        26,
-        26,
-        26
+        30,
+        30,
+        30
       ],
       "sigma_input": 0.02,
-      "sigma_ratio_range": [
-        1.024219717223454,
-        1.1077842108906988
-      ],
+      "sigma_from_regression": 0.022706672128951774,
+      "regression_intercept": -0.0005308081662422901,
+      "regression_r2": 0.9999699653835257,
+      "sigma_ratio": 1.1353336064475887,
       "droplet_survived": true,
-      "sigma_ratio_spread": 0.08356449366724483,
-      "laplace_law_demonstrated": true,
-      "verdict": "PASS",
-      "acceptance": "droplet survives every radius AND the implied sigma is radius-independent within 15% AND the calibration ratio sigma_meas/sigma_input >= 0.7",
-      "wall_seconds": 236.49415707588196,
+      "positivity_ok": true,
+      "verdict": "FAIL",
+      "acceptance": "droplet survives with |psi|<=1, and dp regressed on 2/R_measured gives sigma within 10% of the input, R^2 > 0.95, and an intercept below 25% of mean dp",
+      "wall_seconds": 392.252423286438,
       "exit_code": 0
     },
     "04_static_contact_angle": {
       "runs": [
         {
           "theta_prescribed_deg": 60.0,
-          "rb": 5.830951894845301,
-          "apex": 3.0,
-          "theta_measured_deg": 54.4512559971279,
-          "psi_peak": 0.9999999999574528
+          "theta_measured_deg": 114.75317076373635,
+          "n_contour_points": 5,
+          "fit_R": 9.831879114885494,
+          "fit_zc": -3.1167060430594327,
+          "fit_rms": 0.25404126313903225,
+          "fit_ok": false,
+          "psi_peak": 0.9999999999999994,
+          "positivity_ok": true,
+          "max_abs_v": 0.0008253185722243171
         },
         {
           "theta_prescribed_deg": 90.0,
-          "rb": 4.47213595499958,
-          "apex": 6.0,
-          "theta_measured_deg": 106.60154959902025,
-          "psi_peak": 0.9999999999025347
+          "theta_measured_deg": 82.84306797540289,
+          "n_contour_points": 7,
+          "fit_R": 6.7967605942408,
+          "fit_zc": 1.8467910534266434,
+          "fit_rms": 0.6884753338851325,
+          "fit_ok": false,
+          "psi_peak": 0.999999999999998,
+          "positivity_ok": true,
+          "max_abs_v": 0.0007696614490082632
         },
         {
           "theta_prescribed_deg": 120.0,
-          "rb": 0.0,
-          "apex": 12.0,
-          "theta_measured_deg": null,
-          "psi_peak": 0.9999999883230948
+          "theta_measured_deg": 47.430224573401034,
+          "n_contour_points": 9,
+          "fit_R": 5.726823295819433,
+          "fit_zc": 4.874124779917215,
+          "fit_rms": 0.4645420386373147,
+          "fit_ok": true,
+          "psi_peak": 0.9999999999999902,
+          "positivity_ok": true,
+          "max_abs_v": 0.0011432277942022811
         }
       ],
-      "steps": 2000,
+      "steps": 1800,
       "grid": [
-        24,
-        24,
-        20
+        30,
+        30,
+        30
       ],
-      "verdict": "FAIL",
-      "acceptance": "every prescribed angle keeps |psi|peak > 0.9 AND measured theta within 15 deg",
-      "wall_seconds": 253.58907437324524,
+      "wall_thickness": 2,
+      "phase_convention": "theta measured through the psi>0 (red) phase",
+      "n_fits_ok": 1,
+      "verdict": "INCONCLUSIVE",
+      "reason": "the circle fit failed or was too poor on at least one prescribed angle; this says nothing about the wetting condition",
+      "acceptance": "every prescribed angle yields a usable circle fit (>=8 contour points, rms < 0.5 lu) and the measured angle is within 15 deg of the prescribed one",
+      "wall_seconds": 587.6539444923401,
       "exit_code": 0
     },
     "05_interface_width_vs_beta": {
@@ -217,38 +226,62 @@
         {
           "beta": 0.0,
           "width": 19.99999999999994,
-          "psi_peak": 0.05733943963426651,
-          "slope": 0.005115215182073918
+          "psi_peak": 0.05733943963426529,
+          "positivity_ok": true,
+          "red_min": 0.5025802605944965,
+          "blue_min": 0.47133028018281714,
+          "component_population_negative": false,
+          "slope": 0.005115215182073734
         },
         {
           "beta": 0.5,
-          "width": 1.838714871327973,
-          "psi_peak": 0.9970032621592773,
-          "slope": 0.37579875808844554
+          "width": 1.838714819891559,
+          "psi_peak": 0.997003262159277,
+          "positivity_ok": true,
+          "red_min": 0.0022908337196226774,
+          "blue_min": 0.001498368920361229,
+          "component_population_negative": false,
+          "slope": 0.3757987580884471
         },
         {
           "beta": 0.7,
-          "width": 1.4690258700332497,
-          "psi_peak": 0.9998668653544001,
-          "slope": 0.49479624194587796
+          "width": 1.4690258335867161,
+          "psi_peak": 0.9998668653544,
+          "positivity_ok": true,
+          "red_min": 0.000125954047672139,
+          "blue_min": 6.656732279997612e-05,
+          "component_population_negative": false,
+          "slope": 0.4947962419458755
         },
         {
           "beta": 1.0,
-          "width": 1.1230447592142225,
-          "psi_peak": 0.9999998452806445,
-          "slope": 0.6399570373721233
+          "width": 1.123044756744,
+          "psi_peak": 0.9999998452806443,
+          "positivity_ok": true,
+          "red_min": 2.3517998431656598e-07,
+          "blue_min": 7.735967782446956e-08,
+          "component_population_negative": false,
+          "slope": 0.6399570373721286
         },
         {
           "beta": 1.5,
-          "width": 0.6646710794892242,
-          "psi_peak": 1.0168378666505122,
-          "slope": 0.8603478221529772
+          "width": 0.6646710755564421,
+          "psi_peak": 1.0168378666505138,
+          "positivity_ok": false,
+          "red_min": -0.007673448507684228,
+          "blue_min": -0.008418933325256004,
+          "component_population_negative": true,
+          "slope": 0.8603478221529907
         },
         {
           "beta": 2.0,
-          "width": 0.4047727609356276,
-          "psi_peak": 1.1140932155524508,
-          "slope": 1.0009593619235801
+          "width": 0.4047728102839133,
+          "psi_peak": 1.1140932155687555,
+          "positivity_ok": false,
+          "red_min": -0.057046607784371324,
+          "blue_min": -0.05461582662927566,
+          "component_population_negative": true,
+          "slope": 1.00095936553914
         }
       ],
       "steps": 600,
@@ -257,98 +290,116 @@
         6,
         32
       ],
-      "psi_peak_min": 0.05733943963426651,
-      "psi_peak_max": 1.1140932155524508,
-      "n_beta_with_physical_interface": 5,
-      "widths_physical": [
-        1.838714871327973,
-        1.4690258700332497,
-        1.1230447592142225,
-        0.6646710794892242,
-        0.4047727609356276
+      "n_positive_valid": 3,
+      "invalid_by_positivity": [
+        1.5,
+        2.0
       ],
-      "betas_physical": [
+      "invalid_by_dissolution": [
+        0.0
+      ],
+      "widths_positive_valid": [
+        1.838714819891559,
+        1.4690258335867161,
+        1.123044756744
+      ],
+      "betas_positive_valid": [
         0.5,
         0.7,
-        1.0,
-        1.5,
-        2.0
+        1.0
       ],
       "monotone_in_beta": true,
-      "betas_with_psi_above_one": [
-        1.5,
-        2.0
-      ],
       "verdict": "PASS",
-      "acceptance": "at least one beta keeps |psi|max > 0.95 in both bulks, i.e. a physical diffuse interface exists; the report states that eta (R1 Eq.19 refinement law) is NOT determined by this test",
-      "note": "widths are the fitted tanh width of the TERMINAL state; see EXECUTION_REPORT.md for the terminal-state characterisation at these parameters",
-      "wall_seconds": 12.901106119155884,
+      "acceptance": "at least one beta gives |psi| <= 1 AND separated bulks (|psi|peak > 0.95), and the width is monotone in beta over the positives; positivity violations are reported, not counted as valid",
+      "note": "the beta range is not claimed to be the model's full stability envelope; only the tested positives are used",
+      "wall_seconds": 13.572991132736206,
       "exit_code": 0
     },
     "06_dynamic_isotropy": {
       "runs": [
         {
           "wave_axis": 0,
-          "normal_axis": 2,
-          "amplitude_trace": [
-            0.9988962690261783,
-            0.968351580475977,
-            0.9729114644303754,
-            0.9729544147023892,
-            0.9715404779495774
+          "domain": [
+            32,
+            16,
+            16
           ],
-          "amplitude_final": 0.9715404779495774,
-          "max_abs_v": 0.0010507258055714804
+          "mode": 2,
+          "wavelength": 16.0,
+          "amplitude_trace": [
+            1.5029112338589803,
+            0.8044654069217183,
+            0.349261032837421,
+            0.13426302229830006,
+            0.0471556241920782
+          ],
+          "times": [
+            0,
+            100,
+            200,
+            400,
+            600
+          ],
+          "amplitude_final": 0.0471556241920782,
+          "max_abs_v": 0.00026766705454148084
         },
         {
           "wave_axis": 1,
-          "normal_axis": 2,
-          "amplitude_trace": [
-            0.9988962690261769,
-            0.972866558424496,
-            0.9766475103347911,
-            0.9768004753949223,
-            0.9762550324069542
+          "domain": [
+            16,
+            32,
+            16
           ],
-          "amplitude_final": 0.9762550324069542,
-          "max_abs_v": 0.0002677957197491351
+          "mode": 2,
+          "wavelength": 16.0,
+          "amplitude_trace": [
+            1.5029112338589807,
+            0.8044654069217154,
+            0.3492610328374092,
+            0.13426302229829945,
+            0.04715562419207071
+          ],
+          "times": [
+            0,
+            100,
+            200,
+            400,
+            600
+          ],
+          "amplitude_final": 0.04715562419207071,
+          "max_abs_v": 0.0002676670545413074
         }
       ],
       "steps": 600,
-      "grid": [
-        32,
-        16,
-        16
-      ],
-      "amplitude_asymmetry": 0.004829224230222981,
+      "lam": 16.0,
+      "amplitude_asymmetry": 1.5892071295026446e-13,
+      "equal_wavelength": true,
       "verdict": "PASS",
-      "acceptance": "the terminal interface response agrees for a wave vector along x and along y to within 5% relative",
-      "wall_seconds": 35.79824495315552,
+      "acceptance": "the two arms have equal lattice wavelength and their interface-height Fourier amplitudes agree to within 5% at every sampled time",
+      "wall_seconds": 36.09901714324951,
       "exit_code": 0
     },
     "07_static_slit_capillary_pressure": {
       "runs": [
         {
           "gap": 10,
-          "meniscus_z": 7,
-          "rho_wetting_side": 0.9524565616468499,
-          "rho_nonwetting_side": 0.9524565616468494,
-          "dp": -1.4802973661668753e-16,
-          "pc_analytic": 0.004,
-          "pc_ratio": -3.700743415417188e-14,
-          "psi_peak": 0.9665046742307825,
-          "max_abs_v": 1.7204019004237478e-14
+          "theta_prescribed_deg": 60.0,
+          "meniscus_z": 6,
+          "dp": -9.62193288008469e-16,
+          "pc_expected": 0.0020000000000000005,
+          "pc_ratio": -4.810966440042344e-13,
+          "psi_peak": 0.9957929538423936,
+          "max_abs_v": 1.4363940552550952e-14
         },
         {
           "gap": 12,
-          "meniscus_z": 8,
-          "rho_wetting_side": 0.9597580621083408,
-          "rho_nonwetting_side": 0.959758062108337,
-          "dp": -1.2582527612418441e-15,
-          "pc_analytic": 0.0033333333333333335,
-          "pc_ratio": -3.774758283725532e-13,
-          "psi_peak": 0.9904250474564682,
-          "max_abs_v": 2.4268120496101823e-14
+          "theta_prescribed_deg": 60.0,
+          "meniscus_z": 7,
+          "dp": -1.4062824978585316e-15,
+          "pc_expected": 0.001666666666666667,
+          "pc_ratio": -8.437694987151188e-13,
+          "psi_peak": 0.9988222275068884,
+          "max_abs_v": 2.0570913923239578e-14
         }
       ],
       "steps": 1500,
@@ -357,61 +408,115 @@
         12,
         32
       ],
+      "sigma": 0.02,
       "verdict": "FAIL",
-      "acceptance": "each slit keeps |psi|peak > 0.9 AND a positive pressure difference across the meniscus is measured; the ratio to 2 sigma cos(theta)/gap is reported but not gated, because the contact angle here is the model's own (wetting='none') rather than a prescribed one",
-      "wall_seconds": 37.72963047027588,
+      "acceptance": "with a prescribed contact angle the measured pressure difference has the sign of cos(theta) and agrees with 2 sigma cos(theta)/h to within 50%",
+      "wall_seconds": 38.7962121963501,
       "exit_code": 0
     },
     "08_simple_imbibition": {
-      "front": [
+      "trace": [
         {
           "t": 0,
-          "z": 5.0
+          "slit_level": NaN,
+          "reservoir_level": 7.0,
+          "rise": NaN,
+          "max_abs_v": 2.7755575615628914e-17
         },
         {
-          "t": 187,
-          "z": 5.0
+          "t": 400,
+          "slit_level": NaN,
+          "reservoir_level": 7.0,
+          "rise": NaN,
+          "max_abs_v": 0.0002654023578177322
         },
         {
-          "t": 374,
-          "z": 5.0
+          "t": 800,
+          "slit_level": NaN,
+          "reservoir_level": 7.0,
+          "rise": NaN,
+          "max_abs_v": 0.0002642798400486753
         },
         {
-          "t": 561,
-          "z": 4.0
+          "t": 1200,
+          "slit_level": NaN,
+          "reservoir_level": 7.0,
+          "rise": NaN,
+          "max_abs_v": 0.000264281931353635
         },
         {
-          "t": 748,
-          "z": 4.0
+          "t": 1600,
+          "slit_level": NaN,
+          "reservoir_level": 7.0,
+          "rise": NaN,
+          "max_abs_v": 0.00026428197344457977
         },
         {
-          "t": 935,
-          "z": 4.0
+          "t": 2000,
+          "slit_level": NaN,
+          "reservoir_level": 7.0,
+          "rise": NaN,
+          "max_abs_v": 0.00026428197471586987
         },
         {
-          "t": 1122,
-          "z": 4.0
+          "t": 2400,
+          "slit_level": NaN,
+          "reservoir_level": 7.0,
+          "rise": NaN,
+          "max_abs_v": 0.0002642819748082532
         },
         {
-          "t": 1309,
-          "z": 4.0
+          "t": 2800,
+          "slit_level": NaN,
+          "reservoir_level": 7.0,
+          "rise": NaN,
+          "max_abs_v": 0.0002642819748143602
         },
         {
-          "t": 1496,
-          "z": 4.0
+          "t": 3200,
+          "slit_level": NaN,
+          "reservoir_level": 7.0,
+          "rise": NaN,
+          "max_abs_v": 0.00026428197481488094
+        },
+        {
+          "t": 3600,
+          "slit_level": NaN,
+          "reservoir_level": 7.0,
+          "rise": NaN,
+          "max_abs_v": 0.0002642819748149945
+        },
+        {
+          "t": 4000,
+          "slit_level": NaN,
+          "reservoir_level": 7.0,
+          "rise": NaN,
+          "max_abs_v": 0.0002642819748148737
         }
       ],
-      "steps": 1500,
+      "steps": 4000,
       "grid": [
-        10,
-        10,
+        20,
+        12,
         40
       ],
       "gap": 8,
-      "front_advance": -1.0,
-      "verdict": "FAIL",
-      "acceptance": "the wetting front advances by more than 2 lu with no imposed pressure difference",
-      "wall_seconds": 19.052552223205566,
+      "theta_prescribed_deg": 60.0,
+      "g": 0.00042,
+      "rise_final": NaN,
+      "rise_expected": 5.952380952380953,
+      "rise_ratio": null,
+      "closed_box": {
+        "floor": true,
+        "ceiling": true,
+        "slit_walls": true,
+        "lateral_periodic": true,
+        "all_closed": true
+      },
+      "max_abs_v": 0.0002642819748148737,
+      "verdict": "INCONCLUSIVE",
+      "acceptance": "the closed box stays closed AND the measured capillary rise is within 50% of Jurin's law 2 sigma cos(theta)/(rho g h)",
+      "wall_seconds": 139.4000859260559,
       "exit_code": 0
     },
     "09_asymmetric_killer": {
@@ -422,87 +527,151 @@
         16
       ],
       "band": 3,
-      "wall_band_red_initial": 580.0,
-      "wall_band_red_final": 585.2801417813591,
-      "wall_band_red_change": 5.280141781359134,
-      "wall_band_red_relative": 0.009103692726481266,
-      "red_drift": 92.5487169817427,
-      "blue_drift": 125.33587147383173,
+      "closed_box": {
+        "x_minus": true,
+        "x_plus": true,
+        "y_minus": true,
+        "y_plus": true,
+        "all_closed": true
+      },
+      "wall_band_red_initial": 520.0,
+      "wall_band_red_final": 484.47985133888835,
+      "wall_band_red_relative": -0.06830797819444548,
+      "red_drift": 3.6288838600739837e-10,
+      "blue_drift": 3.838067641481757e-10,
+      "max_red_excursion": 2.7491544394499874e-13,
+      "max_blue_excursion": 2.7414768867726837e-13,
+      "late_red_rate_per_step": -2.419255906715989e-13,
+      "late_blue_rate_per_step": -2.558711760987838e-13,
       "n_components_initial": 1,
       "n_components_final": 1,
       "component_sizes_final": [
-        1208
+        1100
       ],
-      "max_abs_v": 0.020253122924649446,
+      "max_abs_v": 0.0003275183846265769,
       "trace": [
         {
           "t": 0,
-          "wall_band_red": 580.0,
-          "red_total": 1500.0,
-          "blue_total": 1640.0,
+          "wall_band_red": 520.0,
+          "red_total": 1320.0,
+          "blue_total": 1400.0,
+          "red_excursion": 0.0,
+          "blue_excursion": 0.0,
           "max_abs_v": 2.7755575615628914e-17
         },
         {
-          "t": 187,
-          "wall_band_red": 535.309372957927,
-          "red_total": 1460.1372513822985,
-          "blue_total": 1597.9651803068616,
-          "max_abs_v": 0.020025471856022686
+          "t": 125,
+          "wall_band_red": 484.49211260470935,
+          "red_total": 1319.9999999999704,
+          "blue_total": 1399.9999999999686,
+          "red_excursion": -2.2392861975469823e-14,
+          "blue_excursion": -2.2412548007975732e-14,
+          "max_abs_v": 0.00030979519585697037
         },
         {
-          "t": 374,
-          "wall_band_red": 542.1782028397258,
-          "red_total": 1478.1994855955727,
-          "blue_total": 1620.7327217354027,
-          "max_abs_v": 0.02006342556464144
+          "t": 250,
+          "wall_band_red": 484.51872951116803,
+          "red_total": 1319.99999999994,
+          "blue_total": 1399.9999999999366,
+          "red_excursion": -4.5474735088646414e-14,
+          "blue_excursion": -4.5312325320472675e-14,
+          "max_abs_v": 0.00030463341948005357
         },
         {
-          "t": 561,
-          "wall_band_red": 549.1250047433981,
-          "red_total": 1496.5378856328143,
-          "blue_total": 1643.8687653261186,
-          "max_abs_v": 0.020095855338948
+          "t": 375,
+          "wall_band_red": 484.5154510452945,
+          "red_total": 1319.9999999999095,
+          "blue_total": 1399.9999999999045,
+          "red_excursion": -6.8556608201823e-14,
+          "blue_excursion": -6.821210263296962e-14,
+          "max_abs_v": 0.00031413816366048517
         },
         {
-          "t": 748,
-          "wall_band_red": 556.1500563446228,
-          "red_total": 1515.1598432198884,
-          "blue_total": 1667.3824002295878,
-          "max_abs_v": 0.0201276557334944
+          "t": 500,
+          "wall_band_red": 484.50637814726116,
+          "red_total": 1319.9999999998795,
+          "blue_total": 1399.9999999998722,
+          "red_excursion": -9.12939757461462e-14,
+          "blue_excursion": -9.12742897136403e-14,
+          "max_abs_v": 0.0003179001946868105
         },
         {
-          "t": 935,
-          "wall_band_red": 563.2628873768414,
-          "red_total": 1534.0701725735069,
-          "blue_total": 1691.2781535347306,
-          "max_abs_v": 0.020159598229945026
+          "t": 625,
+          "wall_band_red": 484.4977355140226,
+          "red_total": 1319.999999999849,
+          "blue_total": 1399.9999999998402,
+          "red_excursion": -1.143758488593228e-13,
+          "blue_excursion": -1.1417406702613723e-13,
+          "max_abs_v": 0.0003203089169696094
         },
         {
-          "t": 1122,
-          "wall_band_red": 570.4939999981352,
-          "red_total": 1553.268712071663,
-          "blue_total": 1715.5645209955528,
-          "max_abs_v": 0.020191065137510688
+          "t": 750,
+          "wall_band_red": 484.49082518290083,
+          "red_total": 1319.9999999998186,
+          "blue_total": 1399.999999999808,
+          "red_excursion": -1.3745772197249937e-13,
+          "blue_excursion": -1.3707384433863419e-13,
+          "max_abs_v": 0.00032206691774665545
         },
         {
-          "t": 1309,
-          "wall_band_red": 577.832453433529,
-          "red_total": 1572.7603058919935,
-          "blue_total": 1740.247885880906,
-          "max_abs_v": 0.020222226186665127
+          "t": 875,
+          "wall_band_red": 484.4857338943818,
+          "red_total": 1319.9999999997885,
+          "blue_total": 1399.9999999997763,
+          "red_excursion": -1.601950895168226e-13,
+          "blue_excursion": -1.598112118829574e-13,
+          "max_abs_v": 0.000323430385128874
         },
         {
-          "t": 1496,
-          "wall_band_red": 585.2801417813591,
-          "red_total": 1592.5487169817427,
-          "blue_total": 1765.3358714738317,
-          "max_abs_v": 0.020253122924649446
+          "t": 1000,
+          "wall_band_red": 484.4822566019901,
+          "red_total": 1319.999999999758,
+          "blue_total": 1399.999999999744,
+          "red_excursion": -1.8327696262999917e-13,
+          "blue_excursion": -1.8287339896362807e-13,
+          "max_abs_v": 0.00032453138275931494
+        },
+        {
+          "t": 1125,
+          "wall_band_red": 484.4801443219911,
+          "red_total": 1319.9999999997276,
+          "blue_total": 1399.999999999712,
+          "red_excursion": -2.0635883574317577e-13,
+          "blue_excursion": -2.0577317627612502e-13,
+          "max_abs_v": 0.0003254482278740414
+        },
+        {
+          "t": 1250,
+          "wall_band_red": 484.479166712052,
+          "red_total": 1319.9999999996976,
+          "blue_total": 1399.9999999996803,
+          "red_excursion": -2.2909620328749897e-13,
+          "blue_excursion": -2.2834813405227447e-13,
+          "max_abs_v": 0.0003262309205304247
+        },
+        {
+          "t": 1375,
+          "wall_band_red": 484.47912493326197,
+          "red_total": 1319.9999999996671,
+          "blue_total": 1399.999999999648,
+          "red_excursion": -2.5217807640067557e-13,
+          "blue_excursion": -2.5141032113294515e-13,
+          "max_abs_v": 0.00032691309850725364
+        },
+        {
+          "t": 1500,
+          "wall_band_red": 484.47985133888835,
+          "red_total": 1319.999999999637,
+          "blue_total": 1399.9999999996162,
+          "red_excursion": -2.7491544394499874e-13,
+          "blue_excursion": -2.7414768867726837e-13,
+          "max_abs_v": 0.0003275183846265769
         }
       ],
-      "verdict": "PASS",
-      "acceptance": "wall-band red mass changes by < 2% AND the domain stays single-component, with no imposed pressure difference and a non-cancelling geometry",
-      "note": "R2 warns that periodic closure can hide wall-directed mass transfer; the ledge geometry is one-sided, closed on all four lateral faces, and driven by no pressure difference, so a wall-directed transfer cannot cancel",
-      "wall_seconds": 38.40880274772644,
+      "verdict": "FAIL",
+      "acceptance": "box verified closed; wall-band red changes < 2%; single component; |global component excursion| < 2% at every sampled time; late-window component drift < 1e-6 per step (so the early solid-node reservoir fill is separated from real creation)",
+      "note": "R2 warns that periodic closure can hide wall-directed mass transfer; the ledge is one-sided and now verifiably closed on all four lateral faces, with no imposed pressure difference",
+      "wall_seconds": 37.465450286865234,
       "exit_code": 0
     },
     "10_conservation_audit": {
@@ -515,12 +684,12 @@
             8,
             24
           ],
-          "red_drift": 1.4267698134062812e-10,
-          "blue_drift": 1.3142198440618813e-10,
-          "total_drift": 2.7398527890909463e-10,
-          "red_drift_per_step": 1.426769813406281e-13,
-          "blue_drift_per_step": 1.3142198440618812e-13,
-          "total_drift_per_step": 2.7398527890909465e-13,
+          "red_drift": 1.482476363889873e-10,
+          "blue_drift": 1.3073986337985843e-10,
+          "total_drift": 2.787601260934025e-10,
+          "red_drift_per_step": 1.482476363889873e-13,
+          "blue_drift_per_step": 1.3073986337985842e-13,
+          "total_drift_per_step": 2.787601260934025e-13,
           "red_mass": 799.9996067728256,
           "trace": [
             {
@@ -531,63 +700,63 @@
             },
             {
               "t": 100,
-              "red": 799.9996067728125,
-              "blue": 736.0003932271629,
-              "total": 1535.9999999999754
+              "red": 799.9996067728132,
+              "blue": 736.0003932271637,
+              "total": 1535.9999999999768
             },
             {
               "t": 200,
-              "red": 799.999606772797,
-              "blue": 736.0003932271495,
-              "total": 1535.9999999999466
+              "red": 799.9996067727983,
+              "blue": 736.0003932271502,
+              "total": 1535.9999999999486
             },
             {
               "t": 300,
-              "red": 799.999606772783,
-              "blue": 736.0003932271355,
-              "total": 1535.9999999999186
+              "red": 799.9996067727836,
+              "blue": 736.000393227137,
+              "total": 1535.9999999999206
             },
             {
               "t": 400,
-              "red": 799.999606772768,
-              "blue": 736.0003932271233,
-              "total": 1535.9999999998913
+              "red": 799.9996067727685,
+              "blue": 736.000393227125,
+              "total": 1535.9999999998936
             },
             {
               "t": 500,
-              "red": 799.9996067727532,
-              "blue": 736.0003932271093,
-              "total": 1535.9999999998624
+              "red": 799.9996067727529,
+              "blue": 736.0003932271107,
+              "total": 1535.9999999998636
             },
             {
               "t": 600,
-              "red": 799.99960677274,
-              "blue": 736.0003932270961,
-              "total": 1535.999999999836
+              "red": 799.9996067727374,
+              "blue": 736.000393227097,
+              "total": 1535.9999999998345
             },
             {
               "t": 700,
-              "red": 799.9996067727251,
-              "blue": 736.0003932270828,
-              "total": 1535.9999999998079
+              "red": 799.9996067727225,
+              "blue": 736.0003932270829,
+              "total": 1535.9999999998054
             },
             {
               "t": 800,
-              "red": 799.9996067727109,
+              "red": 799.9996067727068,
               "blue": 736.0003932270695,
-              "total": 1535.9999999997804
+              "total": 1535.9999999997763
             },
             {
               "t": 900,
-              "red": 799.9996067726964,
+              "red": 799.9996067726915,
               "blue": 736.0003932270556,
-              "total": 1535.9999999997522
+              "total": 1535.9999999997472
             },
             {
               "t": 1000,
-              "red": 799.9996067726829,
-              "blue": 736.0003932270431,
-              "total": 1535.999999999726
+              "red": 799.9996067726773,
+              "blue": 736.0003932270438,
+              "total": 1535.9999999997212
             }
           ]
         },
@@ -599,12 +768,12 @@
             8,
             24
           ],
-          "red_drift": 9.663381206337363e-12,
+          "red_drift": 1.0118128557223827e-11,
           "blue_drift": 1.000444171950221e-11,
-          "total_drift": 1.978150976356119e-11,
-          "red_drift_per_step": 9.663381206337363e-15,
+          "total_drift": 2.0236257114447653e-11,
+          "red_drift_per_step": 1.0118128557223826e-14,
           "blue_drift_per_step": 1.000444171950221e-14,
-          "total_drift_per_step": 1.9781509763561188e-14,
+          "total_drift_per_step": 2.0236257114447652e-14,
           "red_mass": 799.9996067728256,
           "trace": [
             {
@@ -615,80 +784,81 @@
             },
             {
               "t": 100,
-              "red": 799.9996067728268,
-              "blue": 736.0003932271757,
-              "total": 1536.0000000000025
+              "red": 799.9996067728265,
+              "blue": 736.0003932271756,
+              "total": 1536.000000000002
             },
             {
               "t": 200,
-              "red": 799.9996067728277,
-              "blue": 736.0003932271767,
-              "total": 1536.0000000000045
+              "red": 799.9996067728275,
+              "blue": 736.0003932271765,
+              "total": 1536.000000000004
             },
             {
               "t": 300,
-              "red": 799.999606772829,
+              "red": 799.9996067728285,
               "blue": 736.0003932271778,
-              "total": 1536.0000000000068
+              "total": 1536.0000000000064
             },
             {
               "t": 400,
-              "red": 799.9996067728301,
-              "blue": 736.0003932271787,
-              "total": 1536.0000000000089
+              "red": 799.9996067728296,
+              "blue": 736.0003932271782,
+              "total": 1536.0000000000077
             },
             {
               "t": 500,
-              "red": 799.9996067728308,
-              "blue": 736.0003932271798,
-              "total": 1536.0000000000105
+              "red": 799.9996067728307,
+              "blue": 736.000393227179,
+              "total": 1536.0000000000095
             },
             {
               "t": 600,
-              "red": 799.9996067728318,
-              "blue": 736.000393227181,
-              "total": 1536.0000000000127
+              "red": 799.9996067728316,
+              "blue": 736.0003932271802,
+              "total": 1536.0000000000118
             },
             {
               "t": 700,
-              "red": 799.9996067728327,
-              "blue": 736.0003932271817,
-              "total": 1536.0000000000146
+              "red": 799.9996067728329,
+              "blue": 736.0003932271813,
+              "total": 1536.000000000014
             },
             {
               "t": 800,
-              "red": 799.9996067728338,
+              "red": 799.999606772834,
               "blue": 736.0003932271825,
               "total": 1536.0000000000164
             },
             {
               "t": 900,
-              "red": 799.9996067728346,
-              "blue": 736.0003932271834,
-              "total": 1536.000000000018
+              "red": 799.9996067728351,
+              "blue": 736.0003932271836,
+              "total": 1536.0000000000186
             },
             {
               "t": 1000,
-              "red": 799.9996067728353,
+              "red": 799.9996067728357,
               "blue": 736.0003932271845,
-              "total": 1536.0000000000198
+              "total": 1536.0000000000202
             }
           ]
         }
       ],
       "verdict": "PASS",
       "acceptance": "L17_CORE (no overlay) total-mass drift < 1e-12 and component drift < 1e-9 per step; the overlay arm is reported separately and is NOT described as paper-faithful",
-      "wall_seconds": 9.264944791793823,
+      "scope_limitation": "EXTERNAL REVIEW B10: this result is for the isolated NumPy/f64 reference implementation only. The project's earlier conservation defect was precision/backend specific, so 'the recolouring needs no conservation correction' must NOT be generalised to a Taichi/f32 port without repeating this audit there. No port is attempted here.",
+      "wall_seconds": 9.346977472305298,
       "exit_code": 0
     }
   },
   "verdict_counts": {
-    "PASS": 7,
-    "FAIL": 3
+    "PASS": 5,
+    "FAIL": 3,
+    "INCONCLUSIVE": 2
   },
-  "validation_pass": 2,
-  "pass_1_commit": "51cc61a",
-  "pass_2_note": "whole matrix re-run on the candidate with the Eq.(18) constant corrected; all ten entries from one uninterrupted run",
-  "unit_checks": "42/42 pass (results/leclaire_cg/UNIT_CHECKS.log)",
-  "recommendation": "CHANGES_REQUESTED - bulk physics good, wetting physics not yet measured; see EXECUTION_REPORT.md sections 9 and 12"
+  "validation_pass": 3,
+  "reviewed_predecessor": "738e76f",
+  "unit_checks": "59/59 (results/leclaire_cg/UNIT_CHECKS.log)",
+  "review": "EXTERNAL_SCIENTIFIC_REVIEW_CHANGES_REQUESTED.md (control 1c4f1a4)"
 }

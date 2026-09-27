@@ -1,61 +1,51 @@
 {
   "runs": [
     {
-      "R": 5.0,
-      "dp": 0.008862273687125591,
-      "sigma_measured": 0.022155684217813977,
-      "sigma_input": 0.02,
-      "sigma_ratio": 1.1077842108906988,
-      "psi_peak_initial": 0.9999999998561716,
-      "psi_peak_final": 0.9999999992314821,
-      "psi_peak_ratio": 0.9999999993753105,
-      "interface_width": 0.1272500432931433,
-      "R_over_w": 39.29271747657958,
-      "max_abs_v": 0.0005877388134287656
+      "R_nominal": 5.0,
+      "R_measured": 4.792227629009852,
+      "dp": 0.00895041224018626,
+      "two_over_R": 0.41734244589988956,
+      "sigma_from_this_radius": 0.021446206414224275,
+      "psi_peak": 0.9999999999888526,
+      "positivity_ok": true,
+      "max_abs_v": 0.0004822091097046085
     },
     {
-      "R": 7.0,
-      "dp": 0.00604481951167964,
-      "sigma_measured": 0.02115686829087874,
-      "sigma_input": 0.02,
-      "sigma_ratio": 1.057843414543937,
-      "psi_peak_initial": 0.9999999979300337,
-      "psi_peak_final": 0.9999999912978579,
-      "psi_peak_ratio": 0.9999999933678242,
-      "interface_width": 0.3437130863229599,
-      "R_over_w": 20.365823352511683,
-      "max_abs_v": 0.0003992228894921378
+      "R_nominal": 7.0,
+      "R_measured": 6.868001997278793,
+      "dp": 0.006067674871205149,
+      "two_over_R": 0.29120550646205845,
+      "sigma_from_this_radius": 0.020836401567137654,
+      "psi_peak": 0.9999999998751635,
+      "positivity_ok": true,
+      "max_abs_v": 0.00034945507896228407
     },
     {
-      "R": 9.0,
-      "dp": 0.00455208763210424,
-      "sigma_measured": 0.02048439434446908,
-      "sigma_input": 0.02,
-      "sigma_ratio": 1.024219717223454,
-      "psi_peak_initial": 0.9999999702092184,
-      "psi_peak_final": 0.9999998981691901,
-      "psi_peak_ratio": 0.9999999279599696,
-      "interface_width": 0.8646821298765351,
-      "R_over_w": 10.408449173437964,
-      "max_abs_v": 0.0011578696106244136
+      "R_nominal": 9.0,
+      "R_measured": 8.891988587062059,
+      "dp": 0.0045854746911716164,
+      "two_over_R": 0.2249215662411018,
+      "sigma_from_this_radius": 0.020386994310079967,
+      "psi_peak": 0.9999999985699343,
+      "positivity_ok": true,
+      "max_abs_v": 0.0002787689818532475
     }
   ],
   "steps": 1200,
   "grid": [
-    26,
-    26,
-    26
+    30,
+    30,
+    30
   ],
   "sigma_input": 0.02,
-  "sigma_ratio_range": [
-    1.024219717223454,
-    1.1077842108906988
-  ],
+  "sigma_from_regression": 0.022706672128951774,
+  "regression_intercept": -0.0005308081662422901,
+  "regression_r2": 0.9999699653835257,
+  "sigma_ratio": 1.1353336064475887,
   "droplet_survived": true,
-  "sigma_ratio_spread": 0.08356449366724483,
-  "laplace_law_demonstrated": true,
-  "verdict": "PASS",
-  "acceptance": "droplet survives every radius AND the implied sigma is radius-independent within 15% AND the calibration ratio sigma_meas/sigma_input >= 0.7",
-  "wall_seconds": 236.49415707588196,
+  "positivity_ok": true,
+  "verdict": "FAIL",
+  "acceptance": "droplet survives with |psi|<=1, and dp regressed on 2/R_measured gives sigma within 10% of the input, R^2 > 0.95, and an intercept below 25% of mean dp",
+  "wall_seconds": 392.252423286438,
   "exit_code": 0
 }

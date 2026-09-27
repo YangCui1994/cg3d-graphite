@@ -1,52 +1,105 @@
 {
-  "front": [
+  "trace": [
     {
       "t": 0,
-      "z": 5.0
+      "slit_level": NaN,
+      "reservoir_level": 7.0,
+      "rise": NaN,
+      "max_abs_v": 2.7755575615628914e-17
     },
     {
-      "t": 187,
-      "z": 5.0
+      "t": 400,
+      "slit_level": NaN,
+      "reservoir_level": 7.0,
+      "rise": NaN,
+      "max_abs_v": 0.0002654023578177322
     },
     {
-      "t": 374,
-      "z": 5.0
+      "t": 800,
+      "slit_level": NaN,
+      "reservoir_level": 7.0,
+      "rise": NaN,
+      "max_abs_v": 0.0002642798400486753
     },
     {
-      "t": 561,
-      "z": 4.0
+      "t": 1200,
+      "slit_level": NaN,
+      "reservoir_level": 7.0,
+      "rise": NaN,
+      "max_abs_v": 0.000264281931353635
     },
     {
-      "t": 748,
-      "z": 4.0
+      "t": 1600,
+      "slit_level": NaN,
+      "reservoir_level": 7.0,
+      "rise": NaN,
+      "max_abs_v": 0.00026428197344457977
     },
     {
-      "t": 935,
-      "z": 4.0
+      "t": 2000,
+      "slit_level": NaN,
+      "reservoir_level": 7.0,
+      "rise": NaN,
+      "max_abs_v": 0.00026428197471586987
     },
     {
-      "t": 1122,
-      "z": 4.0
+      "t": 2400,
+      "slit_level": NaN,
+      "reservoir_level": 7.0,
+      "rise": NaN,
+      "max_abs_v": 0.0002642819748082532
     },
     {
-      "t": 1309,
-      "z": 4.0
+      "t": 2800,
+      "slit_level": NaN,
+      "reservoir_level": 7.0,
+      "rise": NaN,
+      "max_abs_v": 0.0002642819748143602
     },
     {
-      "t": 1496,
-      "z": 4.0
+      "t": 3200,
+      "slit_level": NaN,
+      "reservoir_level": 7.0,
+      "rise": NaN,
+      "max_abs_v": 0.00026428197481488094
+    },
+    {
+      "t": 3600,
+      "slit_level": NaN,
+      "reservoir_level": 7.0,
+      "rise": NaN,
+      "max_abs_v": 0.0002642819748149945
+    },
+    {
+      "t": 4000,
+      "slit_level": NaN,
+      "reservoir_level": 7.0,
+      "rise": NaN,
+      "max_abs_v": 0.0002642819748148737
     }
   ],
-  "steps": 1500,
+  "steps": 4000,
   "grid": [
-    10,
-    10,
+    20,
+    12,
     40
   ],
   "gap": 8,
-  "front_advance": -1.0,
-  "verdict": "FAIL",
-  "acceptance": "the wetting front advances by more than 2 lu with no imposed pressure difference",
-  "wall_seconds": 19.052552223205566,
+  "theta_prescribed_deg": 60.0,
+  "g": 0.00042,
+  "rise_final": NaN,
+  "rise_expected": 5.952380952380953,
+  "rise_ratio": null,
+  "closed_box": {
+    "floor": true,
+    "ceiling": true,
+    "slit_walls": true,
+    "lateral_periodic": true,
+    "all_closed": true
+  },
+  "max_abs_v": 0.0002642819748148737,
+  "verdict": "INCONCLUSIVE",
+  "acceptance": "the closed box stays closed AND the measured capillary rise is within 50% of Jurin's law 2 sigma cos(theta)/(rho g h)",
+  "wall_seconds": 139.4000859260559,
   "exit_code": 0
 }

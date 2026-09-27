@@ -6,86 +6,150 @@
     16
   ],
   "band": 3,
-  "wall_band_red_initial": 580.0,
-  "wall_band_red_final": 585.2801417813591,
-  "wall_band_red_change": 5.280141781359134,
-  "wall_band_red_relative": 0.009103692726481266,
-  "red_drift": 92.5487169817427,
-  "blue_drift": 125.33587147383173,
+  "closed_box": {
+    "x_minus": true,
+    "x_plus": true,
+    "y_minus": true,
+    "y_plus": true,
+    "all_closed": true
+  },
+  "wall_band_red_initial": 520.0,
+  "wall_band_red_final": 484.47985133888835,
+  "wall_band_red_relative": -0.06830797819444548,
+  "red_drift": 3.6288838600739837e-10,
+  "blue_drift": 3.838067641481757e-10,
+  "max_red_excursion": 2.7491544394499874e-13,
+  "max_blue_excursion": 2.7414768867726837e-13,
+  "late_red_rate_per_step": -2.419255906715989e-13,
+  "late_blue_rate_per_step": -2.558711760987838e-13,
   "n_components_initial": 1,
   "n_components_final": 1,
   "component_sizes_final": [
-    1208
+    1100
   ],
-  "max_abs_v": 0.020253122924649446,
+  "max_abs_v": 0.0003275183846265769,
   "trace": [
     {
       "t": 0,
-      "wall_band_red": 580.0,
-      "red_total": 1500.0,
-      "blue_total": 1640.0,
+      "wall_band_red": 520.0,
+      "red_total": 1320.0,
+      "blue_total": 1400.0,
+      "red_excursion": 0.0,
+      "blue_excursion": 0.0,
       "max_abs_v": 2.7755575615628914e-17
     },
     {
-      "t": 187,
-      "wall_band_red": 535.309372957927,
-      "red_total": 1460.1372513822985,
-      "blue_total": 1597.9651803068616,
-      "max_abs_v": 0.020025471856022686
+      "t": 125,
+      "wall_band_red": 484.49211260470935,
+      "red_total": 1319.9999999999704,
+      "blue_total": 1399.9999999999686,
+      "red_excursion": -2.2392861975469823e-14,
+      "blue_excursion": -2.2412548007975732e-14,
+      "max_abs_v": 0.00030979519585697037
     },
     {
-      "t": 374,
-      "wall_band_red": 542.1782028397258,
-      "red_total": 1478.1994855955727,
-      "blue_total": 1620.7327217354027,
-      "max_abs_v": 0.02006342556464144
+      "t": 250,
+      "wall_band_red": 484.51872951116803,
+      "red_total": 1319.99999999994,
+      "blue_total": 1399.9999999999366,
+      "red_excursion": -4.5474735088646414e-14,
+      "blue_excursion": -4.5312325320472675e-14,
+      "max_abs_v": 0.00030463341948005357
     },
     {
-      "t": 561,
-      "wall_band_red": 549.1250047433981,
-      "red_total": 1496.5378856328143,
-      "blue_total": 1643.8687653261186,
-      "max_abs_v": 0.020095855338948
+      "t": 375,
+      "wall_band_red": 484.5154510452945,
+      "red_total": 1319.9999999999095,
+      "blue_total": 1399.9999999999045,
+      "red_excursion": -6.8556608201823e-14,
+      "blue_excursion": -6.821210263296962e-14,
+      "max_abs_v": 0.00031413816366048517
     },
     {
-      "t": 748,
-      "wall_band_red": 556.1500563446228,
-      "red_total": 1515.1598432198884,
-      "blue_total": 1667.3824002295878,
-      "max_abs_v": 0.0201276557334944
+      "t": 500,
+      "wall_band_red": 484.50637814726116,
+      "red_total": 1319.9999999998795,
+      "blue_total": 1399.9999999998722,
+      "red_excursion": -9.12939757461462e-14,
+      "blue_excursion": -9.12742897136403e-14,
+      "max_abs_v": 0.0003179001946868105
     },
     {
-      "t": 935,
-      "wall_band_red": 563.2628873768414,
-      "red_total": 1534.0701725735069,
-      "blue_total": 1691.2781535347306,
-      "max_abs_v": 0.020159598229945026
+      "t": 625,
+      "wall_band_red": 484.4977355140226,
+      "red_total": 1319.999999999849,
+      "blue_total": 1399.9999999998402,
+      "red_excursion": -1.143758488593228e-13,
+      "blue_excursion": -1.1417406702613723e-13,
+      "max_abs_v": 0.0003203089169696094
     },
     {
-      "t": 1122,
-      "wall_band_red": 570.4939999981352,
-      "red_total": 1553.268712071663,
-      "blue_total": 1715.5645209955528,
-      "max_abs_v": 0.020191065137510688
+      "t": 750,
+      "wall_band_red": 484.49082518290083,
+      "red_total": 1319.9999999998186,
+      "blue_total": 1399.999999999808,
+      "red_excursion": -1.3745772197249937e-13,
+      "blue_excursion": -1.3707384433863419e-13,
+      "max_abs_v": 0.00032206691774665545
     },
     {
-      "t": 1309,
-      "wall_band_red": 577.832453433529,
-      "red_total": 1572.7603058919935,
-      "blue_total": 1740.247885880906,
-      "max_abs_v": 0.020222226186665127
+      "t": 875,
+      "wall_band_red": 484.4857338943818,
+      "red_total": 1319.9999999997885,
+      "blue_total": 1399.9999999997763,
+      "red_excursion": -1.601950895168226e-13,
+      "blue_excursion": -1.598112118829574e-13,
+      "max_abs_v": 0.000323430385128874
     },
     {
-      "t": 1496,
-      "wall_band_red": 585.2801417813591,
-      "red_total": 1592.5487169817427,
-      "blue_total": 1765.3358714738317,
-      "max_abs_v": 0.020253122924649446
+      "t": 1000,
+      "wall_band_red": 484.4822566019901,
+      "red_total": 1319.999999999758,
+      "blue_total": 1399.999999999744,
+      "red_excursion": -1.8327696262999917e-13,
+      "blue_excursion": -1.8287339896362807e-13,
+      "max_abs_v": 0.00032453138275931494
+    },
+    {
+      "t": 1125,
+      "wall_band_red": 484.4801443219911,
+      "red_total": 1319.9999999997276,
+      "blue_total": 1399.999999999712,
+      "red_excursion": -2.0635883574317577e-13,
+      "blue_excursion": -2.0577317627612502e-13,
+      "max_abs_v": 0.0003254482278740414
+    },
+    {
+      "t": 1250,
+      "wall_band_red": 484.479166712052,
+      "red_total": 1319.9999999996976,
+      "blue_total": 1399.9999999996803,
+      "red_excursion": -2.2909620328749897e-13,
+      "blue_excursion": -2.2834813405227447e-13,
+      "max_abs_v": 0.0003262309205304247
+    },
+    {
+      "t": 1375,
+      "wall_band_red": 484.47912493326197,
+      "red_total": 1319.9999999996671,
+      "blue_total": 1399.999999999648,
+      "red_excursion": -2.5217807640067557e-13,
+      "blue_excursion": -2.5141032113294515e-13,
+      "max_abs_v": 0.00032691309850725364
+    },
+    {
+      "t": 1500,
+      "wall_band_red": 484.47985133888835,
+      "red_total": 1319.999999999637,
+      "blue_total": 1399.9999999996162,
+      "red_excursion": -2.7491544394499874e-13,
+      "blue_excursion": -2.7414768867726837e-13,
+      "max_abs_v": 0.0003275183846265769
     }
   ],
-  "verdict": "PASS",
-  "acceptance": "wall-band red mass changes by < 2% AND the domain stays single-component, with no imposed pressure difference and a non-cancelling geometry",
-  "note": "R2 warns that periodic closure can hide wall-directed mass transfer; the ledge geometry is one-sided, closed on all four lateral faces, and driven by no pressure difference, so a wall-directed transfer cannot cancel",
-  "wall_seconds": 38.40880274772644,
+  "verdict": "FAIL",
+  "acceptance": "box verified closed; wall-band red changes < 2%; single component; |global component excursion| < 2% at every sampled time; late-window component drift < 1e-6 per step (so the early solid-node reservoir fill is separated from real creation)",
+  "note": "R2 warns that periodic closure can hide wall-directed mass transfer; the ledge is one-sided and now verifiably closed on all four lateral faces, with no imposed pressure difference",
+  "wall_seconds": 37.465450286865234,
   "exit_code": 0
 }

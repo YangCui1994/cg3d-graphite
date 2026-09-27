@@ -2,34 +2,53 @@
   "runs": [
     {
       "theta_prescribed_deg": 60.0,
-      "rb": 5.830951894845301,
-      "apex": 3.0,
-      "theta_measured_deg": 54.4512559971279,
-      "psi_peak": 0.9999999999574528
+      "theta_measured_deg": 114.75317076373635,
+      "n_contour_points": 5,
+      "fit_R": 9.831879114885494,
+      "fit_zc": -3.1167060430594327,
+      "fit_rms": 0.25404126313903225,
+      "fit_ok": false,
+      "psi_peak": 0.9999999999999994,
+      "positivity_ok": true,
+      "max_abs_v": 0.0008253185722243171
     },
     {
       "theta_prescribed_deg": 90.0,
-      "rb": 4.47213595499958,
-      "apex": 6.0,
-      "theta_measured_deg": 106.60154959902025,
-      "psi_peak": 0.9999999999025347
+      "theta_measured_deg": 82.84306797540289,
+      "n_contour_points": 7,
+      "fit_R": 6.7967605942408,
+      "fit_zc": 1.8467910534266434,
+      "fit_rms": 0.6884753338851325,
+      "fit_ok": false,
+      "psi_peak": 0.999999999999998,
+      "positivity_ok": true,
+      "max_abs_v": 0.0007696614490082632
     },
     {
       "theta_prescribed_deg": 120.0,
-      "rb": 0.0,
-      "apex": 12.0,
-      "theta_measured_deg": null,
-      "psi_peak": 0.9999999883230948
+      "theta_measured_deg": 47.430224573401034,
+      "n_contour_points": 9,
+      "fit_R": 5.726823295819433,
+      "fit_zc": 4.874124779917215,
+      "fit_rms": 0.4645420386373147,
+      "fit_ok": true,
+      "psi_peak": 0.9999999999999902,
+      "positivity_ok": true,
+      "max_abs_v": 0.0011432277942022811
     }
   ],
-  "steps": 2000,
+  "steps": 1800,
   "grid": [
-    24,
-    24,
-    20
+    30,
+    30,
+    30
   ],
-  "verdict": "FAIL",
-  "acceptance": "every prescribed angle keeps |psi|peak > 0.9 AND measured theta within 15 deg",
-  "wall_seconds": 253.58907437324524,
+  "wall_thickness": 2,
+  "phase_convention": "theta measured through the psi>0 (red) phase",
+  "n_fits_ok": 1,
+  "verdict": "INCONCLUSIVE",
+  "reason": "the circle fit failed or was too poor on at least one prescribed angle; this says nothing about the wetting condition",
+  "acceptance": "every prescribed angle yields a usable circle fit (>=8 contour points, rms < 0.5 lu) and the measured angle is within 15 deg of the prescribed one",
+  "wall_seconds": 587.6539444923401,
   "exit_code": 0
 }

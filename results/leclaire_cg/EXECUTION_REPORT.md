@@ -312,6 +312,60 @@ over 1.5k steps is not zero, and 1.5k steps is short.
 
 ---
 
+## 5b. Validation pass 3 — post-review correction candidate
+
+Candidate **`5a3929fa1cefb7359893d6c19ed0ec8a7c80a91d`**, produced in response to external review
+`EXTERNAL_SCIENTIFIC_REVIEW_CHANGES_REQUESTED.md` (reviewed candidate
+`738e76f`). Everything in sections 1-12 above describes **passes 1 and 2**
+and is retained unchanged: the earlier candidates' behaviour, including its
+errors, is part of the record.
+
+Counts: **FAIL 3, INCONCLUSIVE 2, PASS 5**.
+
+All ten entries are from a single uninterrupted run of the frozen driver at
+candidate `5a3929fa1cefb7359893d6c19ed0ec8a7c80a91d`.
+
+| # | verdict | headline |
+|---|---|---|
+| 01 | **PASS** |  |
+| 02 | **PASS** |  |
+| 03 | **FAIL** | sigma ratio 1.135, R^2 1, intercept -0.000531 |
+| 04 | **INCONCLUSIVE** | 60->115, 90->82.8, 120->47.4 |
+| 05 | **PASS** | widths [1.84, 1.47, 1.12], positivity violations at beta=[1.5, 2.0] |
+| 06 | **PASS** | asymmetry 1.589e-13 |
+| 07 | **FAIL** | pc ratios ['-4.81e-13', '-8.44e-13'] |
+| 08 | **INCONCLUSIVE** | rise nan vs Jurin 5.95 ratio n/a |
+| 09 | **FAIL** | max excursions red/blue 2.7e-13/2.7e-13, late rates -2.4e-13/-2.6e-13 |
+| 10 | **PASS** | total/step ['2.8e-13', '2e-14'] |
+
+### What the review changed, and whether it moved the numbers
+
+| blocker | change | observable effect |
+|---|---|---|
+| B1 | Eq. (4) `psi_i(u.grad rho)` | A1-A4 now hold at non-zero `u`, `grad rho`; previously untested |
+| B2 | R1 `X_W` 1D Cartesian gradient | wall-adjacent `F` and `grad rho` are no longer a renormalised truncated stencil |
+| B3 | R3 Eqs. (2)-(4) complete | `wetting="akai"` is now R3; the partial form is renamed |
+| B4 | test 08 replaced with a closed-system Jurin test | the old periodic two-interface setup is gone |
+| B5 | test 07 prescribed contact angle | compared against `2 sigma cos(theta)/h`, not `2 sigma/h` |
+| B6 | test 09 topology and mass gating | the box is verified closed; global mass is now gated on the time-history maximum and the late-window rate |
+| B7 | test 06 equal wavelength + Fourier mode | the two arms are a genuine lattice-direction comparison |
+| B8 | test 03 measured radius + regression | nominal radius replaced by the equivalent-sphere radius from the phase field |
+| B9 | test 05 positivity gates | `|psi| > 1` is now a warning, not a valid interface |
+| B10 | conservation scope | the bit-frozen claim is explicitly f64-reference-only |
+| B11 | 科研通 provenance | R5 is recorded as a 科研通 delivery; the earlier "no tooling" claim is retracted |
+| B12 | R5 mapping | marked `UNRESOLVED` with the exact mapping recorded |
+
+### Reading pass 3 against pass 2
+
+Pass 2's headline was 7 PASS / 3 FAIL. Pass 3 is
+**5 PASS / 3 FAIL**
+/ 2 INCONCLUSIVE.
+The counts are **not directly comparable**: six of the ten tests were
+rebuilt because the review found them invalid, so a verdict change is a
+change of question as much as of answer. Where a verdict moved, the report
+says which of the two it is.
+
+
 ## 6. The Laplace calibration — RESOLVED
 
 **Outcome: the model now reproduces R1 Eq. (18)'s interfacial tension.** The

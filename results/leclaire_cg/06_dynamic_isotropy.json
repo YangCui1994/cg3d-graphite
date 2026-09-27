@@ -2,40 +2,63 @@
   "runs": [
     {
       "wave_axis": 0,
-      "normal_axis": 2,
-      "amplitude_trace": [
-        0.9988962690261783,
-        0.968351580475977,
-        0.9729114644303754,
-        0.9729544147023892,
-        0.9715404779495774
+      "domain": [
+        32,
+        16,
+        16
       ],
-      "amplitude_final": 0.9715404779495774,
-      "max_abs_v": 0.0010507258055714804
+      "mode": 2,
+      "wavelength": 16.0,
+      "amplitude_trace": [
+        1.5029112338589803,
+        0.8044654069217183,
+        0.349261032837421,
+        0.13426302229830006,
+        0.0471556241920782
+      ],
+      "times": [
+        0,
+        100,
+        200,
+        400,
+        600
+      ],
+      "amplitude_final": 0.0471556241920782,
+      "max_abs_v": 0.00026766705454148084
     },
     {
       "wave_axis": 1,
-      "normal_axis": 2,
-      "amplitude_trace": [
-        0.9988962690261769,
-        0.972866558424496,
-        0.9766475103347911,
-        0.9768004753949223,
-        0.9762550324069542
+      "domain": [
+        16,
+        32,
+        16
       ],
-      "amplitude_final": 0.9762550324069542,
-      "max_abs_v": 0.0002677957197491351
+      "mode": 2,
+      "wavelength": 16.0,
+      "amplitude_trace": [
+        1.5029112338589807,
+        0.8044654069217154,
+        0.3492610328374092,
+        0.13426302229829945,
+        0.04715562419207071
+      ],
+      "times": [
+        0,
+        100,
+        200,
+        400,
+        600
+      ],
+      "amplitude_final": 0.04715562419207071,
+      "max_abs_v": 0.0002676670545413074
     }
   ],
   "steps": 600,
-  "grid": [
-    32,
-    16,
-    16
-  ],
-  "amplitude_asymmetry": 0.004829224230222981,
+  "lam": 16.0,
+  "amplitude_asymmetry": 1.5892071295026446e-13,
+  "equal_wavelength": true,
   "verdict": "PASS",
-  "acceptance": "the terminal interface response agrees for a wave vector along x and along y to within 5% relative",
-  "wall_seconds": 35.79824495315552,
+  "acceptance": "the two arms have equal lattice wavelength and their interface-height Fourier amplitudes agree to within 5% at every sampled time",
+  "wall_seconds": 36.09901714324951,
   "exit_code": 0
 }
