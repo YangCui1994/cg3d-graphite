@@ -14,7 +14,7 @@
     },
     {
       "t": 561,
-      "z": 5.0
+      "z": 4.0
     },
     {
       "t": 748,
@@ -47,6 +47,6 @@
   "front_advance": -1.0,
   "verdict": "FAIL",
   "acceptance": "the wetting front advances by more than 2 lu with no imposed pressure difference",
-  "wall_seconds": 19.18684697151184,
+  "wall_seconds": 19.052552223205566,
   "exit_code": 0
 }

@@ -12,6 +12,6 @@
   ],
   "verdict": "PASS",
   "acceptance": "max|v| < 1e-12 and max|drho| < 1e-12 (machine precision)",
-  "wall_seconds": 0.8928060531616211,
+  "wall_seconds": 0.8639273643493652,
   "exit_code": 0
 }

@@ -1,7 +1,7 @@
 {
   "task": "BI-CG-LECLAIRE-IMPLEMENTATION-001",
   "candidate": "L17_CORE",
-  "generated_utc": "2026-09-26T17:40:13Z",
+  "generated_utc": "2026-09-27T02:10:59Z",
   "host": "Yang",
   "python": "3.13.9",
   "numpy": "2.3.5",
@@ -26,17 +26,17 @@
       ],
       "verdict": "PASS",
       "acceptance": "max|v| < 1e-12 and max|drho| < 1e-12 (machine precision)",
-      "wall_seconds": 0.8928060531616211,
+      "wall_seconds": 0.8639273643493652,
       "exit_code": 0
     },
     "02_planar_interface": {
       "interface_pos_initial": 16.0,
-      "interface_pos_final": 15.994334253978938,
-      "interface_pos_drift": 0.00566574602106229,
+      "interface_pos_final": 15.994334253978977,
+      "interface_pos_drift": 0.00566574602102321,
       "amplitude_initial": 0.9999997749296758,
-      "amplitude_final": 0.9998667421758587,
-      "amplitude_ratio": 0.9998669672162411,
-      "max_spurious_v": 2.2015293584373754e-13,
+      "amplitude_final": 0.9998667421758589,
+      "amplitude_ratio": 0.9998669672162414,
+      "max_spurious_v": 2.202436960411518e-13,
       "trace": [
         {
           "t": 0,
@@ -46,63 +46,63 @@
         },
         {
           "t": 100,
-          "pos": 15.99999276016429,
-          "amp": 0.9998672052135912,
-          "spurious_v": 2.2138757669879587e-14
+          "pos": 15.999992760164277,
+          "amp": 0.9998672052135911,
+          "spurious_v": 2.2224588798416487e-14
         },
         {
           "t": 200,
-          "pos": 15.999367727271487,
-          "amp": 0.9998669890966796,
-          "spurious_v": 4.4257697843530244e-14
+          "pos": 15.999367727271492,
+          "amp": 0.9998669890966795,
+          "spurious_v": 4.451331564216189e-14
         },
         {
           "t": 300,
-          "pos": 15.998732562843486,
-          "amp": 0.9998669577574183,
-          "spurious_v": 6.640225686380646e-14
+          "pos": 15.998732562843507,
+          "amp": 0.9998669577574184,
+          "spurious_v": 6.624881746023224e-14
         },
         {
           "t": 400,
-          "pos": 15.998099120247375,
-          "amp": 0.9998669269544934,
-          "spurious_v": 8.841463720236639e-14
+          "pos": 15.9980991202474,
+          "amp": 0.9998669269544931,
+          "spurious_v": 8.8261296162499e-14
         },
         {
           "t": 500,
-          "pos": 15.997467391179828,
-          "amp": 0.9998668961538087,
-          "spurious_v": 1.1030449955400154e-13
+          "pos": 15.997467391179864,
+          "amp": 0.999866896153809,
+          "spurious_v": 1.1022087960114266e-13
         },
         {
           "t": 600,
-          "pos": 15.996837370050278,
-          "amp": 0.9998668653544003,
-          "spurious_v": 1.3196596221301067e-13
+          "pos": 15.996837370050338,
+          "amp": 0.9998668653544001,
+          "spurious_v": 1.3230816452936254e-13
         },
         {
           "t": 700,
-          "pos": 15.996209051293972,
-          "amp": 0.9998668345565841,
-          "spurious_v": 1.5430310560353307e-13
+          "pos": 15.996209051294029,
+          "amp": 0.999866834556584,
+          "spurious_v": 1.5442938063224939e-13
         },
         {
           "t": 800,
-          "pos": 15.995582429370328,
+          "pos": 15.995582429370373,
           "amp": 0.9998668037606786,
-          "spurious_v": 1.7626610085461064e-13
+          "spurious_v": 1.76116461290541e-13
         },
         {
           "t": 900,
-          "pos": 15.994957498762844,
+          "pos": 15.994957498762888,
           "amp": 0.9998667729669991,
-          "spurious_v": 1.9799102614641195e-13
+          "spurious_v": 1.9822458735308049e-13
         },
         {
           "t": 1000,
-          "pos": 15.994334253978938,
-          "amp": 0.9998667421758587,
-          "spurious_v": 2.2015293584373754e-13
+          "pos": 15.994334253978977,
+          "amp": 0.9998667421758589,
+          "spurious_v": 2.202436960411518e-13
         }
       ],
       "steps": 1000,
@@ -113,49 +113,49 @@
       ],
       "verdict": "PASS",
       "acceptance": "interface position drift < 0.5 lu AND final |psi|max > 0.95 * initial (i.e. the interface survives)",
-      "wall_seconds": 4.2215282917022705,
+      "wall_seconds": 4.082250356674194,
       "exit_code": 0
     },
     "03_laplace_droplet": {
       "runs": [
         {
           "R": 5.0,
-          "dp": 0.005901723792244999,
-          "sigma_measured": 0.014754309480612498,
+          "dp": 0.008862273687125591,
+          "sigma_measured": 0.022155684217813977,
           "sigma_input": 0.02,
-          "sigma_ratio": 0.7377154740306249,
+          "sigma_ratio": 1.1077842108906988,
           "psi_peak_initial": 0.9999999998561716,
-          "psi_peak_final": 0.9999999992140589,
-          "psi_peak_ratio": 0.9999999993578873,
-          "interface_width": 0.12272027049586555,
-          "R_over_w": 40.74306534525158,
-          "max_abs_v": 0.00040059132644450565
+          "psi_peak_final": 0.9999999992314821,
+          "psi_peak_ratio": 0.9999999993753105,
+          "interface_width": 0.1272500432931433,
+          "R_over_w": 39.29271747657958,
+          "max_abs_v": 0.0005877388134287656
         },
         {
           "R": 7.0,
-          "dp": 0.004025991256030907,
-          "sigma_measured": 0.014090969396108174,
+          "dp": 0.00604481951167964,
+          "sigma_measured": 0.02115686829087874,
           "sigma_input": 0.02,
-          "sigma_ratio": 0.7045484698054086,
+          "sigma_ratio": 1.057843414543937,
           "psi_peak_initial": 0.9999999979300337,
-          "psi_peak_final": 0.9999999911557008,
-          "psi_peak_ratio": 0.9999999932256671,
-          "interface_width": 0.3268928296502344,
-          "R_over_w": 21.413745928565614,
-          "max_abs_v": 0.00026781029713005065
+          "psi_peak_final": 0.9999999912978579,
+          "psi_peak_ratio": 0.9999999933678242,
+          "interface_width": 0.3437130863229599,
+          "R_over_w": 20.365823352511683,
+          "max_abs_v": 0.0003992228894921378
         },
         {
           "R": 9.0,
-          "dp": 0.0030320181132299506,
-          "sigma_measured": 0.013644081509534778,
+          "dp": 0.00455208763210424,
+          "sigma_measured": 0.02048439434446908,
           "sigma_input": 0.02,
-          "sigma_ratio": 0.6822040754767389,
+          "sigma_ratio": 1.024219717223454,
           "psi_peak_initial": 0.9999999702092184,
-          "psi_peak_final": 0.9999998974902103,
-          "psi_peak_ratio": 0.9999999272809897,
-          "interface_width": 0.8669467468786717,
-          "R_over_w": 10.381260478112782,
-          "max_abs_v": 0.0009577158286158741
+          "psi_peak_final": 0.9999998981691901,
+          "psi_peak_ratio": 0.9999999279599696,
+          "interface_width": 0.8646821298765351,
+          "R_over_w": 10.408449173437964,
+          "max_abs_v": 0.0011578696106244136
         }
       ],
       "steps": 1200,
@@ -166,39 +166,39 @@
       ],
       "sigma_input": 0.02,
       "sigma_ratio_range": [
-        0.6822040754767389,
-        0.7377154740306249
+        1.024219717223454,
+        1.1077842108906988
       ],
       "droplet_survived": true,
-      "sigma_ratio_spread": 0.05551139855388598,
+      "sigma_ratio_spread": 0.08356449366724483,
       "laplace_law_demonstrated": true,
-      "verdict": "FAIL",
+      "verdict": "PASS",
       "acceptance": "droplet survives every radius AND the implied sigma is radius-independent within 15% AND the calibration ratio sigma_meas/sigma_input >= 0.7",
-      "wall_seconds": 243.38269972801208,
+      "wall_seconds": 236.49415707588196,
       "exit_code": 0
     },
     "04_static_contact_angle": {
       "runs": [
         {
           "theta_prescribed_deg": 60.0,
-          "rb": 5.656854249492381,
-          "apex": 4.0,
-          "theta_measured_deg": 70.52877936550931,
-          "psi_peak": 0.9999999999456909
+          "rb": 5.830951894845301,
+          "apex": 3.0,
+          "theta_measured_deg": 54.4512559971279,
+          "psi_peak": 0.9999999999574528
         },
         {
           "theta_prescribed_deg": 90.0,
           "rb": 4.47213595499958,
           "apex": 6.0,
           "theta_measured_deg": 106.60154959902025,
-          "psi_peak": 0.9999999999080117
+          "psi_peak": 0.9999999999025347
         },
         {
           "theta_prescribed_deg": 120.0,
           "rb": 0.0,
-          "apex": 10.0,
+          "apex": 12.0,
           "theta_measured_deg": null,
-          "psi_peak": 0.9999999970897089
+          "psi_peak": 0.9999999883230948
         }
       ],
       "steps": 2000,
@@ -209,7 +209,7 @@
       ],
       "verdict": "FAIL",
       "acceptance": "every prescribed angle keeps |psi|peak > 0.9 AND measured theta within 15 deg",
-      "wall_seconds": 253.26270747184753,
+      "wall_seconds": 253.58907437324524,
       "exit_code": 0
     },
     "05_interface_width_vs_beta": {
@@ -217,38 +217,38 @@
         {
           "beta": 0.0,
           "width": 19.99999999999994,
-          "psi_peak": 0.05733943963426627,
-          "slope": 0.005115215182073807
+          "psi_peak": 0.05733943963426651,
+          "slope": 0.005115215182073918
         },
         {
           "beta": 0.5,
-          "width": 1.838714844750914,
-          "psi_peak": 0.9970032621592774,
-          "slope": 0.37579875808844665
+          "width": 1.838714871327973,
+          "psi_peak": 0.9970032621592773,
+          "slope": 0.37579875808844554
         },
         {
           "beta": 0.7,
-          "width": 1.4690258314034206,
-          "psi_peak": 0.9998668653544003,
-          "slope": 0.4947962419458847
+          "width": 1.4690258700332497,
+          "psi_peak": 0.9998668653544001,
+          "slope": 0.49479624194587796
         },
         {
           "beta": 1.0,
-          "width": 1.1230447586313694,
-          "psi_peak": 0.9999998452806443,
-          "slope": 0.6399570373721603
+          "width": 1.1230447592142225,
+          "psi_peak": 0.9999998452806445,
+          "slope": 0.6399570373721233
         },
         {
           "beta": 1.5,
-          "width": 0.6646710830446018,
-          "psi_peak": 1.0168378666505165,
-          "slope": 0.8603478221530029
+          "width": 0.6646710794892242,
+          "psi_peak": 1.0168378666505122,
+          "slope": 0.8603478221529772
         },
         {
           "beta": 2.0,
-          "width": 0.4047727958447533,
-          "psi_peak": 1.1140932156182055,
-          "slope": 1.0009593561224932
+          "width": 0.4047727609356276,
+          "psi_peak": 1.1140932155524508,
+          "slope": 1.0009593619235801
         }
       ],
       "steps": 600,
@@ -257,15 +257,15 @@
         6,
         32
       ],
-      "psi_peak_min": 0.05733943963426627,
-      "psi_peak_max": 1.1140932156182055,
+      "psi_peak_min": 0.05733943963426651,
+      "psi_peak_max": 1.1140932155524508,
       "n_beta_with_physical_interface": 5,
       "widths_physical": [
-        1.838714844750914,
-        1.4690258314034206,
-        1.1230447586313694,
-        0.6646710830446018,
-        0.4047727958447533
+        1.838714871327973,
+        1.4690258700332497,
+        1.1230447592142225,
+        0.6646710794892242,
+        0.4047727609356276
       ],
       "betas_physical": [
         0.5,
@@ -282,7 +282,7 @@
       "verdict": "PASS",
       "acceptance": "at least one beta keeps |psi|max > 0.95 in both bulks, i.e. a physical diffuse interface exists; the report states that eta (R1 Eq.19 refinement law) is NOT determined by this test",
       "note": "widths are the fitted tanh width of the TERMINAL state; see EXECUTION_REPORT.md for the terminal-state characterisation at these parameters",
-      "wall_seconds": 13.128572463989258,
+      "wall_seconds": 12.901106119155884,
       "exit_code": 0
     },
     "06_dynamic_isotropy": {
@@ -292,26 +292,26 @@
           "normal_axis": 2,
           "amplitude_trace": [
             0.9988962690261783,
-            0.9667040177864084,
-            0.9715603515413931,
-            0.9730274292247167,
-            0.9718224401230153
+            0.968351580475977,
+            0.9729114644303754,
+            0.9729544147023892,
+            0.9715404779495774
           ],
-          "amplitude_final": 0.9718224401230153,
-          "max_abs_v": 0.000666659096001366
+          "amplitude_final": 0.9715404779495774,
+          "max_abs_v": 0.0010507258055714804
         },
         {
           "wave_axis": 1,
           "normal_axis": 2,
           "amplitude_trace": [
             0.9988962690261769,
-            0.9703415552309602,
-            0.9752748343718147,
-            0.9766656513736087,
-            0.9763157794305622
+            0.972866558424496,
+            0.9766475103347911,
+            0.9768004753949223,
+            0.9762550324069542
           ],
-          "amplitude_final": 0.9763157794305622,
-          "max_abs_v": 0.00048400232203473816
+          "amplitude_final": 0.9762550324069542,
+          "max_abs_v": 0.0002677957197491351
         }
       ],
       "steps": 600,
@@ -320,10 +320,10 @@
         16,
         16
       ],
-      "amplitude_asymmetry": 0.004602342195234891,
+      "amplitude_asymmetry": 0.004829224230222981,
       "verdict": "PASS",
       "acceptance": "the terminal interface response agrees for a wave vector along x and along y to within 5% relative",
-      "wall_seconds": 36.032992124557495,
+      "wall_seconds": 35.79824495315552,
       "exit_code": 0
     },
     "07_static_slit_capillary_pressure": {
@@ -331,24 +331,24 @@
         {
           "gap": 10,
           "meniscus_z": 7,
-          "rho_wetting_side": 0.9524565616468522,
+          "rho_wetting_side": 0.9524565616468499,
           "rho_nonwetting_side": 0.9524565616468494,
-          "dp": -9.251858538542972e-16,
+          "dp": -1.4802973661668753e-16,
           "pc_analytic": 0.004,
-          "pc_ratio": -2.312964634635743e-13,
-          "psi_peak": 0.9665046742307815,
-          "max_abs_v": 1.7340297509408806e-14
+          "pc_ratio": -3.700743415417188e-14,
+          "psi_peak": 0.9665046742307825,
+          "max_abs_v": 1.7204019004237478e-14
         },
         {
           "gap": 12,
           "meniscus_z": 8,
-          "rho_wetting_side": 0.9597580621083378,
-          "rho_nonwetting_side": 0.9597580621083348,
-          "dp": -9.992007221626409e-16,
+          "rho_wetting_side": 0.9597580621083408,
+          "rho_nonwetting_side": 0.959758062108337,
+          "dp": -1.2582527612418441e-15,
           "pc_analytic": 0.0033333333333333335,
-          "pc_ratio": -2.9976021664879227e-13,
-          "psi_peak": 0.9904250474564678,
-          "max_abs_v": 2.42917929772321e-14
+          "pc_ratio": -3.774758283725532e-13,
+          "psi_peak": 0.9904250474564682,
+          "max_abs_v": 2.4268120496101823e-14
         }
       ],
       "steps": 1500,
@@ -359,7 +359,7 @@
       ],
       "verdict": "FAIL",
       "acceptance": "each slit keeps |psi|peak > 0.9 AND a positive pressure difference across the meniscus is measured; the ratio to 2 sigma cos(theta)/gap is reported but not gated, because the contact angle here is the model's own (wetting='none') rather than a prescribed one",
-      "wall_seconds": 43.96052002906799,
+      "wall_seconds": 37.72963047027588,
       "exit_code": 0
     },
     "08_simple_imbibition": {
@@ -378,7 +378,7 @@
         },
         {
           "t": 561,
-          "z": 5.0
+          "z": 4.0
         },
         {
           "t": 748,
@@ -411,7 +411,7 @@
       "front_advance": -1.0,
       "verdict": "FAIL",
       "acceptance": "the wetting front advances by more than 2 lu with no imposed pressure difference",
-      "wall_seconds": 19.18684697151184,
+      "wall_seconds": 19.052552223205566,
       "exit_code": 0
     },
     "09_asymmetric_killer": {
@@ -423,17 +423,17 @@
       ],
       "band": 3,
       "wall_band_red_initial": 580.0,
-      "wall_band_red_final": 587.0305986232278,
-      "wall_band_red_change": 7.030598623227775,
-      "wall_band_red_relative": 0.012121721764185819,
-      "red_drift": 102.09960124625513,
-      "blue_drift": 138.84767083598422,
+      "wall_band_red_final": 585.2801417813591,
+      "wall_band_red_change": 5.280141781359134,
+      "wall_band_red_relative": 0.009103692726481266,
+      "red_drift": 92.5487169817427,
+      "blue_drift": 125.33587147383173,
       "n_components_initial": 1,
       "n_components_final": 1,
       "component_sizes_final": [
-        1224
+        1208
       ],
-      "max_abs_v": 0.021043345875021862,
+      "max_abs_v": 0.020253122924649446,
       "trace": [
         {
           "t": 0,
@@ -444,65 +444,65 @@
         },
         {
           "t": 187,
-          "wall_band_red": 533.4242841219414,
-          "red_total": 1461.5688816991656,
-          "blue_total": 1599.9587983081908,
-          "max_abs_v": 0.020872513951673263
+          "wall_band_red": 535.309372957927,
+          "red_total": 1460.1372513822985,
+          "blue_total": 1597.9651803068616,
+          "max_abs_v": 0.020025471856022686
         },
         {
           "t": 374,
-          "wall_band_red": 540.8170510711318,
-          "red_total": 1480.7052773817745,
-          "blue_total": 1624.315570411,
-          "max_abs_v": 0.020901786332609945
+          "wall_band_red": 542.1782028397258,
+          "red_total": 1478.1994855955727,
+          "blue_total": 1620.7327217354027,
+          "max_abs_v": 0.02006342556464144
         },
         {
           "t": 561,
-          "wall_band_red": 548.3011624369872,
-          "red_total": 1500.146383168753,
-          "blue_total": 1649.0586733198293,
-          "max_abs_v": 0.020925936633410986
+          "wall_band_red": 549.1250047433981,
+          "red_total": 1496.5378856328143,
+          "blue_total": 1643.8687653261186,
+          "max_abs_v": 0.020095855338948
         },
         {
           "t": 748,
-          "wall_band_red": 555.8360516279027,
-          "red_total": 1519.9026300844594,
-          "blue_total": 1674.1938731220098,
-          "max_abs_v": 0.02094988247262463
+          "wall_band_red": 556.1500563446228,
+          "red_total": 1515.1598432198884,
+          "blue_total": 1667.3824002295878,
+          "max_abs_v": 0.0201276557334944
         },
         {
           "t": 935,
-          "wall_band_red": 563.4686431820508,
-          "red_total": 1539.9731493612721,
-          "blue_total": 1699.732209068419,
-          "max_abs_v": 0.020973639408355924
+          "wall_band_red": 563.2628873768414,
+          "red_total": 1534.0701725735069,
+          "blue_total": 1691.2781535347306,
+          "max_abs_v": 0.020159598229945026
         },
         {
           "t": 1122,
-          "wall_band_red": 571.2151458113553,
-          "red_total": 1560.359786188092,
-          "blue_total": 1725.6826199130956,
-          "max_abs_v": 0.02099712573987254
+          "wall_band_red": 570.4939999981352,
+          "red_total": 1553.268712071663,
+          "blue_total": 1715.5645209955528,
+          "max_abs_v": 0.020191065137510688
         },
         {
           "t": 1309,
-          "wall_band_red": 579.0693791166377,
-          "red_total": 1581.0670946729624,
-          "blue_total": 1752.0522028479368,
-          "max_abs_v": 0.021020342943457775
+          "wall_band_red": 577.832453433529,
+          "red_total": 1572.7603058919935,
+          "blue_total": 1740.247885880906,
+          "max_abs_v": 0.020222226186665127
         },
         {
           "t": 1496,
-          "wall_band_red": 587.0305986232278,
-          "red_total": 1602.0996012462551,
-          "blue_total": 1778.8476708359842,
-          "max_abs_v": 0.021043345875021862
+          "wall_band_red": 585.2801417813591,
+          "red_total": 1592.5487169817427,
+          "blue_total": 1765.3358714738317,
+          "max_abs_v": 0.020253122924649446
         }
       ],
       "verdict": "PASS",
       "acceptance": "wall-band red mass changes by < 2% AND the domain stays single-component, with no imposed pressure difference and a non-cancelling geometry",
       "note": "R2 warns that periodic closure can hide wall-directed mass transfer; the ledge geometry is one-sided, closed on all four lateral faces, and driven by no pressure difference, so a wall-directed transfer cannot cancel",
-      "wall_seconds": 38.64064025878906,
+      "wall_seconds": 38.40880274772644,
       "exit_code": 0
     },
     "10_conservation_audit": {
@@ -515,12 +515,12 @@
             8,
             24
           ],
-          "red_drift": 1.4506440493278205e-10,
-          "blue_drift": 1.3415046851150692e-10,
-          "total_drift": 2.7921487344428897e-10,
-          "red_drift_per_step": 1.4506440493278206e-13,
-          "blue_drift_per_step": 1.341504685115069e-13,
-          "total_drift_per_step": 2.7921487344428896e-13,
+          "red_drift": 1.4267698134062812e-10,
+          "blue_drift": 1.3142198440618813e-10,
+          "total_drift": 2.7398527890909463e-10,
+          "red_drift_per_step": 1.426769813406281e-13,
+          "blue_drift_per_step": 1.3142198440618812e-13,
+          "total_drift_per_step": 2.7398527890909465e-13,
           "red_mass": 799.9996067728256,
           "trace": [
             {
@@ -531,63 +531,63 @@
             },
             {
               "t": 100,
-              "red": 799.9996067728123,
-              "blue": 736.0003932271638,
-              "total": 1535.9999999999761
+              "red": 799.9996067728125,
+              "blue": 736.0003932271629,
+              "total": 1535.9999999999754
             },
             {
               "t": 200,
-              "red": 799.9996067727973,
-              "blue": 736.0003932271504,
-              "total": 1535.9999999999477
+              "red": 799.999606772797,
+              "blue": 736.0003932271495,
+              "total": 1535.9999999999466
             },
             {
               "t": 300,
-              "red": 799.9996067727841,
-              "blue": 736.0003932271361,
-              "total": 1535.9999999999202
+              "red": 799.999606772783,
+              "blue": 736.0003932271355,
+              "total": 1535.9999999999186
             },
             {
               "t": 400,
-              "red": 799.9996067727702,
-              "blue": 736.0003932271213,
-              "total": 1535.9999999998915
+              "red": 799.999606772768,
+              "blue": 736.0003932271233,
+              "total": 1535.9999999998913
             },
             {
               "t": 500,
-              "red": 799.9996067727557,
-              "blue": 736.0003932271065,
-              "total": 1535.9999999998622
+              "red": 799.9996067727532,
+              "blue": 736.0003932271093,
+              "total": 1535.9999999998624
             },
             {
               "t": 600,
-              "red": 799.9996067727404,
-              "blue": 736.0003932270936,
-              "total": 1535.999999999834
+              "red": 799.99960677274,
+              "blue": 736.0003932270961,
+              "total": 1535.999999999836
             },
             {
               "t": 700,
-              "red": 799.9996067727259,
-              "blue": 736.0003932270807,
-              "total": 1535.9999999998067
+              "red": 799.9996067727251,
+              "blue": 736.0003932270828,
+              "total": 1535.9999999998079
             },
             {
               "t": 800,
-              "red": 799.9996067727113,
-              "blue": 736.0003932270672,
-              "total": 1535.9999999997785
+              "red": 799.9996067727109,
+              "blue": 736.0003932270695,
+              "total": 1535.9999999997804
             },
             {
               "t": 900,
-              "red": 799.9996067726954,
-              "blue": 736.0003932270538,
-              "total": 1535.9999999997492
+              "red": 799.9996067726964,
+              "blue": 736.0003932270556,
+              "total": 1535.9999999997522
             },
             {
               "t": 1000,
-              "red": 799.9996067726805,
-              "blue": 736.0003932270404,
-              "total": 1535.9999999997208
+              "red": 799.9996067726829,
+              "blue": 736.0003932270431,
+              "total": 1535.999999999726
             }
           ]
         },
@@ -599,12 +599,12 @@
             8,
             24
           ],
-          "red_drift": 1.057287590811029e-11,
-          "blue_drift": 9.43600753089413e-12,
-          "total_drift": 2.000888343900442e-11,
-          "red_drift_per_step": 1.057287590811029e-14,
-          "blue_drift_per_step": 9.436007530894131e-15,
-          "total_drift_per_step": 2.000888343900442e-14,
+          "red_drift": 9.663381206337363e-12,
+          "blue_drift": 1.000444171950221e-11,
+          "total_drift": 1.978150976356119e-11,
+          "red_drift_per_step": 9.663381206337363e-15,
+          "blue_drift_per_step": 1.000444171950221e-14,
+          "total_drift_per_step": 1.9781509763561188e-14,
           "red_mass": 799.9996067728256,
           "trace": [
             {
@@ -615,78 +615,80 @@
             },
             {
               "t": 100,
-              "red": 799.9996067728271,
-              "blue": 736.0003932271753,
-              "total": 1536.0000000000023
+              "red": 799.9996067728268,
+              "blue": 736.0003932271757,
+              "total": 1536.0000000000025
             },
             {
               "t": 200,
-              "red": 799.9996067728282,
-              "blue": 736.0003932271763,
+              "red": 799.9996067728277,
+              "blue": 736.0003932271767,
               "total": 1536.0000000000045
             },
             {
               "t": 300,
-              "red": 799.9996067728295,
-              "blue": 736.0003932271773,
+              "red": 799.999606772829,
+              "blue": 736.0003932271778,
               "total": 1536.0000000000068
             },
             {
               "t": 400,
-              "red": 799.9996067728308,
-              "blue": 736.0003932271788,
-              "total": 1536.0000000000095
+              "red": 799.9996067728301,
+              "blue": 736.0003932271787,
+              "total": 1536.0000000000089
             },
             {
               "t": 500,
-              "red": 799.9996067728318,
-              "blue": 736.0003932271794,
-              "total": 1536.0000000000114
+              "red": 799.9996067728308,
+              "blue": 736.0003932271798,
+              "total": 1536.0000000000105
             },
             {
               "t": 600,
-              "red": 799.9996067728324,
-              "blue": 736.0003932271803,
+              "red": 799.9996067728318,
+              "blue": 736.000393227181,
               "total": 1536.0000000000127
             },
             {
               "t": 700,
-              "red": 799.9996067728337,
-              "blue": 736.0003932271813,
-              "total": 1536.000000000015
+              "red": 799.9996067728327,
+              "blue": 736.0003932271817,
+              "total": 1536.0000000000146
             },
             {
               "t": 800,
-              "red": 799.9996067728346,
+              "red": 799.9996067728338,
               "blue": 736.0003932271825,
-              "total": 1536.000000000017
+              "total": 1536.0000000000164
             },
             {
               "t": 900,
-              "red": 799.9996067728353,
-              "blue": 736.0003932271833,
-              "total": 1536.0000000000186
+              "red": 799.9996067728346,
+              "blue": 736.0003932271834,
+              "total": 1536.000000000018
             },
             {
               "t": 1000,
-              "red": 799.9996067728362,
-              "blue": 736.000393227184,
-              "total": 1536.00000000002
+              "red": 799.9996067728353,
+              "blue": 736.0003932271845,
+              "total": 1536.0000000000198
             }
           ]
         }
       ],
       "verdict": "PASS",
       "acceptance": "L17_CORE (no overlay) total-mass drift < 1e-12 and component drift < 1e-9 per step; the overlay arm is reported separately and is NOT described as paper-faithful",
-      "wall_seconds": 9.20621395111084,
+      "wall_seconds": 9.264944791793823,
       "exit_code": 0
     }
   },
   "verdict_counts": {
-    "PASS": 6,
-    "FAIL": 4
+    "PASS": 7,
+    "FAIL": 3
   },
-  "note_test07": "regenerated by a targeted re-run of test_07_slit_pc after its sampling window was corrected; all other entries from one uninterrupted run_canonical.py run",
-  "unit_checks": "41/41 pass (results/unit_checks.log)",
-  "recommendation": "CHANGES_REQUESTED - see EXECUTION_REPORT.md sections 6 and 9"
+  "validation_pass": 2,
+  "pass_1_commit": "51cc61a",
+  "pass_2_note": "whole matrix re-run on the candidate with the Eq.(18) constant corrected; all ten entries from one uninterrupted run",
+  "unit_checks": "42/42 pass (results/leclaire_cg/UNIT_CHECKS.log)",
+  "recommendation": "CHANGES_REQUESTED - bulk physics good, wetting physics not yet measured; see EXECUTION_REPORT.md sections 9 and 12"
 }

@@ -7,17 +7,17 @@
   ],
   "band": 3,
   "wall_band_red_initial": 580.0,
-  "wall_band_red_final": 587.0305986232278,
-  "wall_band_red_change": 7.030598623227775,
-  "wall_band_red_relative": 0.012121721764185819,
-  "red_drift": 102.09960124625513,
-  "blue_drift": 138.84767083598422,
+  "wall_band_red_final": 585.2801417813591,
+  "wall_band_red_change": 5.280141781359134,
+  "wall_band_red_relative": 0.009103692726481266,
+  "red_drift": 92.5487169817427,
+  "blue_drift": 125.33587147383173,
   "n_components_initial": 1,
   "n_components_final": 1,
   "component_sizes_final": [
-    1224
+    1208
   ],
-  "max_abs_v": 0.021043345875021862,
+  "max_abs_v": 0.020253122924649446,
   "trace": [
     {
       "t": 0,
@@ -28,64 +28,64 @@
     },
     {
       "t": 187,
-      "wall_band_red": 533.4242841219414,
-      "red_total": 1461.5688816991656,
-      "blue_total": 1599.9587983081908,
-      "max_abs_v": 0.020872513951673263
+      "wall_band_red": 535.309372957927,
+      "red_total": 1460.1372513822985,
+      "blue_total": 1597.9651803068616,
+      "max_abs_v": 0.020025471856022686
     },
     {
       "t": 374,
-      "wall_band_red": 540.8170510711318,
-      "red_total": 1480.7052773817745,
-      "blue_total": 1624.315570411,
-      "max_abs_v": 0.020901786332609945
+      "wall_band_red": 542.1782028397258,
+      "red_total": 1478.1994855955727,
+      "blue_total": 1620.7327217354027,
+      "max_abs_v": 0.02006342556464144
     },
     {
       "t": 561,
-      "wall_band_red": 548.3011624369872,
-      "red_total": 1500.146383168753,
-      "blue_total": 1649.0586733198293,
-      "max_abs_v": 0.020925936633410986
+      "wall_band_red": 549.1250047433981,
+      "red_total": 1496.5378856328143,
+      "blue_total": 1643.8687653261186,
+      "max_abs_v": 0.020095855338948
     },
     {
       "t": 748,
-      "wall_band_red": 555.8360516279027,
-      "red_total": 1519.9026300844594,
-      "blue_total": 1674.1938731220098,
-      "max_abs_v": 0.02094988247262463
+      "wall_band_red": 556.1500563446228,
+      "red_total": 1515.1598432198884,
+      "blue_total": 1667.3824002295878,
+      "max_abs_v": 0.0201276557334944
     },
     {
       "t": 935,
-      "wall_band_red": 563.4686431820508,
-      "red_total": 1539.9731493612721,
-      "blue_total": 1699.732209068419,
-      "max_abs_v": 0.020973639408355924
+      "wall_band_red": 563.2628873768414,
+      "red_total": 1534.0701725735069,
+      "blue_total": 1691.2781535347306,
+      "max_abs_v": 0.020159598229945026
     },
     {
       "t": 1122,
-      "wall_band_red": 571.2151458113553,
-      "red_total": 1560.359786188092,
-      "blue_total": 1725.6826199130956,
-      "max_abs_v": 0.02099712573987254
+      "wall_band_red": 570.4939999981352,
+      "red_total": 1553.268712071663,
+      "blue_total": 1715.5645209955528,
+      "max_abs_v": 0.020191065137510688
     },
     {
       "t": 1309,
-      "wall_band_red": 579.0693791166377,
-      "red_total": 1581.0670946729624,
-      "blue_total": 1752.0522028479368,
-      "max_abs_v": 0.021020342943457775
+      "wall_band_red": 577.832453433529,
+      "red_total": 1572.7603058919935,
+      "blue_total": 1740.247885880906,
+      "max_abs_v": 0.020222226186665127
     },
     {
       "t": 1496,
-      "wall_band_red": 587.0305986232278,
-      "red_total": 1602.0996012462551,
-      "blue_total": 1778.8476708359842,
-      "max_abs_v": 0.021043345875021862
+      "wall_band_red": 585.2801417813591,
+      "red_total": 1592.5487169817427,
+      "blue_total": 1765.3358714738317,
+      "max_abs_v": 0.020253122924649446
     }
   ],
   "verdict": "PASS",
   "acceptance": "wall-band red mass changes by < 2% AND the domain stays single-component, with no imposed pressure difference and a non-cancelling geometry",
   "note": "R2 warns that periodic closure can hide wall-directed mass transfer; the ledge geometry is one-sided, closed on all four lateral faces, and driven by no pressure difference, so a wall-directed transfer cannot cancel",
-  "wall_seconds": 38.64064025878906,
+  "wall_seconds": 38.40880274772644,
   "exit_code": 0
 }

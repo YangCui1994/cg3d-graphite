@@ -18,14 +18,22 @@ Headline status:
 
 | item | result |
 |---|---|
-| table / operator unit checks | **41 / 41 pass** (exact to f64 roundoff) |
+| table / operator unit checks | **42 / 42 pass** (exact to f64 roundoff) |
 | canonical matrix | **6 PASS, 4 FAIL** (see §5) |
-| the paper's recolouring is mass-exact | **confirmed** analytically and numerically (§7) |
-| Laplace calibration | **FAIL against the pre-declared gate**, with a quantified, resolution-independent 0.70 offset (§6) |
-| ready for external scientific review | **NO** — recommend `CHANGES_REQUESTED`; §§6 and 9 list what must be resolved first |
+| the paper's recolouring is mass-exact | **confirmed**; flat-interface component mass is **bit-frozen** (§7) |
+| Laplace calibration | **RESOLVED** — σ_meas/σ_input = 1.108 / 1.058 / 1.024 at R = 5 / 7 / 9, converging to 1 (§6) |
+| ready for external scientific review | **NOT YET** — recommend `CHANGES_REQUESTED`; §9 lists what remains |
 
 The candidate is **not** proposed for promotion. Nothing in this branch
 changes production.
+
+**This report covers two validation passes.** Pass 1 (`51cc61a`) gave
+6 PASS / 4 FAIL with the Laplace offset unexplained and attributed to the
+then-unobtainable R5 stencil. Between the passes R5 was obtained, which
+**ruled out** that hypothesis and thereby located the real cause: an
+arithmetic error in the Eq. (18) constant. Pass 2 re-ran the whole matrix
+on the corrected candidate. Both passes remain in the history; §4.5 and
+§6 describe the correction, and §12 lists what pass 1 got wrong.
 
 **The most important thing in this report is not the matrix.** It is §4:
 five corrective commits, four of which fixed defects that produced
@@ -65,8 +73,8 @@ Design decisions worth naming:
 
 ## 3. Fidelity — what is verified exactly
 
-`tests/leclaire_cg/test_lattice_tables.py`, 41 checks, all passing at
-f64 roundoff:
+`tests/leclaire_cg/test_lattice_tables.py`, **42 checks, all passing at
+f64 roundoff**:
 
 | group | checks | worst residual |
 |---|---|---|
@@ -75,13 +83,15 @@ f64 roundoff:
 | shell counts and norms | 3 | 0.0 |
 | gradient: linear exactness on all three axes, physical sign, tanh agreement, off-axis zero | 6 | 1.3e-15 (linear) |
 | equilibrium reduction to `ρW_i` at `u=0` | 2 | 0.0 |
-| perturbation: mass, momentum, and **second moment against the closed-form derivation** `(2/9)A|F|(n̂⊗n̂ − δ)` | 4 | 2.6e-18 |
+| perturbation: mass, momentum, **second moment against the closed-form derivation** `(2/9)A|F|(n̂⊗n̂ − δ)`, and **the Eq. (18) constant itself** (`A = 2.25 ω σ`, asserted against both 2.25 and 1.5) | 5 | 3.5e-18 |
 | recolouring: `Σ N_r = ρ_r`, `Σ N_b = ρ_b`, `N_r+N_b = N` | 3 | 2.2e-16 |
 | bounce-back involution and fluid pass-through | 3 | 0.0 |
 | streaming shift and mass preservation | 3 | 7.1e-15 |
 
-The `rows_shell_constant` check is the one that pins R1's Table IV
-ordering — see §4, first item.
+Two of these checks exist because the corresponding defect was actually
+made: `rows_shell_constant` pins R1's Table IV ordering (§4.1), and
+`perturbation.A_equals_9over4_omega_sigma` pins the Eq. (18) constant
+(§4.5). Neither is a hypothetical test.
 
 ---
 
@@ -167,6 +177,40 @@ The 120° case is outside R1's own stated good-accuracy band
 (`θ_c ∈ [45°, 135°]`, error growing asymmetrically away from 90°) and is
 measured here with a crude spherical-cap estimator; see §5.
 
+### 4.5 pass 2 — the Eq. (18) constant was written `1.5` instead of `9/4`
+
+Found only because R5 arrived and **ruled out** the gradient-stencil
+hypothesis for the Laplace offset (§6). With the stencil eliminated, the
+calibration constant itself was the remaining candidate — and the code had
+
+```python
+A = 1.5 * omega[ok] * sigma        # (9/4) * omega * sigma
+```
+
+R1 Eq. (18) is `A = (9/4) ω_eff σ`, and **9/4 = 2.25, not 1.5**. The comment
+on the line was right and the expression was wrong. The implemented `A` was
+therefore `1.5/2.25 = 2/3` of the paper's; since the delivered surface
+tension is proportional to `A`, the model returned exactly `2/3 × σ_input`.
+Pass-1 ratios were 0.682–0.738 — i.e. `2/3` plus a finite-radius correction.
+
+After the fix: **1.108 / 1.058 / 1.024** at R = 5 / 7 / 9, converging to 1
+as the droplet is better resolved. That convergence is the expected
+finite-radius behaviour, not a residual systematic.
+
+`test_lattice_tables.py` now asserts the constant directly
+(`perturbation.A_equals_9over4_omega_sigma`), because this error is
+invisible to every conservation, table, stationarity and stability check —
+it moves only the amplitude of the delivered surface tension.
+
+**Generalisable lesson.** This defect was silent *and had been
+rationalised*: the pass-1 report attributed the offset to a plausible
+physical cause and wrote a careful paragraph about it. Obtaining R5
+converted a plausible story into a refuted one, and the refutation is what
+located the real bug. The prior "the paper's constant is fine; my
+transcription is wrong" should have been tested first. Of the six defects
+found in this candidate, four were silent and this one was also
+self-justifying.
+
 ---
 
 ## 5. Canonical matrix
@@ -176,20 +220,35 @@ statements are in the driver and are not edited after the fact.
 Parameters: σ = 0.02, ν = 1/6, β = 0.7, χ = 1 (SRT limit), unit density
 ratio. Machine-readable per-test output in `results/leclaire_cg/*.json`.
 
+**Pass 2 (current candidate, commit after `51cc61a`).** All ten entries
+below are from a single uninterrupted run of the committed driver.
+
 | # | test | verdict | headline number |
 |---|---|---|---|
 | 1 | uniform single-phase stationarity | **PASS** | `max|v| = 8.8e-14`, `max|Δρ| = 7.5e-14` |
-| 2 | planar interface stationarity | **PASS** | position drift 0.0057 lu over 1000 steps; amplitude ratio 0.99987; `max|v| = 2.2e-13` |
-| 3 | Laplace droplet | **FAIL** | see §6 |
-| 4 | static contact angle | **FAIL** | 60→70.5°, 90→106.6°, 120→unmeasurable |
+| 2 | planar interface stationarity | **PASS** | position drift 0.0057 lu over 1000 steps; amplitude ratio 0.99987 |
+| 3 | Laplace droplet | **PASS** | σ_meas/σ_input = 1.108 / 1.058 / 1.024 at R = 5 / 7 / 9; radius-independence spread 8.4 % |
+| 4 | static contact angle | **FAIL** | 60→54.5°, 90→106.6°, 120→unmeasurable |
 | 5 | interface width vs β | **PASS** | monotone: 1.84 / 1.47 / 1.12 / 0.66 / 0.40 for β = 0.5 / 0.7 / 1.0 / 1.5 / 2.0 |
-| 6 | dynamic isotropy | **PASS** | x-vs-y wave response agrees to **0.46 %** |
-| 7 | static slit capillary pressure | **FAIL** (test design) | Δp = 0 to 1e-15 — flat meniscus at neutral wetting; test must be redesigned |
+| 6 | dynamic isotropy | **PASS** | x-vs-y wave response agrees to **0.48 %** |
+| 7 | static slit capillary pressure | **FAIL** (test design) | Δp = 0 to 1e-16 — flat meniscus at neutral wetting; test must be redesigned |
 | 8 | simple capillary imbibition | **FAIL** | front *retreats* by 1 lu (z 5→4) instead of advancing |
-| 9 | asymmetric killer test | **PASS** (with a caveat) | wall-band red changes 1.21 %; single component; fluid max\|v\| = 0.021 |
-| 10 | conservation audit | **PASS** | `L17_CORE` total 2.8e-13/step; overlay 2.0e-14/step |
+| 9 | asymmetric killer test | **PASS** (with a caveat) | wall-band red changes 0.91 %; single component; fluid max\|v\| = 0.020 |
+| 10 | conservation audit | **PASS** | `L17_CORE` **total and component drift bit-frozen at 0.0** over 1000 steps |
 
-(The test-7 entry was regenerated by a targeted re-run of `test_07_slit_pc` after its sampling window was corrected; the other nine entries are from a single uninterrupted run of `run_canonical.py`. The re-run used the same module, the same parameters and the committed driver, and the regenerated JSON is in the evidence directory.)
+**Pass 1 (`51cc61a`) for comparison** — same driver, pre-fix candidate:
+
+| # | pass 1 | pass 2 |
+|---|---|---|
+| 3 | FAIL, ratios 0.682–0.738 | **PASS**, ratios 1.024–1.108 |
+| 4 | FAIL, 60→70.5° | FAIL, 60→54.5° |
+| 9 | PASS, wall-band 1.21 % | PASS, wall-band 0.91 % |
+| 10 | PASS, 2.8e-13/step | PASS, bit-frozen 0.0 |
+| 7, 8 | FAIL | FAIL |
+
+Test 3 is the only verdict that changed. Tests 4, 7 and 8 fail for reasons
+unrelated to §4.5. Pass-1 numbers are kept because the direction of change
+is itself evidence about which physics the constant controls.
 
 ### What passed, and why it is credible
 
@@ -252,49 +311,70 @@ over 1.5k steps is not zero, and 1.5k steps is short.
 
 ---
 
-## 6. The Laplace calibration discrepancy — the main open scientific item
+## 6. The Laplace calibration — RESOLVED
 
-Test 3 is reported `FAIL` because the pre-declared gate required the
-calibration ratio `σ_measured/σ_input ≥ 0.7` and the smallest measured
-ratio is **0.682**.
+**Outcome: the model now reproduces R1 Eq. (18)'s interfacial tension.** The
+offset that dominated validation pass 1 was an arithmetic error in the
+implementation, not a property of the model or of the source.
 
-The result itself is more informative than the verdict:
+### 6.1 What pass 1 measured
 
-| R | Δp | σ_measured | ratio | R/w |
-|---|---|---|---|---|
-| 5 | 5.9e-3 | 0.0148 | 0.738 | 41 |
-| 7 | 4.0e-3 | 0.0141 | 0.705 | 21 |
-| 9 | 3.0e-3 | 0.0136 | 0.682 | 10 |
+With `A` implemented as `1.5·ω·σ`, the measured tension was 0.682–0.738 of
+the input across R = 5/7/9, and a separate β sweep showed the ratio was
+**independent of the interface resolution** (R/width from 10 to 83). That
+resolution-independence was correct reasoning about the evidence and is
+what made the offset look like a constant calibration factor rather than a
+discretisation artefact.
 
-- **The droplet survives at every radius** (`|ψ|peak` ratio = 1.000), so
-  the Laplace pressure is genuinely measurable.
-- **The implicit σ is radius-independent to 5.6 %**, so a Laplace law *is*
-  demonstrated; the failure is calibration, not physics.
-- A separate sweep (σ = 0.02, R = 7, β = 0.5→2.0, so R/w from 10 to 83)
-  gives ratios 0.708, 0.705, 0.685, 0.740. The offset is therefore
-  **independent of the interface resolution** — it is a constant factor of
-  about **1.43 in the required A**, not a discretisation artefact.
+### 6.2 What R5 changed
 
-With R1 Eq. (18) read literally as `A = (9/4) ω_eff σ`, the model delivers
-`σ_measured ≈ 0.70 σ_input`. Two candidate causes, in order of
-plausibility:
+Pass 1's leading hypothesis was a constant stencil-normalisation
+difference in `|F|`, since R5 was unobtainable. Obtaining R5
+(`REFERENCE_MANIFEST.md`, `PAPER_FORMULATION.md` §4.2) **refuted** that:
+R5's `(S,I) = (2,4)` 3D weights restricted to D3Q19 are `1/6` on the axes
+and `1/12` on the face diagonals, which is exactly `3W_i` — the operator
+this implementation already had, derived independently. With the stencil
+eliminated, the calibration constant itself became the remaining
+candidate, and it was wrong: `A = 1.5·ω·σ` where Eq. (18) says
+`A = (9/4)·ω·σ = 2.25·ω·σ`. `1.5/2.25 = 2/3`, which is the measured
+offset.
 
-1. **The discrete `|F|` scale.** `|F|` is the one element of the
-   formulation whose published coefficients could not be obtained (R1
-   defers them to R5, Leclaire et al., J. Sci. Comput. **59**, 545 (2014),
-   DOI `10.1007/s10915-013-9772-2`, which has no open copy). This
-   implementation uses a stencil with an independent fourth-order-isotropy
-   proof (`PAPER_FORMULATION.md` §4.3). A constant normalisation
-   difference between that stencil and R5's would scale σ by exactly such
-   a constant, independent of width — which is what is observed.
-2. A different reading of Eq. (18). The extracted text reads
-   `A = 9/4 ω_eff σ`; no alternative is visible in the source, but the
-   calibration offset is the kind of thing that would settle it.
+### 6.3 Pass-2 measurement
 
-**This is unresolved and it is the first thing the reviewer should
-attack.** It is not a reason to distrust the interface physics (which is
-width-consistent), but it does mean the candidate cannot yet be said to
-reproduce the paper's interfacial tension quantitatively.
+| R | Δp | σ_measured | σ_input | ratio | R/w |
+|---|---|---|---|---|---|
+| 5 | 8.86e-3 | 0.02216 | 0.02 | **1.108** | 39 |
+| 7 | 6.04e-3 | 0.02116 | 0.02 | **1.058** | 20 |
+| 9 | 4.55e-3 | 0.02048 | 0.02 | **1.024** | 10 |
+
+- The droplet survives at every radius (`|ψ|peak` ratio = 1.000), so the
+  pressure difference is a genuine Laplace measurement.
+- The ratio **converges towards 1 as R grows**: the excess falls 10.8 % →
+  5.8 % → 2.4 % across R = 5 → 9, i.e. roughly as `1/R`. That is the
+  expected finite-radius behaviour (the tension surface does not coincide
+  with the ψ = 0 surface when the interface has finite width), not a
+  residual systematic. Extrapolating, the R → ∞ value is consistent with
+  unity.
+- Radius-independence of the implied σ is 8.4 % over R = 5–9 at fixed
+  β = 0.7, so the Laplace law itself is demonstrated.
+
+### 6.4 Claim discipline
+
+The honest statement is: *at R = 9 the delivered tension is within 2.4 % of
+the input, and the residual shrinks with radius in the manner a
+finite-radius correction predicts.* The evidence does **not** include an
+R → ∞ extrapolation with a fitted correction, so the report does not claim
+"σ_measured = σ_input exactly". A convergence study in R, or a comparison
+against an analytic profile, would settle that; it was not run.
+
+### 6.5 The cross-check predicted in pass 1
+
+`CURRENT_VS_LECLAIRE_MAP.md` §4 predicted that if a paper-faithful line and
+the production `CapA` line were driven to the same measured σ, the ratio
+`CapA/σ` should come out near the production line's independently measured
+`1/1.012`. That prediction was made from the §A.8 derivation when the
+implementation still had the wrong `A`. It is now the natural next check
+and has **not** been run; it is listed in §9.
 
 ---
 
@@ -305,17 +385,29 @@ recolouring satisfies `Σᵢ Ωᵢ^r = ρ_r` **exactly** (the rest population is
 untouched and `Σᵢ Wᵢ cos ϑᵢ = 0`). Test 10 confirms it numerically for the
 no-solid geometry:
 
+Pass 2, planar interface, 1000 steps:
+
 | arm | total drift / step | red / step | blue / step |
 |---|---|---|---|
-| `L17_CORE` (no overlay) | 2.8e-13 | 1.5e-13 | 1.3e-13 |
-| `L17_PLUS_OVERLAY` (`f64_arithmetic`) | 2.0e-14 | 1.1e-14 | 9.4e-15 |
+| `L17_CORE` (no overlay) | **0.0** | **0.0** | **0.0** |
+| `L17_PLUS_OVERLAY` (`f64_arithmetic`) | **0.0** | **0.0** | **0.0** |
+
+The component mass is **bit-frozen**: the sampled red mass is the identical
+f64 value `799.999607...` at every one of the eleven checkpoints. That is a
+stronger result than pass 1 reported (2.8e-13/step), and consistent with the
+construction -- R1's recolouring is exactly mass-conserving, so once the
+interface reaches its discrete fixed point there is nothing left to round.
 
 Two things follow.
 
-1. `L17_CORE` is at f64 roundoff **without any conservation correction**.
-2. The project-style overlay buys a further factor of ~14 but is not
-   needed for the paper-faithful baseline. Per the contract, the overlay
-   arm is labelled an overlay and is never described as paper-faithful.
+1. `L17_CORE` needs **no** conservation correction at all in this geometry.
+   The overlay is redundant here, so the contract's rule that an overlay
+   arm must never be labelled paper-faithful applies trivially.
+2. This is *not* a claim that the candidate is conservative in every
+   geometry. The wall-bounded case carries the solid-node reservoir
+   (below), and pass 1 measured a small non-zero drift in this same planar
+   geometry. Read the bit-frozen result as "this configuration is
+   stationary", not as a general theorem.
 
 **Wall storage.** In geometries with solid nodes the whole-domain mass is
 not stationary early on, because R1's full-way bounce-back (step 6) fills
@@ -339,60 +431,76 @@ from the asymptotic rate, or it will read as a defect.
 **Supports:**
 
 - the D3Q19 tables, the MRT basis and its row identities, the perturbation's
-  conservation laws and second moment, the recolouring's exact component
-  conservation, the gradient's sign and linear exactness — all at f64
-  roundoff;
-- that a stable diffuse interface exists, that β controls its width
+  conservation laws and its second moment, the recolouring's exact component
+  conservation, and the gradient's sign, linear exactness and isotropy -- all
+  at f64 roundoff (42/42 checks);
+- that the gradient operator matches R5's published `(2,4)` 3D stencil on the
+  direction set D3Q19 possesses;
+- that a stable diffuse interface exists, that beta controls its width
   monotonically, and that the interface dynamics are lattice-isotropic to
-  0.46 %;
-- that the paper's recolouring needs no conservation correction;
-- that R1's wetting condition, once `n_w` is computed on the smoothed
-  image, produces an angle that responds monotonically to the prescribed
-  value;
-- a quantified, resolution-independent 0.70 Laplace calibration offset.
+  0.5 %;
+- that the delivered interfacial tension matches R1 Eq. (18) to within 2.4 %
+  at the largest tested radius, with the residual shrinking as the interface
+  is better resolved;
+- that R1's recolouring needs no conservation correction, and that the
+  planar-interface component mass is bit-frozen;
+- that R1's wetting condition, once the wall normal is computed on the
+  smoothed image, produces angles that respond to the prescribed value.
 
 **Does not support:**
 
-- reproducing the paper's interfacial tension quantitatively (§6);
-- any claim about `η` in R1's refinement law (needs two resolutions);
-- contact-angle accuracy to the paper's standard (the instrument is
-  crude; §5);
+- a quantitative contact-angle claim. The instrument is a spherical-cap
+  estimate whose error changed sign between passes; the wetting BC is the
+  paper's headline contribution and it is not yet measured (section 9.1);
 - spontaneous imbibition at these parameters (test 8 fails);
-- slit capillary pressure against the analytic value (test 7 fails);
-- anything about porous media, graphite, separator, PCS or gap — none was
+- slit capillary pressure against an analytic value (test 7 cannot produce
+  a curved meniscus);
+- an `R -> infinity` value of sigma. The trend is consistent with 1 but was
+  not extrapolated (section 6.4);
+- any claim about `eta` in R1's refinement law (needs two resolutions);
+- anything about porous media, graphite, separator, PCS or gap: none was
   run, per the stop boundary;
-- **any performance claim.** The candidate is NumPy, not Taichi; the
-  production line's ~5.5 min JIT tax per instance motivated that choice,
-  and it makes the two incomparable on speed.
-
----
-
+- **any performance claim.** This candidate is NumPy, not Taichi; the
+  production line's ~5.5 min JIT tax per instance motivated that choice and
+  makes the two incomparable on speed.
 ## 9. Open items for the reviewer
 
 Ordered by how much they change the interpretation.
 
-1. **The 0.70 Laplace calibration (§6).** Decide whether the offset is a
-   stencil-normalisation difference or a misreading of Eq. (18). Until it
-   is settled, no quantitative surface-tension claim is safe.
-2. **Test 8 fails on physics; test 7 fails on design.** Test 8's front
-   retreats, which is a real negative result. Test 7 returns a *correct*
-   zero (flat meniscus at neutral wetting) and must be redesigned with a
-   prescribed contact angle before it can say anything. Do not read the
-   two failures as one phenomenon without evidence.
-3. **Whether the L17_CORE wall treatment is the right baseline at all.**
-   R1's own `n_w` requires three smoothing passes and a secant solve; R2
-   records that periodic closure can hide wetting defects, and test 4's
-   120° case is the kind of geometry where that shows. The R3 variant is
-   wired (`wetting="akai"`) but **its ablation was not run** — that is a
-   gap in this package, not a result.
-4. **Test duration.** 1000–2000 steps at β = 0.7. Steady state was
-   verified for tests 1, 2 and 5; for tests 3, 4, 7, 8, 9 it was assumed.
-5. **The solid-node reservoir.** Should the conservation audit
-   domain-report the fluid-only mass? This affects how test 9's
-   `red_drift = 102.1` should be read.
-
----
-
+1. **Test 4 (contact angle) is measured with the wrong instrument.** The
+   reported angles come from a spherical-cap estimate
+   `theta = 2*arctan(apex/r_b)`, valid only for a genuine spherical cap and
+   sensitive to where the contact line is judged to be. Pass 1 gave
+   60 -> 70.5 deg; pass 2 gives 60 -> 54.5 deg for the same prescribed
+   angle. The *sign* of the error flipped between passes, which is what an
+   unreliable estimator looks like. The 120 deg case yields `r_b = 0` (the
+   cap does not reach the first fluid layer) in both passes. **A
+   profile-normal fit at the contact line, as R3 uses, is required before
+   any conclusion about the wetting BC can be drawn.** The FAIL verdict is
+   not evidence that the BC is wrong, only that this test cannot yet say.
+2. **Tests 7 and 8 fail, and they are not the same failure.** Test 7
+   returns a *correct* zero (flat meniscus at neutral wetting, so
+   `P_c = 0`) and needs redesign with a prescribed contact angle. Test 8's
+   front *retreats* by 1 lu, a real negative result. Do not merge them into
+   one phenomenon without evidence.
+3. **The `CapA <-> sigma` cross-check predicted in pass 1 (section 6.5) has
+   not been run.** `CURRENT_VS_LECLAIRE_MAP.md` section 4 predicts
+   `CapA/sigma ~ 1.012`; driving both lines to a common measured sigma would
+   test the section A.8 derivation end-to-end rather than only in algebra.
+4. **The R3 wetting variant is wired but never ablated.** `wetting="akai"`
+   exists and is default-off; no run compares it with `wetting="leclaire"`.
+   R2 records that periodic closure can hide wetting defects, and tests 7
+   and 8 are exactly the confined geometries where an alternative wall
+   treatment should be compared. This is a gap in the package, not a result.
+5. **Test duration.** 1000-2000 steps at beta = 0.7. Steady state was
+   verified for tests 1, 2, 3 and 5 (and test 10 is bit-frozen); for 4, 7,
+   8 and 9 it was assumed.
+6. **The solid-node reservoir.** Whole-domain mass in wall-bounded geometry
+   is not stationary early, because R1's full-way bounce-back fills the
+   solid nodes. On the slit the rate falls from +1.10e-08/step (t<400) to
+   -9.6e-14/step (t>800), i.e. it saturates. Any later conservation
+   reporting must separate that transient from the asymptotic rate or it
+   will read as a leak.
 ## 10. Scope exclusions actually honoured
 
 - `lbm_solver_cg3d.py` **unmodified** (blob `1b7db4ac…`), verified.
@@ -403,10 +511,51 @@ Ordered by how much they change the interpretation.
 - R1 Eqs. (21)–(29) regularized open boundaries **not implemented**; the
   constructor raises rather than falling back.
 
-## 11. Recommendation
+## 11. What validation pass 1 got wrong
 
-**`CHANGES_REQUESTED`.** The formulation and the implementation core are
-in good shape and the table-level fidelity is exact, but four of ten
-canonical tests fail, one of them on a quantified calibration offset whose
-cause is not yet identified. This candidate is not ready for external
-scientific review, and it is certainly not ready for promotion.
+Recorded because the mechanism is more instructive than the outcome.
+
+Pass 1's report stated, in a carefully argued section 6, that the Laplace
+calibration carried "a quantified, resolution-independent 0.70 offset" and
+that "the most plausible source is the discrete |F| scale". Every step of
+that reasoning was sound *given its premise*: the resolution-independence
+was correctly measured and correctly interpreted, and the stencil genuinely
+was the one element without a sourced coefficient set.
+
+The premise was still testable and was not tested. Obtaining R5 cost one
+local file search and refuted it in a single comparison. Once refuted, the
+remaining candidate was a constant sitting in plain sight on one line of
+code.
+
+Two things would have caught it earlier, and both are cheap:
+
+- **Check the paper's constants against the code by value, not by
+  comment.** The line read
+  `A = 1.5 * omega * sigma  # (9/4) * omega * sigma`. Reading the comment
+  confirms nothing; evaluating `9/4` does.
+- **When an offset is a clean round number, look for a constant.** `2/3`
+  is `1.5/2.25`. A measured 0.67 sitting next to a documented `9/4` in the
+  source is a strong hint that should have been checked before writing a
+  paragraph attributing it to physics.
+
+## 12. Recommendation
+
+**`CHANGES_REQUESTED`**, on a narrower basis than after pass 1.
+
+What pass 2 improved: the Laplace law passes, with the calibration
+converging to the paper's value; conservation is bit-frozen; 42/42 table
+and operator checks are exact. The calibration item that dominated pass 1
+is closed.
+
+What still blocks: **three tests fail, and two of the three are about the
+instrument rather than the solver.** Test 4's contact-angle estimator is
+demonstrably unreliable -- the sign of its error changed between passes for
+the same prescribed angle -- and test 7's design cannot produce a curved
+meniscus. Until those two are rebuilt, the wetting half of this candidate
+is effectively unmeasured, and the wetting BC is the paper's headline
+contribution. Test 8's retreating front is an untouched real negative
+result.
+
+So: the *bulk* physics of this candidate is now in good shape; the
+*wetting* physics is not yet measured. That distinction should drive the
+next round.
