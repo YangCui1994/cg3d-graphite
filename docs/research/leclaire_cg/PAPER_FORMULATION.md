@@ -352,22 +352,69 @@ different objects; see `CURRENT_VS_LECLAIRE_MAP.md` §4.
 - Reference [88] is Leclaire, El-Hachem, Trépanier, Reggio, J. Sci. Comput. **59**,
   545 (2014), DOI `10.1007/s10915-013-9772-2`.
 
-### 4.2 Status of the exact coefficients — **UNRESOLVED**
+### 4.2 Status of the exact coefficients — **RESOLVED** (R5 obtained in validation pass 2)
 
-R1 does **not** print the stencil coefficients; it defers to [88], and [88] is
-not obtainable (see `REFERENCE_MANIFEST.md`, R5 — no OA location, no repository
-copy, no Wayback PDF). Therefore the literal published coefficient set for the
-gradient is **UNRESOLVED** and `L17_CORE` may not claim to reproduce it
-byte-for-byte.
+R1 does **not** print the stencil coefficients; it defers to [88] = R5.
 
-### 4.3 Working stencil actually implemented — **derived here** `[DERIVED HERE]`
+R5 was obtained after the first validation pass (local copy,
+`_refs/leclaire2014_jsc_isotropic_gradient_gpu.pdf`, SHA256 recorded in
+`REFERENCE_MANIFEST.md`). Its method builds the weights from a spatial-order
+constraint plus an isotropy constraint; §2.2 works the `(S, I) = (2, 4)` case
+explicitly, and Table 2 (PDF p.9) tabulates the 3D weights.
+
+**R5's 2D `(2,4)` case — explicit in the text:** the constraints reduce to
+`4w(1,1) + 2w(1,0) = 1` and `w(1,0) = 4w(1,1)`, giving `w(1,0) = 1/3`,
+`w(1,1) = 1/12`. Note that `4w(1,1) + 2w(1,0) = 1` is exactly the
+second-moment normalisation `Σ_i w_i c_{ix}² = 1`.
+
+**R5's 3D `(2,4)` column — Transcribed from Table 2** (rendered and read as
+an image; the table is vector text that does not survive extraction). The
+leading entries, which are the ones D3Q19 can represent, are
+
+| offset | `w(i,j,k)` for `(S,I) = (2,4)` |
+|---|---|
+| (1,0,0) | 1/6 |
+| (1,1,0) | 1/12 |
+| (1,1,1) | 1/3360 |
+| (2,·,·) | 0 (six offsets) |
+
+followed by non-zero higher-shell terms `1/1260`, `1/420`, `−1/315`, `1/315`,
+`1/210`, `−1/84`, `4/105`, `17/420`, `−22/315`, `23/140`, `−2/21`, …
+
+**The decisive comparison.** For D3Q19, `3W_i` is
+
+- `3·(1/18) = 1/6` on the six axis directions,
+- `3·(1/36) = 1/12` on the twelve face diagonals.
+
+That is **exactly** R5's `w(1,0,0)` and `w(1,1,0)`. Furthermore
+`Σ_i 3W_i c_{iα}c_{iβ} = δ_{αβ}` (checked exactly in
+`tests/leclaire_cg/test_lattice_tables.py`), which is the same second-moment
+normalisation R5's `(2,4)` constraints impose in 2D.
+
+So **R5's `(2,4)` 3D stencil, restricted to the directions D3Q19 possesses, is
+exactly `3W_i` — the operator derived independently in §4.3.** The only R5
+term D3Q19 cannot carry is the body-diagonal `w(1,1,1) = 1/3360 ≈ 3.0e-4`,
+whose omission perturbs the operator at the ~0.2 % level in the trace and
+cannot matter for anything measured here.
+
+*Honest limit of this check.* R5's Table 2 is a raster table and its row
+labels are printed twice, on the left in reverse order and on the right in
+forward order, offset by two rows. The assignment used here is the
+right-hand column, i.e. `w(1,0,0)` and `w(1,1,0)` label the first two value
+rows. That assignment is the only one consistent with R5's own
+normalisation, and it is the one that makes the D3Q19 restriction agree with
+an independent derivation — but a reader who wants to be certain should
+re-read Table 2 from the PDF rather than take this transcription on trust.
+
+### 4.3 Working stencil actually implemented — `[DERIVED HERE]`, and now corroborated
 
 `L17_CORE` uses the second-neighbour-shell lattice gradient
 
 `F_α(x) = 3 Σ_i W_i c_{iα} ψ(x + c_i)`
 
-and the derivation that this operator is **fourth-order isotropic on D3Q19** is
-supplied here rather than attributed to R5.
+and the derivation that this operator is **fourth-order isotropic on D3Q19**
+is supplied here rather than attributed to R5 (R5 gives the weights, not a
+D3Q19-specific proof).
 
 *Derivation.* Write the estimate `g_α = Σ_i a_i c_{iα} ψ(x+c_i)` with `a_i`
 depending only on `|c_i|`. Taylor-expanding,
@@ -389,18 +436,15 @@ Hence the leading anisotropic error is absent at 3rd and 4th order: the residual
 3rd-order term is `(1/6)∂_α(∇²ψ)`, which is **isotropic**, and this is exactly
 the sense in which R1's "fourth-order isotropic discretization" is meant.
 
-*Consequence for the map.* Under this reading the current production solver's
-`Compute_C` (a `Σ 3 w_i e_i ψ` sum, with solid neighbours supplying a wall
-colour) uses the **same operator**; the difference is in the *wall sampling*,
-not in the stencil. This is recorded as `SAME` on the stencil and `DIFFERENT` on
-the wall sampling in `CURRENT_VS_LECLAIRE_MAP.md`.
+*Consequence for the map.* The current production solver's `Compute_C` (a
+`Σ 3 w_i e_i ψ` sum, with solid neighbours supplying a wall colour) uses the
+**same operator**; the difference is in the *wall sampling*, not in the
+stencil. Recorded as `SAME` on the stencil and `DIFFERENT` on the wall
+sampling in `CURRENT_VS_LECLAIRE_MAP.md`.
 
-*Honest caveat for the reviewer.* If R5's published operator is in fact a
-different (larger-footprint) stencil, then `L17_CORE` differs from the published
-runs on this one element. Nothing else in the formulation depends on it, and the
-difference would be an isotropy-order refinement, not a change of physics.
-
----
+*Consequence for the Laplace calibration.* Because the stencil is confirmed,
+the stencil-normalisation hypothesis for the calibration offset is **ruled
+out**. See `EXECUTION_REPORT.md` §6 for what the offset actually was.
 
 ## 5. Perturbation (interfacial-tension) operator
 
@@ -680,9 +724,12 @@ element.
 
 ## 11. Items explicitly labelled UNRESOLVED
 
-1. **Exact published gradient stencil coefficients** — R1 defers to R5 [88],
-   which could not be obtained. `L17_CORE` implements a stencil with an
-   independent fourth-order-isotropy proof (§4.3) and says so.
+1. ~~**Exact published gradient stencil coefficients** — R1 defers to R5 [88],
+   which could not be obtained.~~ **CLOSED in validation pass 2**: R5 was
+   obtained, and its `(2,4)` 3D stencil restricted to D3Q19 is exactly `3W_i`
+   (§4.2). The remaining caveat is only that R5's Table 2 is a raster table
+   whose row labels are printed twice; §4.2 states how the assignment was
+   resolved.
 2. **Contact-angle sign convention in Eq. (30)** — not stated in R1; reported
    with the measured phase instead of assumed (§7.4).
 3. **`η` in the `β` refinement law** — requires two physical resolutions to

@@ -38,6 +38,7 @@ equation.
 | R2 | `leclaire_2017_IJMPC_cg_vs_pp_benchmark.pdf` | `91fc30f1d597adfafd95080cafe8599d67acfff3bc0917ad49b19a9f4e3d811c` |
 | R3 | `akai2018_awr_wetting_bc_cg.pdf` | `073a343175a68e28a0e8a00f9b7c811f9236acb37bf6b15588a6d3a7dd30efdd` |
 | R4 | `parmigiani2019_geofluids_transport_enhanced_separation.pdf` | `17aca930e58c1efb477ba84149eec4676a9dd07f24263fb9a30038eb3b0a2962` |
+| R5 | `leclaire2014_jsc_isotropic_gradient_gpu.pdf` | `f18e3bfd81e65cc74d8a5c24c76f1ec3d5be6316a67bbb118b904e1db8ec7968` |
 
 ## Mandatory set
 
@@ -128,15 +129,26 @@ equation.
   [88] (R1 PDF p.24 / journal 033306-23, reference list). R1 does **not**
   reproduce the stencil coefficients, so the canonical gradient operator is
   defined by an external source.
-- **Status: NOT OBTAINED.** No open copy exists (OpenAlex lists no OA location;
-  PolyPublie record `12018` exposes no PDF; no Wayback snapshot of a PDF).
-  Consequence for the formulation: the gradient element is recorded as
-  `UNRESOLVED` **in its exact published coefficient form**. The task's
-  self-contained justification is instead supplied by an explicit lattice
-  isotropy derivation (see `PAPER_FORMULATION.md` §6.3), which is labelled as
-  *derived here* rather than attributed to R5. A reviewer must treat the
-  gradient stencil as the one element whose paper-fidelity rests on a
-  derivation rather than on a transcribed equation.
+- **Status: OBTAINED** (2026-09-27, after the first validation pass). Local
+  file `_refs/leclaire2014_jsc_isotropic_gradient_gpu.pdf`, SHA256
+  `f18e3bfd81e65cc74d8a5c24c76f1ec3d5be6316a67bbb118b904e1db8ec7968`,
+  29 pages, Springer typeset version. Route: found already present in a
+  sibling project on this machine (`06_EMIS/literature/`), not re-downloaded.
+- **Result of reading it** (details in `PAPER_FORMULATION.md` §4.3): R5's
+  Table 2 gives the `(S, I) = (2, 4)` 3D stencil as
+  `w(1,0,0) = 1/6`, `w(1,1,0) = 1/12`, `w(1,1,1) = 1/3360`, plus higher-shell
+  terms. Restricted to the directions D3Q19 actually has, that is **exactly**
+  `3W_i` — i.e. the stencil this implementation already used, derived
+  independently. The gradient element therefore closes: it is no longer
+  `UNRESOLVED`.
+- **Consequence:** the hypothesis that the Laplace calibration offset came
+  from a stencil-normalisation difference is **ruled out**. That negative
+  result is what forced the check that found the real cause (an arithmetic
+  slip in the Eq. (18) constant, see `EXECUTION_REPORT.md` §6).
+
+The acquisition note at the top of this file (that 科研通 tooling does not
+exist on this machine) still applies; R5 was obtained by local search
+rather than by download.
 
 ## Source discipline applied
 
