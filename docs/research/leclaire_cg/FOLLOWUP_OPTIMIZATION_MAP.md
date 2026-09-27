@@ -81,11 +81,31 @@ but not implemented in this task.
 - **Expected effect.** A cheaper, non-iterative wall treatment with the same
   norm-preserving property; R3 reports improved agreement with analytic and
   experimental contact angles relative to the fictitious-density BC.
-- **Implemented now?** **YES (switch), default off.** Selected by
-  `wetting="akai"`; `L17_CORE` is `wetting="leclaire"`.
+- **Implemented now?** **YES (switch), default off, COMPLETE since the
+  external-review correction round.** Selected by `wetting="akai"`;
+  `L17_CORE` is `wetting="leclaire"`.
+
+  *Correction history.* The first version of this entry claimed "YES
+  (switch)" while `operators.wetting_akai` implemented only R3 Eq. (4),
+  applied to the already-computed R1 field: it skipped the boundary colour
+  extrapolation (R3 Eq. 2) and the re-estimated normal (R3 Eq. 3). External
+  review B3 caught the overclaim. The partial form is now a separately
+  named variant, `wetting="akai_rotation_only"`, and is never reported as
+  R3. `wetting_akai` now runs Eqs. (2)-(4) in order: `_site_classes` builds
+  C_FB / C_Fl / C_SB / C_Sl, `extrapolate_to_solid_boundary` is Eq. (2),
+  the normal is recomputed from the extrapolated field (Eq. 3), and the
+  closed-form rotation follows (Eq. 4).
+
+  *One documented substitution.* R3 takes `n_s` from the Xu et al. (2017)
+  construction; here it is supplied by the same three-pass
+  smoothed-solid-image gradient R1 uses. R3 cites rather than derives that
+  quantity, so this is a sourcing choice, recorded rather than hidden.
+
 - **Switch/ablation.** Both arms run the same static-contact-angle and
   asymmetric-killer geometries. Attribute any difference to the wetting closure
-  only, because nothing else differs between the arms.
+  only, because nothing else differs between the arms. **No A/B claim has
+  been made** -- the ablation was still not run in this round, and the
+  review's restriction on such a claim stands until it is.
 
 ---
 
@@ -197,7 +217,7 @@ so that the overlay's contribution is attributable.
 | arm | F1 β | F2 wetting | F3 extra recolor | F4 open BC | F5 variable γ | F6 overlay |
 |---|---|---|---|---|---|---|
 | `L17_CORE` | paper (core) | `leclaire` | off | off | off | off |
-| `L17_PLUS_AKAI` | paper | `akai` | off | off | off | off |
+| `L17_PLUS_AKAI` | paper | `akai` (R3 Eqs. 2-4) | off | off | off | off |
 | `L17_PLUS_OVERLAY` | paper | `leclaire` | off | off | off | `f64_arithmetic` |
 | `CURRENT_AMPLITUDE_ABLATION` | `min_variant` | `leclaire` | off | off | off | off |
 

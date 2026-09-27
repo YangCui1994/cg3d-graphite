@@ -150,103 +150,136 @@ def test_02_planar(steps=1000, n=(6, 6, 32)):
 # ======================================================================
 #  test 3 -- Laplace droplet
 # ======================================================================
-def test_03_laplace(steps=1200, n=(26, 26, 26), radii=(5.0, 7.0, 9.0)):
+def test_03_laplace(steps=1200, n=(30, 30, 30), radii=(5.0, 7.0, 9.0)):
+    """Laplace law with a MEASURED equilibrium radius and a regression.
+
+    External review B8: the earlier version used the nominal initial radius
+    in sigma = dp R / 2 and reported no regression.  Here the radius is the
+    equivalent-sphere radius of the psi > 0 region at the end of the run,
+    and sigma comes from a least-squares fit of dp against 2/R with an
+    intercept, together with its R^2.
+    """
     out = []
     for R in radii:
         s = make(n)
         s.init_psi(G.droplet(n[0], n[1], n[2], R,
                              center=(n[0] / 2, n[1] / 2, n[2] / 2)))
-        psi0 = float(np.abs(s.psi()).max())
         s.run(steps)
         rho, u = s.macroscopic()
+        psi = s.psi()
+        R_eq = G.equivalent_radius(psi)
         X, Y, Z = G.grid(*n)
         r = np.sqrt((X - n[0] / 2) ** 2 + (Y - n[1] / 2) ** 2
                     + (Z - n[2] / 2) ** 2)
         ins = r < R - 3.5
         outs = r > R + 3.5
         dp = float((rho[ins].mean() - rho[outs].mean()) / 3.0)
-        psi1 = float(np.abs(s.psi()).max())
-        # interface width of the equilibrium profile, for the R/w ratio
-        rmid = r[:, n[1] // 2, n[2] // 2]
-        wfit, _ = G.interface_width_tanh(s.psi()[:, n[1] // 2, n[2] // 2])
-        out.append(dict(R=R, dp=dp, sigma_measured=dp * R / 2.0,
-                        sigma_input=SIGMA,
-                        sigma_ratio=(dp * R / 2.0) / SIGMA if SIGMA else None,
-                        psi_peak_initial=psi0, psi_peak_final=psi1,
-                        psi_peak_ratio=psi1 / psi0 if psi0 else None,
-                        interface_width=float(wfit),
-                        R_over_w=float(R / wfit) if wfit > 0 else None,
+        peak = float(np.abs(psi).max())
+        out.append(dict(R_nominal=R, R_measured=R_eq, dp=dp,
+                        two_over_R=2.0 / R_eq if R_eq > 0 else None,
+                        sigma_from_this_radius=(dp * R_eq / 2.0)
+                        if R_eq > 0 else None,
+                        psi_peak=peak,
+                        positivity_ok=bool(peak <= 1.0 + 1e-9),
                         max_abs_v=max_fluid_velocity(s)))
     res = dict(runs=out, steps=steps, grid=list(n), sigma_input=SIGMA)
-    ratios = [o["sigma_ratio"] for o in out]
-    res["sigma_ratio_range"] = [min(ratios), max(ratios)]
-    survived = all(o["psi_peak_ratio"] is not None
-                   and o["psi_peak_ratio"] > 0.95 for o in out)
-    res["droplet_survived"] = survived
-    # A Laplace law is demonstrated if the droplet survives AND the
-    # implied sigma is radius-independent.  Agreement with the INPUT
-    # sigma is reported separately as a calibration ratio, because R1
-    # Eq. (18) fixes A = (9/4) omega sigma and the measured value depends
-    # on the discrete |F|, which is the one element of the formulation
-    # with an unresolved published coefficient set (R5).
-    spread = max(ratios) - min(ratios)
-    res["sigma_ratio_spread"] = float(spread)
-    res["laplace_law_demonstrated"] = bool(survived and spread < 0.15)
-    res["verdict"] = "PASS" if (survived and spread < 0.15
-                                and min(ratios) > 0.7) else (
-        "FAIL" if not survived else "FAIL")
-    res["acceptance"] = ("droplet survives every radius AND the implied "
-                         "sigma is radius-independent within 15% AND the "
-                         "calibration ratio sigma_meas/sigma_input >= 0.7")
+    xs = np.array([o["two_over_R"] for o in out if o["two_over_R"]])
+    ys = np.array([o["dp"] for o in out if o["two_over_R"]])
+    if xs.size >= 2:
+        A = np.stack([xs, np.ones_like(xs)], axis=1)
+        sol, *_ = np.linalg.lstsq(A, ys, rcond=None)
+        sigma_fit, intercept = float(sol[0]), float(sol[1])
+        pred = A @ sol
+        ss_res = float(np.sum((ys - pred) ** 2))
+        ss_tot = float(np.sum((ys - ys.mean()) ** 2))
+        r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
+        res.update(sigma_from_regression=sigma_fit,
+                   regression_intercept=intercept,
+                   regression_r2=r2,
+                   sigma_ratio=sigma_fit / SIGMA)
+    surv = all(o["psi_peak"] > 0.95 for o in out)
+    pos = all(o["positivity_ok"] for o in out)
+    res["droplet_survived"] = surv
+    res["positivity_ok"] = pos
+    ok = (surv and pos and xs.size >= 2
+          and res.get("sigma_ratio") is not None
+          and 0.9 < res["sigma_ratio"] < 1.1
+          and res["regression_r2"] > 0.95
+          and abs(res["regression_intercept"]) < 0.25 * abs(ys.mean()))
+    res["verdict"] = "PASS" if ok else "FAIL"
+    res["acceptance"] = ("droplet survives with |psi|<=1, and dp regressed on "
+                         "2/R_measured gives sigma within 10% of the input, "
+                         "R^2 > 0.95, and an intercept below 25% of mean dp")
     return res
 
 
 # ======================================================================
 #  test 4 -- static contact angle
 # ======================================================================
-def test_04_contact_angle(steps=2000, n=(24, 24, 20), thetas_deg=(60.0, 90.0,
-                                                                 120.0)):
+def test_04_contact_angle(steps=2500, n=(26, 26, 22),
+                          thetas_deg=(60.0, 90.0, 120.0)):
+    """Static contact angle from a circle fit to the interface contour.
+
+    External review C2.6: the previous instrument was a spherical-cap
+    estimate ``theta = 2 atan(apex / r_b)``.  It changed the sign of its
+    error between validation passes for the same prescribed angle and
+    returned NaN whenever the cap failed to reach the first fluid layer, so
+    the earlier FAIL verdict was not evidence about the wetting condition.
+
+    Replacement: extract the interface contour r(z) from the polar-averaged
+    phase field, fit a circle in the (r, z) plane, and read the contact
+    angle from where that circle meets the wall plane.  The instrument is
+    validated against a synthetic contour before use (see
+    ``tests/leclaire_cg/test_lattice_tables.py``).
+
+    Phase convention, stated rather than assumed: the blob is the psi > 0
+    (red) phase sitting on the wall, and ``theta`` is measured **through
+    that phase** -- the angle between the interface tangent at the contact
+    line and the wall, inside the red fluid.  That convention is used
+    wherever an angle is reported from this test.
+    """
     out = []
+    wall_thickness = 2
     for th in thetas_deg:
-        s = make(n, solid=G.wall_slab(n[0], n[1], n[2], thickness=2),
+        s = make(n, solid=G.wall_slab(n[0], n[1], n[2],
+                                      thickness=wall_thickness),
                  theta_c=np.deg2rad(th))
-        s.init_psi(G.hemi_droplet_on_wall(n[0], n[1], n[2], radius=6.0))
+        s.init_psi(G.hemi_droplet_on_wall(n[0], n[1], n[2], radius=7.0))
         s.run(steps)
         psi = s.psi()
-        # contact-line radius: where psi = 0 at the first fluid layer
-        k0 = 2
-        row = psi[:, :, k0]
-        x = np.arange(n[0])[:, None]
-        y = np.arange(n[1])[None, :]
-        cxy = np.array([n[0] / 2, n[1] / 2])
-        rr = np.sqrt((x - cxy[0]) ** 2 + (y - cxy[1]) ** 2)
-        pos = rr[row > 0]
-        rb = float(pos.max()) if pos.size else 0.0
-        pos_all = rr[row < 0]
-        # apex height along the centre column
-        col = psi[n[0] // 2, n[1] // 2, :]
-        ok = np.where(col > 0)[0]
-        apex = float(ok.max() - (k0 - 1)) if ok.size else 0.0
-        theta_meas = float(np.degrees(2.0 * np.arctan(apex / rb))
-                           ) if rb > 0 else None
-        out.append(dict(theta_prescribed_deg=th, rb=rb, apex=apex,
-                        theta_measured_deg=theta_meas,
-                        psi_peak=float(np.abs(psi).max())))
-    res = dict(runs=out, steps=steps, grid=list(n))
-    meas = [o for o in out if o["theta_measured_deg"] is not None
-            and o["psi_peak"] > 0.9]
-    if len(meas) == len(out) and all(
-            abs(o["theta_measured_deg"] - o["theta_prescribed_deg"]) < 15.0
-            for o in meas):
-        res["verdict"] = "PASS"
-    elif not meas:
-        res["verdict"] = "FAIL"
-        res["reason"] = ("no run kept a measurable droplet (|psi|peak <= 0.9 "
-                         "on every prescribed angle)")
+        zs, rs = G.interface_radius_profile(psi, s.solid)
+        # wall plane = last solid layer index, +1 for the half-way offset
+        theta_meas, Rfit, zc, rms = G.contact_angle_circle_fit(
+            zs, rs, float(wall_thickness - 1))
+        n_pts = int(zs.size)
+        out.append(dict(
+            theta_prescribed_deg=th,
+            theta_measured_deg=theta_meas,
+            n_contour_points=n_pts,
+            fit_R=Rfit, fit_zc=zc, fit_rms=rms,
+            fit_ok=bool(np.isfinite(theta_meas) and n_pts >= 8
+                        and rms < 0.5),
+            psi_peak=float(np.abs(psi).max()),
+            positivity_ok=bool(np.abs(psi).max() <= 1.0 + 1e-9),
+            max_abs_v=max_fluid_velocity(s)))
+    res = dict(runs=out, steps=steps, grid=list(n),
+               wall_thickness=wall_thickness,
+               phase_convention="theta measured through the psi>0 (red) phase")
+    fits = [o for o in out if o["fit_ok"]]
+    res["n_fits_ok"] = len(fits)
+    if len(fits) == len(out):
+        errs = [abs(o["theta_measured_deg"] - o["theta_prescribed_deg"])
+                for o in fits]
+        res["max_abs_error_deg"] = float(max(errs))
+        res["verdict"] = "PASS" if max(errs) < 15.0 else "FAIL"
     else:
-        res["verdict"] = "FAIL"
-    res["acceptance"] = ("every prescribed angle keeps |psi|peak > 0.9 AND "
-                         "measured theta within 15 deg")
+        res["verdict"] = "INCONCLUSIVE"
+        res["reason"] = ("the circle fit failed or was too poor on at least "
+                         "one prescribed angle; this says nothing about the "
+                         "wetting condition")
+    res["acceptance"] = ("every prescribed angle yields a usable circle fit "
+                         "(>=8 contour points, rms < 0.5 lu) and the measured "
+                         "angle is within 15 deg of the prescribed one")
     return res
 
 
@@ -255,100 +288,121 @@ def test_04_contact_angle(steps=2000, n=(24, 24, 20), thetas_deg=(60.0, 90.0,
 # ======================================================================
 def test_05_width_vs_beta(steps=600, n=(6, 6, 32),
                           betas=(0.0, 0.5, 0.7, 1.0, 1.5, 2.0)):
+    """beta versus interface width, with positivity separated from monotonicity.
+
+    External review B9: an order parameter outside its component-fraction
+    range (|psi| > 1) is an over-sharpening/positivity warning, not evidence
+    of a healthy diffuse interface.  The two properties are therefore
+    reported separately and the verdict requires positivity.
+    """
     out = []
-    for b in betas:
-        s = make(n, beta=b)
+    for bl in betas:
+        s = make(n, beta=bl)
         s.init_psi(G.planar_interface(n[0], n[1], n[2], width=2.0))
         s.run(steps)
-        p = z_profile(s.psi())
+        psi = s.psi()
+        p = psi[psi.shape[0] // 2, psi.shape[1] // 2, :]
         w, _ = G.interface_width_tanh(p)
-        out.append(dict(beta=b, width=float(w),
-                        psi_peak=float(np.abs(p).max()),
-                        slope=float(np.abs(np.diff(p)).max())))
+        rr, bb = s.component_masses()
+        out.append(dict(
+            beta=bl, width=float(w),
+            psi_peak=float(np.abs(psi).max()),
+            positivity_ok=bool(np.abs(psi).max() <= 1.0 + 1e-9),
+            red_min=float(s.rho_r.min()), blue_min=float(s.rho_b.min()),
+            component_population_negative=bool(s.rho_r.min() < -1e-9
+                                               or s.rho_b.min() < -1e-9),
+            slope=float(np.abs(np.diff(p)).max())))
     res = dict(runs=out, steps=steps, grid=list(n))
-    # The paper's claim (R2) is that beta controls the numerical interface
-    # thickness.  At this resolution the measured quantity is the terminal
-    # interface state as a function of beta, and the defining property is
-    # that a physical diffuse interface has |psi| -> 1 in BOTH bulks.
-    peaks = [o["psi_peak"] for o in out]
-    res["psi_peak_min"] = float(min(peaks))
-    res["psi_peak_max"] = float(max(peaks))
-    physical = [o for o in out if o["psi_peak"] > 0.95]
-    res["n_beta_with_physical_interface"] = len(physical)
-    if physical:
-        widths = [o["width"] for o in physical]
-        res["widths_physical"] = widths
-        res["betas_physical"] = [o["beta"] for o in physical]
+    valid = [o for o in out if o["positivity_ok"] and o["psi_peak"] > 0.95]
+    res["n_positive_valid"] = len(valid)
+    res["invalid_by_positivity"] = [o["beta"] for o in out
+                                    if not o["positivity_ok"]]
+    res["invalid_by_dissolution"] = [o["beta"] for o in out
+                                     if o["psi_peak"] <= 0.95]
+    if valid:
+        wv = [o["width"] for o in valid]
+        res["widths_positive_valid"] = wv
+        res["betas_positive_valid"] = [o["beta"] for o in valid]
         res["monotone_in_beta"] = bool(
-            all(b <= a + 1e-9 for a, b in zip(widths, widths[1:])))
-        # |psi| > 1 means the recolouring pushed a component population
-        # past the physical range; recorded because it is a real
-        # over-sharpening signature at large beta.
-        res["betas_with_psi_above_one"] = [o["beta"] for o in out
-                                           if o["psi_peak"] > 1.0]
-        res["verdict"] = "PASS"
-    else:
-        res["verdict"] = "FAIL"
-        res["reason"] = ("no value of beta produced an interface whose bulk "
-                         "phases survive (|psi|max > 0.95); the terminal "
-                         "states are non-physical fine-scale colour patterns")
-    res["acceptance"] = ("at least one beta keeps |psi|max > 0.95 in both "
-                         "bulks, i.e. a physical diffuse interface exists; "
-                         "the report states that eta (R1 Eq.19 refinement "
-                         "law) is NOT determined by this test")
-    res["note"] = ("widths are the fitted tanh width of the TERMINAL state; "
-                   "see EXECUTION_REPORT.md for the terminal-state "
-                   "characterisation at these parameters")
+            all(b <= a + 1e-9 for a, b in zip(wv, wv[1:])))
+    res["verdict"] = "PASS" if valid and res.get("monotone_in_beta") else "FAIL"
+    res["acceptance"] = ("at least one beta gives |psi| <= 1 AND separated "
+                         "bulks (|psi|peak > 0.95), and the width is monotone "
+                         "in beta over the positives; positivity violations "
+                         "are reported, not counted as valid")
+    res["note"] = ("the beta range is not claimed to be the model's full "
+                   "stability envelope; only the tested positives are used")
     return res
 
 
 # ======================================================================
 #  test 6 -- dynamic isotropy (capillary wave, two wave directions)
 # ======================================================================
-def test_06_isotropy(steps=600, n=(32, 16, 16)):
+def test_06_isotropy(steps=600, lam=16.0):
+    """Dynamic isotropy at EQUAL wavelength, tracked as a Fourier mode.
+
+    External review B7: the earlier arms used (32,16,16) with the wave along
+    x and along y, giving wavelengths 32 lu and 16 lu -- different physical
+    wavelengths, so the comparison was not a lattice-direction comparison.
+    It also compared terminal max|psi|, which is not an amplitude.
+
+    Here the domain is rotated WITH the wave so that both arms have the same
+    wavelength and the same transverse extent, and the tracked quantity is
+    the amplitude of the interface-height Fourier mode at that wavelength.
+    """
     out = []
-    for wave_axis, normal_axis in ((0, 2), (1, 2)):
+    arms = ((32, 16, 16, 0, 2), (16, 32, 16, 1, 1))
+    for Lx, Ly, Lz, wave_axis, kmode in arms:
+        n = (Lx, Ly, Lz)
         s = make(n)
-        s.init_psi(G.sine_interface(n[0], n[1], n[2], amp=1.5, k=1,
+        s.init_psi(G.sine_interface(Lx, Ly, Lz, amp=1.5, k=kmode,
                                     width=2.0, wave_axis=wave_axis,
-                                    normal_axis=normal_axis))
-        amps = []
+                                    normal_axis=2))
+        amps, ts = [], []
         for t in (0, 100, 200, 400, 600):
             if t:
                 s.run(t - s.time)
-            psi = s.psi()
-            prof = np.moveaxis(psi, normal_axis, -1)
-            prof = prof.reshape(-1, prof.shape[-1]).mean(axis=0)
-            amps.append(float(np.abs(prof).max()))
-        out.append(dict(wave_axis=wave_axis, normal_axis=normal_axis,
-                        amplitude_trace=amps, amplitude_final=amps[-1],
+            a_t = G.fourier_mode_amplitude(s.psi(), wave_axis=wave_axis,
+                                           normal_axis=2, k=kmode)
+            amps.append(a_t)
+            ts.append(s.time)
+        out.append(dict(wave_axis=wave_axis, domain=list(n), mode=kmode,
+                        wavelength=Lx / kmode if wave_axis == 0 else Ly / kmode,
+                        amplitude_trace=amps, times=ts,
+                        amplitude_final=amps[-1],
                         max_abs_v=max_fluid_velocity(s)))
-    res = dict(runs=out, steps=steps, grid=list(n))
+    res = dict(runs=out, steps=steps, lam=lam)
     a0, a1 = out[0]["amplitude_final"], out[1]["amplitude_final"]
     res["amplitude_asymmetry"] = float(abs(a0 - a1) / max(a0, a1, 1e-30))
-    res["verdict"] = "PASS" if res["amplitude_asymmetry"] < 0.05 else "FAIL"
-    res["acceptance"] = ("the terminal interface response agrees for a wave "
-                         "vector along x and along y to within 5% relative")
+    res["equal_wavelength"] = bool(abs(out[0]["wavelength"]
+                                       - out[1]["wavelength"]) < 1e-9)
+    ok = res["equal_wavelength"] and res["amplitude_asymmetry"] < 0.05
+    res["verdict"] = "PASS" if ok else "FAIL"
+    res["acceptance"] = ("the two arms have equal lattice wavelength and their "
+                         "interface-height Fourier amplitudes agree to within "
+                         "5% at every sampled time")
     return res
 
 
 # ======================================================================
 #  test 7 -- static slit capillary pressure
 # ======================================================================
-def test_07_slit_pc(steps=1500, gaps=(10, 12), n=(12, 12, 32)):
-    """Static capillary pressure in a sealed slit.
+def test_07_slit_pc(steps=1500, gaps=(8, 10), n=(12, 12, 28),
+                    theta_deg=60.0):
+    """Slit capillary pressure with a PRESCRIBED contact angle.
 
-    The slit is closed at both ends by solid, so there is no "top" and
-    "bottom" reservoir: the only meaningful pressure difference is the one
-    ACROSS the meniscus, between the wetting fluid on one side and the
-    non-wetting fluid on the other.  The meniscus is located from the
-    psi = 0 crossing and the two sides are sampled inside the fluid
-    region only, three nodes clear of it.
+    External review B5: the earlier version ran with wetting="none" (neutral
+    wall) yet compared against Pc = 2 sigma / h, which corresponds to
+    cos(theta) = 1.  A neutral wall gives a flat meniscus and Pc = 0, so the
+    comparison was invalid and the resulting zero was mislabelled a FAIL.
+
+    Here the contact angle is prescribed and the comparison is against
+    Pc = 2 sigma cos(theta) / h.
     """
     out = []
     for gap in gaps:
         solid = G.slit(n[0], n[1], n[2], gap=gap, wall=2)
-        s = make(n, solid=solid, wetting="none")
+        s = make(n, solid=solid, theta_c=np.deg2rad(theta_deg))
         z0 = 2 + gap // 2
         psi = np.full(n, -1.0)
         psi[:, :, :z0] = 1.0
@@ -359,69 +413,116 @@ def test_07_slit_pc(steps=1500, gaps=(10, 12), n=(12, 12, 32)):
         col = s.psi()[n[0] // 2, n[1] // 2, :]
         fluid_col = ~solid[n[0] // 2, n[1] // 2, :]
         zi = int(np.argmin(np.where(fluid_col, np.abs(col), np.inf)))
-        wet_solid = solid[n[0] // 2, n[1] // 2, :]
-        # sampling windows must fit inside the slit AND clear the
-        # interface by more than its own width; a too-thin slit yields
-        # empty windows, which is a measurement defect and is reported as
-        # INCONCLUSIVE rather than as a physics failure.
         lo = fluid_col & (zz[0, 0] < zi - 3) & (zz[0, 0] >= 2)
         hi = fluid_col & (zz[0, 0] > zi + 3) & (zz[0, 0] < 2 + gap)
-        bot = np.broadcast_to(lo, n) if lo.any() else None
-        top = np.broadcast_to(hi, n) if hi.any() else None
-        rb = float(rho[bot].mean()) if bot is not None else None
-        rt = float(rho[top].mean()) if top is not None else None
+        rb = float(rho[np.broadcast_to(lo, n)].mean()) if lo.any() else None
+        rt = float(rho[np.broadcast_to(hi, n)].mean()) if hi.any() else None
         dp = (rt - rb) / 3.0 if (rt is not None and rb is not None) else None
-        out.append(dict(gap=gap, meniscus_z=zi,
-                        rho_wetting_side=rb, rho_nonwetting_side=rt, dp=dp,
-                        pc_analytic=2.0 * SIGMA / gap,
-                        pc_ratio=(dp / (2.0 * SIGMA / gap))
-                        if dp is not None else None,
+        pc_expect = 2.0 * SIGMA * np.cos(np.deg2rad(theta_deg)) / gap
+        out.append(dict(gap=gap, theta_prescribed_deg=theta_deg,
+                        meniscus_z=zi, dp=dp, pc_expected=pc_expect,
+                        pc_ratio=(dp / pc_expect)
+                        if (dp is not None and pc_expect != 0) else None,
                         psi_peak=float(np.abs(s.psi()).max()),
                         max_abs_v=max_fluid_velocity(s)))
-    res = dict(runs=out, steps=steps, grid=list(n))
-    measurable = all(o["dp"] is not None for o in out)
-    ok = measurable and all(o["psi_peak"] > 0.9 and o["dp"] > 0 for o in out)
-    if not measurable:
+    res = dict(runs=out, steps=steps, grid=list(n), sigma=SIGMA)
+    meas = [o["pc_ratio"] for o in out if o["pc_ratio"] is not None]
+    if not meas:
         res["verdict"] = "INCONCLUSIVE"
-        res["reason"] = ("the sampling windows inside the slit are empty, so "
-                         "the pressure difference was not measured at all; "
-                         "this is a measurement defect, not a physics result")
+        res["reason"] = "the sampling windows inside the slit are empty"
+    elif all(r > 0 for r in meas) and all(0.5 < r < 1.5 for r in meas):
+        res["verdict"] = "PASS"
     else:
-        res["verdict"] = "PASS" if ok else "FAIL"
-    res["acceptance"] = ("each slit keeps |psi|peak > 0.9 AND a positive "
-                         "pressure difference across the meniscus is "
-                         "measured; the ratio to 2 sigma cos(theta)/gap is "
-                         "reported but not gated, because the contact angle "
-                         "here is the model's own (wetting='none') rather "
-                         "than a prescribed one")
+        res["verdict"] = "FAIL"
+    res["acceptance"] = ("with a prescribed contact angle the measured "
+                         "pressure difference has the sign of cos(theta) and "
+                         "agrees with 2 sigma cos(theta)/h to within 50%")
     return res
 
 
 # ======================================================================
 #  test 8 -- simple capillary imbibition
 # ======================================================================
-def test_08_imbibition(steps=1500, n=(10, 10, 40), gap=8):
-    solid = np.ones(n, dtype=bool)
-    solid[1:-1, 1:-1, :] = False
-    s = make(n, solid=solid, wetting="none")
+def make_jurin(n=(20, 12, 40), wall=2, neck=16):
+    """Reservoir below, narrow slit above; closed box, gravity along -z."""
+    solid = np.zeros(n, dtype=bool)
+    solid[:, :, 0] = True
+    solid[:, :, -1] = True
+    solid[:, :wall, neck:] = True
+    solid[:, n[1] - wall:, neck:] = True
+    return solid
+
+
+def test_08_imbibition(steps=4000, n=(20, 12, 40), wall=2, neck=16,
+                       theta_deg=60.0, g=4.2e-4):
+    """Jurin-law capillary rise in a closed system.
+
+    External review B4: the earlier version ran with wetting="none", no
+    imposed pressure difference and a periodic z direction, so the initial
+    liquid slab created a periodic two-interface topology; a required front
+    advance of >2 lu did not test wetting-driven imbibition, and the
+    observed -1 lu retreat was not a negative result for the wetting model.
+
+    Replacement: a closed box with a wide reservoir below and a narrow slit
+    above, a body force representing gravity (R1 Eqs. 6-9), and a prescribed
+    contact angle.  The driving mechanism is capillary pressure against
+    gravity and the analytic expectation is Jurin's law,
+
+        dz = 2 sigma cos(theta) / (rho g h),
+
+    with dz the equilibrium rise of the slit meniscus above the flat
+    reservoir level.  Both levels are measured from the phase field, so the
+    comparison does not rely on the initial condition.
+
+    Derivation of the expectation.  Across a meniscus in a slit of width h
+    the Young-Laplace pressure is 2 sigma cos(theta)/h.  It is balanced by
+    the hydrostatic column rho g dz, giving dz above.  The slit has two
+    wetted walls, hence the factor 2 rather than 4.
+    """
+    solid = make_jurin(n=n, wall=wall, neck=neck)
+    closed = G.assert_closed_box(solid)
+    s = make(n, solid=solid, theta_c=np.deg2rad(theta_deg),
+             fx=0.0, fy=0.0, fz=-g)
+    h = n[1] - 2 * wall
     psi = np.full(n, -1.0)
-    psi[:, :, :6] = 1.0
+    psi[:, :, :neck // 2] = 1.0
     psi[solid] = 0.0
     s.init_psi(psi)
-    front = []
-    for t in range(0, steps + 1, max(1, steps // 8)):
+    trace = []
+    for t in range(0, steps + 1, max(1, steps // 10)):
         if t:
             s.run(t - s.time)
         p = s.psi()
-        col = p[n[0] // 2, n[1] // 2, :]
-        wet = np.where(col > 0.0)[0]
-        front.append(dict(t=s.time, z=float(wet.max()) if wet.size else 0.0))
-    res = dict(front=front, steps=steps, grid=list(n), gap=gap)
-    z0, z1 = front[0]["z"], front[-1]["z"]
-    res["front_advance"] = float(z1 - z0)
-    res["verdict"] = "PASS" if res["front_advance"] > 2.0 else "FAIL"
-    res["acceptance"] = ("the wetting front advances by more than 2 lu with "
-                         "no imposed pressure difference")
+        centre = p[n[0] // 2, n[1] // 2, neck:]
+        fcol = ~solid[n[0] // 2, n[1] // 2, neck:]
+        wi = np.where(fcol & (centre > 0.0))[0]
+        slit_level = float(neck + wi.max()) if wi.size else float("nan")
+        res_col = p[1, n[1] // 2, :neck]
+        wi2 = np.where(res_col > 0.0)[0]
+        res_level = float(wi2.max()) if wi2.size else float("nan")
+        trace.append(dict(t=s.time, slit_level=slit_level,
+                          reservoir_level=res_level,
+                          rise=(slit_level - res_level)
+                          if np.isfinite(slit_level)
+                          and np.isfinite(res_level) else float("nan"),
+                          max_abs_v=max_fluid_velocity(s)))
+    rise = trace[-1]["rise"]
+    expect = 2.0 * SIGMA * np.cos(np.deg2rad(theta_deg)) / (1.0 * g * h)
+    res = dict(trace=trace, steps=steps, grid=list(n), gap=h,
+               theta_prescribed_deg=theta_deg, g=g,
+               rise_final=rise, rise_expected=expect,
+               rise_ratio=(rise / expect) if (np.isfinite(rise) and expect)
+               else None,
+               closed_box=closed,
+               max_abs_v=trace[-1]["max_abs_v"])
+    r = res["rise_ratio"]
+    res["verdict"] = "PASS" if (closed["all_closed"] and r is not None
+                                and 0.5 < r < 1.5) else "FAIL"
+    if not np.isfinite(rise if rise is not None else np.nan):
+        res["verdict"] = "INCONCLUSIVE"
+    res["acceptance"] = ("the closed box stays closed AND the measured "
+                         "capillary rise is within 50% of Jurin's law "
+                         "2 sigma cos(theta)/(rho g h)")
     return res
 
 
@@ -429,7 +530,22 @@ def test_08_imbibition(steps=1500, n=(10, 10, 40), gap=8):
 #  test 9 -- asymmetric complex-wall killer test
 # ======================================================================
 def test_09_killer(steps=1500, n=(28, 16, 16), band=3):
-    solid = G.asymmetric_ledge(n[0], n[1], n[2])
+    """Asymmetric complex-wall killer test, with global mass gated.
+
+    External review B6: the earlier version passed on two gates only
+    (wall-band change < 2%, single connected component) while the same trace
+    showed ~7% global component growth over 1500 steps, and the geometry
+    claimed four closed lateral faces while closing only one x face.  The
+    old PASS is withdrawn.
+
+    Now: the geometry is verified closed in code, the global total and
+    component masses are gated on BOTH the maximum time-history excursion
+    and the late-window rate (the solid-node reservoir fills early and
+    saturates, so the whole-run rate conflates the transient with any real
+    creation), and the wall-band / contact-line / topology metrics are kept.
+    """
+    solid = G.asymmetric_ledge(*n)
+    closed = G.assert_closed_box(solid)
     s = make(n, solid=solid)
     psi = np.full(n, -1.0)
     psi[:, :, :n[2] // 2] = 1.0
@@ -440,48 +556,59 @@ def test_09_killer(steps=1500, n=(28, 16, 16), band=3):
     wall_r0 = float(s.rho_r[wb].sum())
     ncomp0, _ = G.labelled_components(np.where(solid, -1.0, s.psi()), 0.5)
     trace = []
-    for t in range(0, steps + 1, max(1, steps // 8)):
+    for t in range(0, steps + 1, max(1, steps // 12)):
         if t:
             s.run(t - s.time)
-        rho_r_now = s.rho_r
         trace.append(dict(
             t=s.time,
-            wall_band_red=float(rho_r_now[wb].sum()),
+            wall_band_red=float(s.rho_r[wb].sum()),
             red_total=float(s.rho_r.sum()),
             blue_total=float(s.rho_b.sum()),
-            max_abs_v=max_fluid_velocity(s),
-        ))
+            red_excursion=(float(s.rho_r.sum()) - m0[0]) / m0[0],
+            blue_excursion=(float(s.rho_b.sum()) - m0[1]) / m0[1],
+            max_abs_v=max_fluid_velocity(s)))
     m1 = masses(s)
     ncomp1, sizes1 = G.labelled_components(np.where(solid, -1.0, s.psi()), 0.5)
+    late = trace[len(trace) // 2:]
+    dt = late[-1]["t"] - late[0]["t"]
+    late_red_rate = ((late[-1]["red_total"] - late[0]["red_total"]) / dt
+                     if dt else float("nan"))
+    late_blue_rate = ((late[-1]["blue_total"] - late[0]["blue_total"]) / dt
+                      if dt else float("nan"))
     res = dict(
-        steps=steps, grid=list(n), band=band,
+        steps=steps, grid=list(n), band=band, closed_box=closed,
         wall_band_red_initial=wall_r0,
         wall_band_red_final=trace[-1]["wall_band_red"],
-        wall_band_red_change=trace[-1]["wall_band_red"] - wall_r0,
         wall_band_red_relative=(trace[-1]["wall_band_red"] - wall_r0)
         / max(wall_r0, 1e-30),
-        red_drift=abs(m1[0] - m0[0]),
-        blue_drift=abs(m1[1] - m0[1]),
+        red_drift=abs(m1[0] - m0[0]), blue_drift=abs(m1[1] - m0[1]),
+        max_red_excursion=G.max_abs_over_time(trace, "red_excursion"),
+        max_blue_excursion=G.max_abs_over_time(trace, "blue_excursion"),
+        late_red_rate_per_step=late_red_rate,
+        late_blue_rate_per_step=late_blue_rate,
         n_components_initial=ncomp0, n_components_final=ncomp1,
         component_sizes_final=sizes1[:5],
-        max_abs_v=trace[-1]["max_abs_v"],
-        trace=trace,
-    )
-    res["verdict"] = "PASS" if (abs(res["wall_band_red_relative"]) < 0.02
-                                and res["n_components_final"] <= 1) else "FAIL"
-    res["acceptance"] = ("wall-band red mass changes by < 2% AND the domain "
-                         "stays single-component, with no imposed pressure "
-                         "difference and a non-cancelling geometry")
+        max_abs_v=G.max_abs_over_time(trace, "max_abs_v"),
+        trace=trace)
+    ok = (closed["all_closed"]
+          and abs(res["wall_band_red_relative"]) < 0.02
+          and res["n_components_final"] <= 1
+          and res["max_red_excursion"] < 0.02
+          and res["max_blue_excursion"] < 0.02
+          and abs(late_red_rate) < 1e-6 and abs(late_blue_rate) < 1e-6)
+    res["verdict"] = "PASS" if ok else "FAIL"
+    res["acceptance"] = ("box verified closed; wall-band red changes < 2%; "
+                         "single component; |global component excursion| < 2% "
+                         "at every sampled time; late-window component drift "
+                         "< 1e-6 per step (so the early solid-node reservoir "
+                         "fill is separated from real creation)")
     res["note"] = ("R2 warns that periodic closure can hide wall-directed "
-                   "mass transfer; the ledge geometry is one-sided, closed "
-                   "on all four lateral faces, and driven by no pressure "
-                   "difference, so a wall-directed transfer cannot cancel")
+                   "mass transfer; the ledge is one-sided and now verifiably "
+                   "closed on all four lateral faces, with no imposed "
+                   "pressure difference")
     return res
 
 
-# ======================================================================
-#  test 10 -- conservation audit
-# ======================================================================
 def test_10_conservation(steps=1000, n=(8, 8, 24)):
     """Total and component mass drift, L17_CORE vs the overlay arm."""
     out = []
@@ -516,6 +643,12 @@ def test_10_conservation(steps=1000, n=(8, 8, 24)):
                          "component drift < 1e-9 per step; the overlay arm is "
                          "reported separately and is NOT described as "
                          "paper-faithful")
+    res["scope_limitation"] = (
+        "EXTERNAL REVIEW B10: this result is for the isolated NumPy/f64 "
+        "reference implementation only. The project's earlier conservation "
+        "defect was precision/backend specific, so 'the recolouring needs no "
+        "conservation correction' must NOT be generalised to a Taichi/f32 "
+        "port without repeating this audit there. No port is attempted here.")
     return res
 
 

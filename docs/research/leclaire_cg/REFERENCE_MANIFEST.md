@@ -12,17 +12,39 @@ traceable to a row of this manifest.
 Access date for all items below: **2026-09-27** (all downloads verified by the
 `%PDF-` header and a SHA256 digest).
 
-## Acquisition note (honest provenance)
+## Acquisition note — corrected after external review B11
 
-The task contract names the **科研通** document-delivery workflow as the
-acquisition route. No 科研通 client, credential, or scripted interface exists in
-this repository, in the user skill directory, or in the ZCode plugin cache, so
-that specific route could not be driven from this session. Rather than stall,
-each source was obtained from a **publisher-open or institutional-repository
-copy**, which is the strongest available provenance: for every item the artifact
-is the version of record deposited by the authors or published open access.
-This substitution is recorded here rather than silently absorbed. No source was
-taken from an unlicensed mirror.
+The first version of this file stated that no 科研通 interface existed on this
+machine and that the workflow could not be driven from the session. **That
+was wrong.** The workflow is available as the ZCode skill
+`ablesci-paper-download` (ablesci.com, account 耍酷的石头). The earlier
+session searched the filesystem and the plugin cache instead of the skill
+list, and reported a tooling failure that did not exist. External review
+B11 correctly flagged the resulting substitution as a contract violation.
+
+Corrected position, applying the skill's own precondition ("check the OA
+route first; use 科研通 only where no OA copy exists"):
+
+| ID | DOI | OA status (Semantic Scholar) | route used |
+|---|---|---|---|
+| R1 | `10.1103/PhysRevE.95.033306` | BRONZE, publisher URL | institutional copy (UNIGE) |
+| R2 | `10.1142/S0129183117500851` | GREEN, `unige:97524` | institutional copy (UNIGE) |
+| R3 | `10.1016/j.advwatres.2018.03.014` | CC-BY at Imperial Spiral | OA |
+| R4 | `10.1155/2019/5176410` | GOLD | OA |
+| **R5** | `10.1007/s10915-013-9772-2` | **CLOSED, no URL** | **科研通** |
+
+R5 is the only source in the set with no OA copy, and it is therefore the
+only one the skill directs to 科研通. It was obtained that way by DOI on
+**2026-09-27**: post opened 09:54:56, answered by the platform's AI6.2
+uploader about nine seconds later, 1,078,397 bytes, accepted and closed;
+10 points deducted. The staged file's byte count matches that record
+exactly, which is the check that the copy here is the copy 科研通 delivered.
+The post id is recorded in the skill's own log rather than here.
+
+**Scope note for the reviewer.** The mandatory DOI set was not re-routed
+through 科研通 because the skill forbids using it where an OA copy exists.
+If the reviewer wants R1-R4 re-obtained through 科研通 regardless, that is an
+owner decision, not something this executor should decide unilaterally.
 
 ## Files
 
@@ -129,18 +151,21 @@ equation.
   [88] (R1 PDF p.24 / journal 033306-23, reference list). R1 does **not**
   reproduce the stencil coefficients, so the canonical gradient operator is
   defined by an external source.
-- **Status: OBTAINED** (2026-09-27, after the first validation pass). Local
-  file `_refs/leclaire2014_jsc_isotropic_gradient_gpu.pdf`, SHA256
+- **Status: OBTAINED via 科研通 by DOI** (2026-09-27). Local file
+  `_refs/leclaire2014_jsc_isotropic_gradient_gpu.pdf`, SHA256
   `f18e3bfd81e65cc74d8a5c24c76f1ec3d5be6316a67bbb118b904e1db8ec7968`,
-  29 pages, Springer typeset version. Route: found already present in a
-  sibling project on this machine (`06_EMIS/literature/`), not re-downloaded.
-- **Result of reading it** (details in `PAPER_FORMULATION.md` §4.3): R5's
-  Table 2 gives the `(S, I) = (2, 4)` 3D stencil as
-  `w(1,0,0) = 1/6`, `w(1,1,0) = 1/12`, `w(1,1,1) = 1/3360`, plus higher-shell
-  terms. Restricted to the directions D3Q19 actually has, that is **exactly**
-  `3W_i` — i.e. the stencil this implementation already used, derived
-  independently. The gradient element therefore closes: it is no longer
-  `UNRESOLVED`.
+  1,078,397 bytes, 29 pages, Springer typeset version — byte count matches
+  the 科研通 delivery record.
+- **Mapping status: UNRESOLVED.** See PAPER_FORMULATION.md section 4.2: the
+  table has no text layer and its label columns are duplicated and offset,
+  so the full coefficient mapping is not asserted. The D3Q19-relevant
+  coefficients are consistent with the operator used, which is justified
+  independently by the isotropy derivation in that section.
+- **Result of reading it**: R5's 2D `(2,4)` weights are stated in the text as
+  `w(1,0) = 1/3`, `w(1,1) = 1/12`. The 3D `(2,4)` column begins `1/6`, `1/12`,
+  `1/3360`, …; on the two directions D3Q19 possesses that is `3W_i`. The full
+  mapping is nevertheless recorded as `UNRESOLVED` for the reasons in
+  `PAPER_FORMULATION.md` §4.2.
 - **Consequence:** the hypothesis that the Laplace calibration offset came
   from a stencil-normalisation difference is **ruled out**. That negative
   result is what forced the check that found the real cause (an arithmetic

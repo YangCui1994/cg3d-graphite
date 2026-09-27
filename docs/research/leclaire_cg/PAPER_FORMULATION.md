@@ -352,59 +352,78 @@ different objects; see `CURRENT_VS_LECLAIRE_MAP.md` §4.
 - Reference [88] is Leclaire, El-Hachem, Trépanier, Reggio, J. Sci. Comput. **59**,
   545 (2014), DOI `10.1007/s10915-013-9772-2`.
 
-### 4.2 Status of the exact coefficients — **RESOLVED** (R5 obtained in validation pass 2)
+### 4.2 Status of the exact coefficients — **UNRESOLVED** (external-review B12)
 
-R1 does **not** print the stencil coefficients; it defers to [88] = R5.
+R1 does **not** print the stencil coefficients; it defers to [88] = R5. R5
+was obtained via 科研通 by DOI `10.1007/s10915-013-9772-2` (see
+`REFERENCE_MANIFEST.md`), so the source is in hand. The *mapping from R5's
+table to coefficients is nevertheless recorded here as UNRESOLVED*, for the
+reasons below, and the review's instruction for this case is followed: the
+bulk D3Q19 `3W_i` operator is retained as an **independent implementation
+choice justified by the isotropy derivation in §4.3**, not as an R5
+attribution.
 
-R5 was obtained after the first validation pass (local copy,
-`_refs/leclaire2014_jsc_isotropic_gradient_gpu.pdf`, SHA256 recorded in
-`REFERENCE_MANIFEST.md`). Its method builds the weights from a spatial-order
-constraint plus an isotropy constraint; §2.2 works the `(S, I) = (2, 4)` case
-explicitly, and Table 2 (PDF p.9) tabulates the 3D weights.
+**What is certain (stated in R5's running text, not only its table).** R5
+§2.2 works the 2D `(S, I) = (2, 4)` case explicitly: the constraints reduce
+to `4w(1,1) + 2w(1,0) = 1` and `w(1,0) = 4w(1,1)`, giving
+`w(1,0) = 1/3`, `w(1,1) = 1/12`, and R5 notes these "are already known".
+The constraint `4w(1,1) + 2w(1,0) = 1` is the second-moment normalisation
+`Σ_i w_i c_{ix}² = 1`.
 
-**R5's 2D `(2,4)` case — explicit in the text:** the constraints reduce to
-`4w(1,1) + 2w(1,0) = 1` and `w(1,0) = 4w(1,1)`, giving `w(1,0) = 1/3`,
-`w(1,1) = 1/12`. Note that `4w(1,1) + 2w(1,0) = 1` is exactly the
-second-moment normalisation `Σ_i w_i c_{ix}² = 1`.
+**Exact row/column mapping attempted for the 3D `(2,4)` column.** R5's
+Table 2 (PDF p.9) has **no text layer** — `get_text` returns only the
+caption, so the table was read by rendering it (300 dpi and 800 dpi crops).
+The table prints its weight labels **twice**: once in a shaded column on the
+left, once in a right-hand "Weights" column, and **the two listings are in
+opposite order and offset by two rows**. Concretely, reading page 9 as
+rows top-to-bottom:
 
-**R5's 3D `(2,4)` column — Transcribed from Table 2** (rendered and read as
-an image; the table is vector text that does not survive extraction). The
-leading entries, which are the ones D3Q19 can represent, are
+| value row in the `(2,4)` column | left label at that height | right label at that height |
+|---|---|---|
+| 1/6 | (none) | `w(1,0,0)` |
+| 1/12 | (none) | `w(1,1,0)` |
+| 1/3360 | `w(4,0,0)` | `w(1,1,1)` |
+| 0 | `w(3,3,3)` | `w(2,0,0)` |
+| … | … | … |
+| 181/315 | `w(1,0,0)` | (cut off) |
 
-| offset | `w(i,j,k)` for `(S,I) = (2,4)` |
-|---|---|
-| (1,0,0) | 1/6 |
-| (1,1,0) | 1/12 |
-| (1,1,1) | 1/3360 |
-| (2,·,·) | 0 (six offsets) |
+The mapping used is the **right-hand column**, i.e. row *k* pairs with the
+*k*-th entry of the right-hand list. That is the only self-consistent
+choice: under the alternative the first two value rows would carry no label
+at all, and `w(1,0,0)`/`w(1,1,0)` would be unlabelled. It is also the
+choice that makes the D3Q19 restriction agree with an independent
+derivation, and the leading terms then satisfy `Σ_i w_i c_{ix}² = 1.0024`,
+with the higher shells plausibly cancelling the 0.24 %.
 
-followed by non-zero higher-shell terms `1/1260`, `1/420`, `−1/315`, `1/315`,
-`1/210`, `−1/84`, `4/105`, `17/420`, `−22/315`, `23/140`, `−2/21`, …
+**Why it is still UNRESOLVED.** Three things could not be settled from the
+27-page paper:
 
-**The decisive comparison.** For D3Q19, `3W_i` is
+1. the left/right label duplication and its two-row offset are not
+   explained by anything in the text;
+2. R5 states that for `I = S + 2 = 2R + 2` the weight set has a unique
+   solution when `D = R² + 1`. For the 3D `(2,4)` case (`R = 1`) that gives
+   `D = 2`, i.e. two distinct weights — but the `(2,4)` column shows around
+   fifteen non-zero entries. Either `D` counts something other than
+   same-radius offset classes in 3D, or the column assignment is not what
+   the row-rendering suggests. R5's own 2D example is consistent with
+   `D = 2` meaning "two distinct `(i,j)` classes", which has no obvious 3D
+   analogue;
+3. the table has no text layer and its lower rows run past the page.
 
-- `3·(1/18) = 1/6` on the six axis directions,
-- `3·(1/36) = 1/12` on the twelve face diagonals.
+**What is used, and how it is justified.** `L17_CORE` uses
+`F_α = 3 Σ_i W_i c_{iα} ψ(x + c_i)`, i.e. `w = 1/6` on the six axes and
+`w = 1/12` on the twelve face diagonals. Those two numbers are the two
+leading rows of R5's `(2,4)` column and are the only ones D3Q19 can
+represent anyway; the body-diagonal `w(1,1,1) = 1/3360` and all higher
+shells have no D3Q19 direction to sit on. The operator's fourth-order
+isotropy on D3Q19 is proved independently in §4.3, so the implementation
+does not depend on the unresolved mapping.
 
-That is **exactly** R5's `w(1,0,0)` and `w(1,1,0)`. Furthermore
-`Σ_i 3W_i c_{iα}c_{iβ} = δ_{αβ}` (checked exactly in
-`tests/leclaire_cg/test_lattice_tables.py`), which is the same second-moment
-normalisation R5's `(2,4)` constraints impose in 2D.
-
-So **R5's `(2,4)` 3D stencil, restricted to the directions D3Q19 possesses, is
-exactly `3W_i` — the operator derived independently in §4.3.** The only R5
-term D3Q19 cannot carry is the body-diagonal `w(1,1,1) = 1/3360 ≈ 3.0e-4`,
-whose omission perturbs the operator at the ~0.2 % level in the trace and
-cannot matter for anything measured here.
-
-*Honest limit of this check.* R5's Table 2 is a raster table and its row
-labels are printed twice, on the left in reverse order and on the right in
-forward order, offset by two rows. The assignment used here is the
-right-hand column, i.e. `w(1,0,0)` and `w(1,1,0)` label the first two value
-rows. That assignment is the only one consistent with R5's own
-normalisation, and it is the one that makes the D3Q19 restriction agree with
-an independent derivation — but a reader who wants to be certain should
-re-read Table 2 from the PDF rather than take this transcription on trust.
+**Consequence for the Laplace calibration.** Because the mapping is
+unresolved, a constant normalisation difference in `|F|` cannot be excluded
+from R5 alone. It *was* excluded empirically in validation pass 2: the
+calibration offset was traced to an arithmetic error in the Eq. (18)
+constant, not to the gradient (see `EXECUTION_REPORT.md` §6).
 
 ### 4.3 Working stencil actually implemented — `[DERIVED HERE]`, and now corroborated
 

@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..",
                                 "experimental"))
 
 from leclaire_cg import lattice as L          # noqa: E402
+from leclaire_cg import geometry as G_geom    # noqa: E402
 from leclaire_cg import operators as op       # noqa: E402
 
 TOL = 1e-12
@@ -151,6 +152,119 @@ def main():
                          [abs(A_impl - 2.25 * sig3),
                           0.0 if abs(A_impl - 1.5 * sig3) > 1e-6 else 1.0],
                          1e-12))
+
+    # ---- R1 X_W gradient rule (blocker B2) -----------------------------
+    # R1: isotropic in the bulk, standard 1D forward/backward/centred
+    # Cartesian differences at X_W.  Checked on an explicit staggered
+    # configuration so each of the three one-sided branches is exercised.
+    n = 12
+    fluid = np.ones((n, n, n), dtype=bool)
+    wall = np.zeros((n, n, n), dtype=bool)
+    Xa, Ya, Za = np.meshgrid(np.arange(n), np.arange(n), np.arange(n),
+                             indexing="ij")
+    interior = np.zeros((n, n, n), dtype=bool)
+    interior[2:-2, 2:-2, 2:-2] = True
+    lin = 0.7 * Xa - 1.3 * Ya + 0.25 * Za
+    g = op.gradient(lin.astype(float), fluid, wall)
+    results.append(check("grad_l17.bulk_linear_exact_x",
+                         np.abs(g[..., 0][interior] - 0.7).max(), 1e-12))
+    results.append(check("grad_l17.bulk_linear_exact_y",
+                         np.abs(g[..., 1][interior] + 1.3).max(), 1e-12))
+
+    # a wall site: fluid in +x and -x, solid in +y -> centred x, one-sided y
+    fld = fluid.copy()
+    wall2 = np.zeros_like(fluid)
+    fld[6, 6, 6] = True
+    fld[5, 6, 6] = True
+    fld[7, 6, 6] = True
+    fld[6, 5, 6] = True            # -y fluid
+    fld[6, 7, 6] = False           # +y solid
+    fld[6, 6, 5] = False           # -z solid
+    fld[6, 6, 7] = False           # +z solid  -> both z neighbours missing
+    wall2[6, 6, 6] = True
+    lin2 = 2.0 * Xa + 3.0 * Ya + 5.0 * Za
+    g2 = op.gradient(lin2.astype(float), fld, wall2)
+    results.append(check("grad_l17.wall_centred_available_axis",
+                         abs(g2[6, 6, 6, 0] - 2.0), 1e-12))
+    results.append(check("grad_l17.wall_backward_when_plus_missing",
+                         abs(g2[6, 6, 6, 1] - 3.0), 1e-12))
+    results.append(check("grad_l17.wall_zero_when_both_missing",
+                         abs(g2[6, 6, 6, 2] - 0.0), 1e-12))
+
+    # the retained experimental variant must be reachable and labelled
+    gv = op.gradient(lin.astype(float), fluid, wall,
+                     variant="isotropic_renormalised")
+    results.append(check("grad_variant.experimental_reachable",
+                         np.abs(gv[..., 0][interior] - 0.7).max(), 1e-12))
+    try:
+        op.gradient(lin.astype(float), fluid, wall, variant="nonsense")
+        results.append(check("grad_variant.rejects_unknown", 1.0, 0.0))
+    except ValueError:
+        results.append(check("grad_variant.rejects_unknown", 0.0, 0.0))
+
+    # ---- R1 Appendix (A1)-(A4) at NON-ZERO u and grad rho --------------
+    # These are the identities the Table IV weights were derived from, and
+    # they are the gate that catches the B1 defect: at u = 0 or grad rho = 0
+    # the correct and incorrect forms of the psi_i term collapse to the same
+    # value, so a zero-state check cannot see it.  Evaluated on random fields.
+    rng2 = np.random.default_rng(20260927)
+    shape = (4, 3, 2)
+    rho_r = 0.8 + 0.6 * rng2.random(shape)
+    u_r = 0.25 * (rng2.random(shape + (3,)) - 0.5)
+    g_r = 2.0 * (rng2.random(shape + (3,)) - 0.5)
+    nu_r = 0.05 + 0.2 * rng2.random(shape)
+    ne = op.equilibrium(rho_r, u_r, g_r, nu_r)
+    Ef = L.E.astype(float)
+    ud = np.einsum("...a,...a->...", u_r, g_r)
+
+    m0 = ne.sum(axis=-1)
+    results.append(check("A1_mass", np.abs(m0 - rho_r).max(), 1e-14))
+
+    m1 = np.einsum("...i,ia->...a", ne, Ef)
+    results.append(check("A2_momentum", np.abs(m1 - rho_r[..., None] * u_r).max(),
+                         1e-14))
+
+    m2 = np.einsum("...i,ia,ib->...ab", ne, Ef, Ef)
+    P = rho_r[..., None, None] / 3.0 * np.eye(3)
+    rr = rho_r[..., None, None] * (u_r[..., :, None] * u_r[..., None, :])
+    visc = nu_r[..., None, None] * (
+        u_r[..., :, None] * g_r[..., None, :]
+        + g_r[..., :, None] * u_r[..., None, :]
+        + ud[..., None, None] * np.eye(3))
+    results.append(check("A3_second_moment", np.abs(m2 - P - rr - visc).max(), 1e-14))
+
+    m3 = np.einsum("...i,ia,ib,ic->...abc", ne, Ef, Ef, Ef)
+    I3 = np.eye(3)
+    # T_mno = (rho/3) ( u_m delta_no + u_n delta_mo + u_o delta_mn )
+    want3 = (rho_r[..., None, None, None] / 3.0) * (
+        np.einsum("...m,no->...mno", u_r, I3)
+        + np.einsum("...n,mo->...mno", u_r, I3)
+        + np.einsum("...o,mn->...mno", u_r, I3))
+    results.append(check("A4_third_moment", np.abs(m3 - want3).max(), 1e-13))
+
+    # the B1 defect would break A1 and A3; assert that explicitly so a
+    # regression cannot re-introduce it silently
+    bad = ne.copy()
+    bad += (nu_r[..., None] * (L.PSI_I.astype(float) * np.einsum(
+        "ia,...a->...i", Ef, g_r) - L.PSI_I.astype(float) * ud[..., None]))
+    results.append(check("A1_would_fail_with_c_i_dot_grad_rho_form",
+                         [0.0 if np.abs(bad.sum(axis=-1) - rho_r).max() > 1e-6
+                          else 1.0], 0.0))
+
+    # ---- contact-angle instrument validated on a synthetic contour -----
+    # The circle-fit instrument replaced a spherical-cap estimate whose
+    # error changed sign between passes.  Before it is trusted on a
+    # simulation it must recover a known angle from an exact circle.
+    import math as _m
+    for ang in (30.0, 60.0, 90.0, 120.0, 150.0):
+        R_t = 8.0
+        zc_t = R_t * _m.cos(_m.radians(ang))
+        z_top = zc_t + R_t          # apex of the cap; contour stops here
+        zs_t = np.linspace(0.5, max(z_top - 0.5, 1.0), 24)
+        rs_t = np.sqrt(np.maximum(R_t ** 2 - (zs_t - zc_t) ** 2, 0.0))
+        th, Rf, zcf, rms = G_geom.contact_angle_circle_fit(zs_t, rs_t, 0.0)
+        results.append(check(f"instrument.circle_fit_recovers_{int(ang)}deg",
+                             abs(th - ang), 0.05))
 
     # ---- recolouring conserves both components exactly ----------------
     Nr = rng.random((3, 3, 3, 19))
