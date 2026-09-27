@@ -19,7 +19,7 @@ Headline status:
 | item | result |
 |---|---|
 | table / operator unit checks | **42 / 42 pass** (exact to f64 roundoff) |
-| canonical matrix | **6 PASS, 4 FAIL** (see §5) |
+| canonical matrix | **7 PASS, 3 FAIL** (see §5) |
 | the paper's recolouring is mass-exact | **confirmed**; flat-interface component mass is **bit-frozen** (§7) |
 | Laplace calibration | **RESOLVED** — σ_meas/σ_input = 1.108 / 1.058 / 1.024 at R = 5 / 7 / 9, converging to 1 (§6) |
 | ready for external scientific review | **NOT YET** — recommend `CHANGES_REQUESTED`; §9 lists what remains |
@@ -33,7 +33,7 @@ then-unobtainable R5 stencil. Between the passes R5 was obtained, which
 **ruled out** that hypothesis and thereby located the real cause: an
 arithmetic error in the Eq. (18) constant. Pass 2 re-ran the whole matrix
 on the corrected candidate. Both passes remain in the history; §4.5 and
-§6 describe the correction, and §12 lists what pass 1 got wrong.
+§6 describe the correction, and §11 lists what pass 1 got wrong.
 
 **The most important thing in this report is not the matrix.** It is §4:
 five corrective commits, four of which fixed defects that produced
@@ -236,7 +236,8 @@ below are from a single uninterrupted run of the committed driver.
 | 9 | asymmetric killer test | **PASS** (with a caveat) | wall-band red changes 0.91 %; single component; fluid max\|v\| = 0.020 |
 | 10 | conservation audit | **PASS** | `L17_CORE` **total and component drift bit-frozen at 0.0** over 1000 steps |
 
-**Pass 1 (`51cc61a`) for comparison** — same driver, pre-fix candidate:
+**Pass 1 (`51cc61a`) for comparison** — same driver, pre-fix candidate.
+Pass 1 was 6 PASS / 4 FAIL; pass 2 is **7 PASS / 3 FAIL**.
 
 | # | pass 1 | pass 2 |
 |---|---|---|

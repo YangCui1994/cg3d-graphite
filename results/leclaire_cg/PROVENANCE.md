@@ -39,7 +39,8 @@ itself prescribes for corrections (section 10) and none rewrites an earlier
 commit.
 
 **Two validation passes are recorded.** Pass 1 produced 6 PASS / 4 FAIL and
-left the Laplace calibration offset unexplained. Between the passes R5 was
+left the Laplace calibration offset unexplained. Pass 2 produced
+**7 PASS / 3 FAIL** — test 3 is the only verdict that changed. Between the passes R5 was
 obtained, which ruled out the gradient-stencil hypothesis and led to the
 discovery of an arithmetic error in the Eq. (18) constant. Pass 2 re-ran
 the whole matrix on the corrected candidate. Pass-1 evidence is retained
