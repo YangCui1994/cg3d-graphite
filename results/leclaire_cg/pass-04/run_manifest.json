@@ -1,0 +1,84 @@
+{
+  "stage": "BI-CG-LECLAIRE-PASS4-001",
+  "candidate_sha": "0b3da4e954878dc22618330caed9f0da0782d449",
+  "environment": {
+    "host": "Yang",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.13.9",
+    "numpy": "2.3.5",
+    "matplotlib": "3.10.6",
+    "backend": "numpy-f64",
+    "generated_utc": "2026-09-27T15:23:15Z"
+  },
+  "cases": {
+    "case-01": {
+      "verdict": "PASS",
+      "dir": "case-01-uniform-stationarity",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-02": {
+      "verdict": "PASS",
+      "dir": "case-02-planar-interface",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-03": {
+      "verdict": "FAIL_SOLVER",
+      "dir": "case-03-laplace-multi-radius",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-04": {
+      "verdict": "PASS",
+      "dir": "case-04-contact-angle",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-05": {
+      "verdict": "PASS",
+      "dir": "case-05-beta-width-validity",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-06": {
+      "verdict": "PASS",
+      "dir": "case-06-axis-symmetry-isotropy",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-07": {
+      "verdict": "INVALID_TEST",
+      "dir": "case-07-slit-capillary-pressure",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-08": {
+      "verdict": "INCONCLUSIVE",
+      "dir": "case-08-jurin-equilibrium",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-09": {
+      "verdict": "FAIL_SOLVER",
+      "dir": "case-09-asymmetric-wall",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-10": {
+      "verdict": "PASS",
+      "dir": "case-10-conservation",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-11": {
+      "verdict": "PASS",
+      "dir": "case-11-mechanical-sigma",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    }
+  },
+  "raw_schema_version": "l17c_core_raw_v1",
+  "command": "python tests/leclaire_cg/pass04.py",
+  "rerun_note": "cases 04 and 07 re-run after a harness fix (unrenamed gate key, broadcasting error); all other cases from one uninterrupted run of the same frozen candidate"
+}

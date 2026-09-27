@@ -1,0 +1,29 @@
+{
+  "grid": [
+    28,
+    16,
+    16
+  ],
+  "steps": 1500,
+  "band": 3,
+  "solid": "one-sided ledge, four lateral faces closed",
+  "wetting": "none (no prescribed angle)",
+  "precheck": {
+    "x_minus": true,
+    "x_plus": true,
+    "y_minus": true,
+    "y_plus": true,
+    "all_closed": true
+  },
+  "snapshot_times": [
+    "t0000",
+    "t_mid",
+    "t_final"
+  ],
+  "exit_code": 0,
+  "candidate_sha": "a12c14f553c5a03a815dbfc96d5aa09a6f33083e",
+  "case_id": "case-09",
+  "case_name": "asymmetric-wall",
+  "raw_schema_version": "l17c_core_raw_v1",
+  "wall_seconds": 37.13478350639343
+}

@@ -1,0 +1,42 @@
+{
+  "grid": [
+    20,
+    16,
+    48
+  ],
+  "steps": 4000,
+  "wall": 4,
+  "neck": 18,
+  "theta_deg": 60.0,
+  "gravity": 0.0003,
+  "initial": "liquid column continuous from reservoir into capillary",
+  "wetting": "leclaire",
+  "precheck": {
+    "gap": 8,
+    "dh_theory": 8.333333333333336,
+    "reservoir_level_predicted": 13.222222222222221,
+    "capillary_level_predicted": 21.555555555555557,
+    "reservoir_window": [
+      1,
+      18
+    ],
+    "capillary_window": [
+      18,
+      46
+    ],
+    "inside_capillary": true,
+    "inside_reservoir": true,
+    "clearance_to_top": 24.444444444444443
+  },
+  "snapshot_times": [
+    "t0000",
+    "t_mid",
+    "t_final"
+  ],
+  "exit_code": 0,
+  "candidate_sha": "a12c14f553c5a03a815dbfc96d5aa09a6f33083e",
+  "case_id": "case-08",
+  "case_name": "jurin-equilibrium",
+  "raw_schema_version": "l17c_core_raw_v1",
+  "wall_seconds": 220.80598783493042
+}

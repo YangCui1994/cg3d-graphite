@@ -1,0 +1,142 @@
+{
+  "stage": "BI-CG-LECLAIRE-PASS4-001",
+  "candidate_sha": "0b3da4e954878dc22618330caed9f0da0782d449",
+  "branch": "agent-task/BI-CG-LECLAIRE-IMPLEMENTATION-001",
+  "environment": {
+    "host": "Yang",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.13.9",
+    "numpy": "2.3.5",
+    "matplotlib": "3.10.6",
+    "backend": "numpy-f64",
+    "generated_utc": "2026-09-27T15:23:15Z"
+  },
+  "verdict_counts": {
+    "PASS": 7,
+    "FAIL_SOLVER": 2,
+    "INVALID_TEST": 1,
+    "INCONCLUSIVE": 1
+  },
+  "cases": {
+    "case-01": {
+      "verdict": "PASS",
+      "dir": "case-01-uniform-stationarity",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-02": {
+      "verdict": "PASS",
+      "dir": "case-02-planar-interface",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-03": {
+      "verdict": "FAIL_SOLVER",
+      "dir": "case-03-laplace-multi-radius",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-04": {
+      "verdict": "PASS",
+      "dir": "case-04-contact-angle",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-05": {
+      "verdict": "PASS",
+      "dir": "case-05-beta-width-validity",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-06": {
+      "verdict": "PASS",
+      "dir": "case-06-axis-symmetry-isotropy",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-07": {
+      "verdict": "INVALID_TEST",
+      "dir": "case-07-slit-capillary-pressure",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-08": {
+      "verdict": "INCONCLUSIVE",
+      "dir": "case-08-jurin-equilibrium",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-09": {
+      "verdict": "FAIL_SOLVER",
+      "dir": "case-09-asymmetric-wall",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-10": {
+      "verdict": "PASS",
+      "dir": "case-10-conservation",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    },
+    "case-11": {
+      "verdict": "PASS",
+      "dir": "case-11-mechanical-sigma",
+      "exit_code": 0,
+      "wall_seconds": 0.0
+    }
+  },
+  "gates": {
+    "01_uniform": {
+      "max_v": 1e-12,
+      "max_drho": 1e-12
+    },
+    "02_planar": {
+      "pos_drift": 0.5,
+      "amp_ratio": 0.95
+    },
+    "03_laplace": {
+      "sigma_ratio_lo": 0.9,
+      "sigma_ratio_hi": 1.1,
+      "r2_min": 0.95,
+      "intercept_frac": 0.25
+    },
+    "04_contact_angle": {
+      "min_contour_pts": 6,
+      "max_fit_rms_geom": 0.3,
+      "max_angle_err_deg": 15.0,
+      "min_snapshots": 3
+    },
+    "05_beta": {
+      "positivity_tol": 1e-09,
+      "min_valid": 1
+    },
+    "06_isotropy": {
+      "asymmetry": 0.05
+    },
+    "07_slit_pc": {
+      "ratio_lo": 0.5,
+      "ratio_hi": 1.5,
+      "min_contour": 1
+    },
+    "08_jurin": {
+      "rise_ratio_lo": 0.5,
+      "rise_ratio_hi": 1.5
+    },
+    "09_killer": {
+      "wall_band": 0.02,
+      "excursion": 0.02,
+      "late_rate": 1e-06
+    },
+    "10_conservation": {
+      "total_per_step": 1e-12,
+      "comp_per_step": 1e-09
+    },
+    "11_mech_sigma": {
+      "ratio_lo": 0.7,
+      "ratio_hi": 1.3
+    }
+  },
+  "raw_schema_version": "l17c_core_raw_v1",
+  "convention": "n_w=-grad(g)/|grad(g)| solid->fluid; theta through liquid/red",
+  "rerun_note": "cases 04 and 07 re-run after a harness fix (unrenamed gate key, broadcasting error); all other cases from one uninterrupted run of the same frozen candidate"
+}

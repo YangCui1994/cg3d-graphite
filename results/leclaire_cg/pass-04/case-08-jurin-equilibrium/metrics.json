@@ -1,0 +1,30 @@
+{
+  "precheck": {
+    "gap": 8,
+    "dh_theory": 8.333333333333336,
+    "reservoir_level_predicted": 13.222222222222221,
+    "capillary_level_predicted": 21.555555555555557,
+    "reservoir_window": [
+      1,
+      18
+    ],
+    "capillary_window": [
+      18,
+      46
+    ],
+    "inside_capillary": true,
+    "inside_reservoir": true,
+    "clearance_to_top": 24.444444444444443
+  },
+  "rise_final": NaN,
+  "rise_theory": 8.333333333333336,
+  "rise_ratio": null,
+  "theta_prescribed_deg": 60.0,
+  "g": 0.0003,
+  "gap": 8,
+  "gates": {
+    "rise_ratio_lo": 0.5,
+    "rise_ratio_hi": 1.5
+  },
+  "verdict": "INCONCLUSIVE"
+}

@@ -1,0 +1,30 @@
+{
+  "grid": [
+    28,
+    14,
+    10
+  ],
+  "steps": 1500,
+  "angles": [
+    60.0,
+    90.0,
+    120.0
+  ],
+  "solid": "two plates at low/high y, x ends sealed",
+  "wetting": "leclaire",
+  "geometry_rev": "transverse_v2",
+  "snapshot_times": [
+    "theta60_init",
+    "theta90_init",
+    "theta120_init",
+    "theta60_final",
+    "theta90_final",
+    "theta120_final"
+  ],
+  "exit_code": 0,
+  "candidate_sha": "0b3da4e954878dc22618330caed9f0da0782d449",
+  "case_id": "case-07",
+  "case_name": "slit-capillary-pressure",
+  "raw_schema_version": "l17c_core_raw_v1",
+  "wall_seconds": 56.0565140247345
+}

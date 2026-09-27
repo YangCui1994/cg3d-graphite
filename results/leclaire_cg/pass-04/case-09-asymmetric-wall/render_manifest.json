@@ -1,0 +1,57 @@
+{
+  "candidate_sha": "a12c14f553c5a03a815dbfc96d5aa09a6f33083e",
+  "raw_schema_version": "l17c_core_raw_v1",
+  "psi_scale": [
+    -1.0,
+    1.0
+  ],
+  "colormap": "RdBu_r",
+  "dpi": 160,
+  "figures": [
+    {
+      "figure": "figures/fig1_field.png",
+      "figure_svg": "figures/fig1_field.svg",
+      "source_candidate_sha": "a12c14f553c5a03a815dbfc96d5aa09a6f33083e",
+      "source_raw": "raw/t_final.npz",
+      "plotted_variable": "psi",
+      "psi_scale": [
+        -1.0,
+        1.0
+      ],
+      "colormap": "RdBu_r",
+      "script": "tests/leclaire_cg/pass04.py",
+      "script_version": "pass-04",
+      "slice": "xz",
+      "slice_index": 8,
+      "isosurface_level": 0.0
+    },
+    {
+      "figure": "figures/fig2_observable.png",
+      "figure_svg": "figures/fig2_observable.svg",
+      "source_candidate_sha": "a12c14f553c5a03a815dbfc96d5aa09a6f33083e",
+      "source_raw": "raw/t_final.npz",
+      "plotted_variable": "wall-band red mass",
+      "psi_scale": [
+        -1.0,
+        1.0
+      ],
+      "colormap": "RdBu_r",
+      "script": "tests/leclaire_cg/pass04.py",
+      "script_version": "pass-04"
+    },
+    {
+      "figure": "figures/fig3_residual.png",
+      "figure_svg": "figures/fig3_residual.svg",
+      "source_candidate_sha": "a12c14f553c5a03a815dbfc96d5aa09a6f33083e",
+      "source_raw": "raw/t_final.npz",
+      "plotted_variable": "relative excursion",
+      "psi_scale": [
+        -1.0,
+        1.0
+      ],
+      "colormap": "RdBu_r",
+      "script": "tests/leclaire_cg/pass04.py",
+      "script_version": "pass-04"
+    }
+  ]
+}

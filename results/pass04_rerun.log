@@ -1,0 +1,5 @@
+[PASS] case-04 re-run (531.6s)
+[INVALID_TEST] case-07 re-run (56.1s)
+VALIDATION_REPORT.md written
+SUMMARY rebuilt: {'PASS': 7, 'FAIL_SOLVER': 2, 'INVALID_TEST': 1, 'INCONCLUSIVE': 1}
+EXIT=0

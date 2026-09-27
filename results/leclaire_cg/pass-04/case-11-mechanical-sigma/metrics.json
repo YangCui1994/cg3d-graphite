@@ -1,0 +1,14 @@
+{
+  "sigma_mech": 0.01536549717401775,
+  "sigma_input": 0.02,
+  "sigma_ratio": 0.7682748587008875,
+  "A_coefficient": 2.25,
+  "omega_eff": 1.0,
+  "predicted_from_derivation": 0.02,
+  "gates": {
+    "ratio_lo": 0.7,
+    "ratio_hi": 1.3
+  },
+  "verdict": "PASS",
+  "note": "Eq.(18) is not retuned; an offset is a reported result."
+}

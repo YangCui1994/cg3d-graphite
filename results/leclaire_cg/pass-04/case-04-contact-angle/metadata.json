@@ -1,0 +1,29 @@
+{
+  "grid": [
+    30,
+    30,
+    30
+  ],
+  "steps": 1600,
+  "angles": [
+    60.0,
+    90.0,
+    120.0
+  ],
+  "wetting": "leclaire",
+  "wall_normal_sign": -1,
+  "snapshot_times": [
+    "theta60_init",
+    "theta90_init",
+    "theta120_init",
+    "theta60_final",
+    "theta90_final",
+    "theta120_final"
+  ],
+  "exit_code": 0,
+  "candidate_sha": "0b3da4e954878dc22618330caed9f0da0782d449",
+  "case_id": "case-04",
+  "case_name": "contact-angle",
+  "raw_schema_version": "l17c_core_raw_v1",
+  "wall_seconds": 531.5999183654785
+}

@@ -1,0 +1,19 @@
+{
+  "grid": [
+    6,
+    6,
+    64
+  ],
+  "steps": 800,
+  "width": 2.5,
+  "wetting": "none",
+  "snapshot_times": [
+    "t_final"
+  ],
+  "exit_code": 0,
+  "candidate_sha": "a12c14f553c5a03a815dbfc96d5aa09a6f33083e",
+  "case_id": "case-11",
+  "case_name": "mechanical-sigma",
+  "raw_schema_version": "l17c_core_raw_v1",
+  "wall_seconds": 5.290286540985107
+}

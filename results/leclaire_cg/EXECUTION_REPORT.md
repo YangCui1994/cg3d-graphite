@@ -1,12 +1,49 @@
 # EXECUTION REPORT — BI-CG-LECLAIRE-IMPLEMENTATION-001
 
-Executor claim. Git diffs, commit identities and the per-test JSON in
-`results/leclaire_cg/` are the sources of truth; this file is a reading of
-them.
+## 0. CURRENT HEADLINE — pass-04 (this is the only current summary)
+
+**Every section below section 0 is a historical record and is explicitly
+`SUPERSEDED`.** Passes 1, 2 and 3 are retained because their errors are part
+of the provenance; none of their claims is current. Read
+`results/leclaire_cg/pass-04/VALIDATION_REPORT.md` for the current
+machine-readable summary and `docs/research/leclaire_cg/VALIDATION_ATLAS.md`
+for the current visual entry point.
+
+| item | value |
+|---|---|
+| stage | `BI-CG-LECLAIRE-PASS4-001` |
+| frozen source candidate | `0b3da4e954878dc22618330caed9f0da0782d449` |
+| evidence tree | `results/leclaire_cg/pass-04/` |
+| unit checks | 73/73 (`results/unit_checks.log`) |
+| pass-04 verdicts | {'PASS': 7, 'FAIL_SOLVER': 2, 'INVALID_TEST': 1, 'INCONCLUSIVE': 1} |
+| backend scope | NumPy/f64 reference only; **not** ported to Taichi/f32 |
+
+| case | verdict |
+|---|---|
+| case-01 | **PASS** | `case-01-uniform-stationarity/README.md` |
+| case-02 | **PASS** | `case-02-planar-interface/README.md` |
+| case-03 | **FAIL_SOLVER** | `case-03-laplace-multi-radius/README.md` |
+| case-04 | **PASS** | `case-04-contact-angle/README.md` |
+| case-05 | **PASS** | `case-05-beta-width-validity/README.md` |
+| case-06 | **PASS** | `case-06-axis-symmetry-isotropy/README.md` |
+| case-07 | **INVALID_TEST** | `case-07-slit-capillary-pressure/README.md` |
+| case-08 | **INCONCLUSIVE** | `case-08-jurin-equilibrium/README.md` |
+| case-09 | **FAIL_SOLVER** | `case-09-asymmetric-wall/README.md` |
+| case-10 | **PASS** | `case-10-conservation/README.md` |
+| case-11 | **PASS** | `case-11-mechanical-sigma/README.md` |
+
+Gates were declared in `tests/leclaire_cg/pass04.py::GATES` before the run and
+were not edited afterwards, with one documented exception recorded in
+case-04's README: the contact-angle fit-quality gate was switched from the
+linearised residual (radius-squared units) to the geometric residual in
+lattice units, because the former mixed dimensions and scales as R^2. Both
+quantities are reported for every angle so the change is auditable.
+
+`A = (9/4) omega_eff sigma` was **not** retuned anywhere in this round.
 
 ---
 
-## 1. Summary
+## 1. Summary (SUPERSEDED — pass-1/2/3)
 
 Delivered: an isolated, paper-faithful Leclaire-2017 D3Q19
 colour-gradient candidate (`L17_CORE`) in `experimental/leclaire_cg/`, an
@@ -312,7 +349,7 @@ over 1.5k steps is not zero, and 1.5k steps is short.
 
 ---
 
-## 5b. Validation pass 3 — post-review correction candidate
+## 5b. Validation pass 3  [SUPERSEDED by pass-04] — post-review correction candidate
 
 Candidate **`5a3929fa1cefb7359893d6c19ed0ec8a7c80a91d`**, produced in response to external review
 `EXTERNAL_SCIENTIFIC_REVIEW_CHANGES_REQUESTED.md` (reviewed candidate
@@ -366,7 +403,7 @@ change of question as much as of answer. Where a verdict moved, the report
 says which of the two it is.
 
 
-## 6. The Laplace calibration — RESOLVED
+## 6. The Laplace calibration  [SUPERSEDED by pass-04] — RESOLVED
 
 **Outcome: the model now reproduces R1 Eq. (18)'s interfacial tension.** The
 offset that dominated validation pass 1 was an arithmetic error in the

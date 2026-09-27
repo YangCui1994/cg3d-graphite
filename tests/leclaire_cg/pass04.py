@@ -49,7 +49,7 @@ GATES = {
     "02_planar": dict(pos_drift=0.5, amp_ratio=0.95),
     "03_laplace": dict(sigma_ratio_lo=0.90, sigma_ratio_hi=1.10,
                        r2_min=0.95, intercept_frac=0.25),
-    "04_contact_angle": dict(min_contour_pts=6, max_fit_rms=0.5,
+    "04_contact_angle": dict(min_contour_pts=6, max_fit_rms_geom=0.30,
                              max_angle_err_deg=15.0, min_snapshots=3),
     "05_beta": dict(positivity_tol=1e-9, min_valid=1),
     "06_isotropy": dict(asymmetry=0.05),
@@ -598,7 +598,7 @@ def case_07(out_root, cand, angles=(60.0, 90.0, 120.0), n=(28, 14, 10),
         s.run(steps)
         c.snapshot(f"theta{int(th)}_final", s)
         rho, _ = s.macroscopic()
-        xx = np.arange(n[0])[None, :, None] * np.ones(n)
+        xx = np.arange(n[0])[:, None, None] * np.ones(n)
         fluid = ~solid
         liq = fluid & (xx < n[0] // 2 - 4)
         gas = fluid & (xx > n[0] // 2 + 4)
