@@ -421,7 +421,6 @@ def test_07_slit_pc(steps=1500, gaps=(10, 12), n=(12, 12, 32),
         # box left the upper window empty and produced dp = None
         lo = fluid_col & (zz[0, 0] < zi - 3) & (zz[0, 0] >= 2)
         hi = fluid_col & (zz[0, 0] > zi + 3) & (zz[0, 0] < 2 + gap)
-        if not (lo.any() and hi.any()):
         rb = float(rho[np.broadcast_to(lo, n)].mean()) if lo.any() else None
         rt = float(rho[np.broadcast_to(hi, n)].mean()) if hi.any() else None
         dp = (rt - rb) / 3.0 if (rt is not None and rb is not None) else None
