@@ -728,6 +728,15 @@ def jurin_geometry(n=(24, 16, 44), wall=3, x_w=10, z_channel=8):
     s = np.zeros(n, dtype=bool)
     s[:, :, 0] = True                              # floor
     s[:, :, -1] = True                             # ceiling
+    # The lattice streams periodically in every direction, so the barrier at
+    # x = x_w only separates reservoir from capillary if the x faces are
+    # closed: otherwise the reservoir at x = 0 wraps directly into the
+    # capillary at x = n-1 at every height and the barrier is bypassed.
+    # (This is the same topology trap as the Pass-4 ledge, where only one
+    # lateral face was closed.)  Sealing both x faces leaves the lower
+    # channel as the single connection.
+    s[0, :, :] = True
+    s[n[0] - 1, :, :] = True
     upper = np.zeros(n, dtype=bool)
     upper[:, :, z_channel:] = True
     xx = np.arange(n[0])[:, None, None]
@@ -740,10 +749,12 @@ def jurin_geometry(n=(24, 16, 44), wall=3, x_w=10, z_channel=8):
 
 def jurin_sections(n, wall, x_w, z_channel):
     """Fluid cross-sectional areas of the three regions."""
+    # Both x faces are sealed, so the fluid x range is 1 .. n-2.
+    fluid_x = n[0] - 2
     return dict(
-        channel=n[0] * n[1],
-        reservoir=x_w * n[1],
-        capillary=(n[0] - x_w - 1) * (n[1] - 2 * wall),
+        channel=fluid_x * n[1],
+        reservoir=(x_w - 1) * n[1],
+        capillary=(n[0] - 2 - x_w) * (n[1] - 2 * wall),
     )
 
 
