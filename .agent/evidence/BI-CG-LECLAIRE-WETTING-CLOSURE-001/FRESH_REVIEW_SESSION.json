@@ -1,0 +1,232 @@
+{
+  "task": "BI-CG-LECLAIRE-WETTING-CLOSURE-001",
+  "stage_name": "Pass-5 wetting-closure fresh review",
+  "attempt": 1,
+  "mode": "FRESH_SESSION (independent reviewer; executor transcript not read)",
+  "product_branch": "agent-task/BI-CG-LECLAIRE-IMPLEMENTATION-001",
+  "base": "6c30260dfe0c8b61ea9609e6bffa5c487312cf06",
+  "frozen_source_candidate": "b65bdce3758dd967df1a3f5559c7014f97fd960b",
+  "evidence_tip": "ad07b18c548a06babf385f0b33f13e52433234a4",
+  "control_branch_read": "agent-dev/bilateral-episode-v0.1 @ d606ad07a434e5316823a928ffed8f9d5ec61169",
+  "predecessors": [
+    ".agent/evidence/BI-CG-LECLAIRE-PASS4-001/FRESH_REVIEW.md",
+    ".agent/evidence/BI-CG-LECLAIRE-PASS4-001/EXTERNAL_SCIENTIFIC_REVIEW_R3_CHANGES_REQUESTED.md"
+  ],
+  "staging": "D:/2026_agent_work/01_GLM_LBM3D_porous_media/.review_runtime/BI-CG-LECLAIRE-WETTING-CLOSURE-001/",
+  "review_runtime": ".agent/evidence/BI-CG-LECLAIRE-WETTING-CLOSURE-001/FRESH_REVIEW.md",
+  "decision": "CHANGES_REQUESTED",
+  "candidate_modified": false,
+  "evidence_modified": false,
+  "no_gpu_used": true,
+  "no_taichi_used": true,
+
+  "A_freeze_binding": {
+    "evidence_commit_is_pure_child_of_freeze": true,
+    "evidence_commit_parent": "b65bdce3758dd967df1a3f5559c7014f97fd960b",
+    "diff_freeze_to_evidence_modified_paths": ["docs/research/leclaire_cg/VALIDATION_ATLAS.md", "results/leclaire_cg/EXECUTION_REPORT.md"],
+    "diff_freeze_to_evidence_added_groups": ["results/leclaire_cg/pass-04/**/raw/*.npz (39, backfill required by R3-5)", "results/leclaire_cg/pass-05/** (evidence tree)", "results/pass05_run.log", "results/smoke.log", "results/unit_checks.pass5.log"],
+    "source_harness_gate_geometry_change_between_freeze_and_evidence": false,
+    "no_case_specific_post_freeze_patch": true,
+    "single_command_reproduces_matrix": true,
+    "command": "python tests/leclaire_cg/pass05.py (run from a byte-exact staged copy of b65bdce; OUT_ROOT redirects into the staging tree)",
+    "isolation": {
+      "base_is_ancestor_of_tip": true,
+      "commits_base_to_tip": 23,
+      "lbm_solver_cg3d_blob_base": "1b7db4ac27448b5b982cead1ea86e719c59e6684",
+      "lbm_solver_cg3d_blob_freeze": "1b7db4ac27448b5b982cead1ea86e719c59e6684",
+      "lbm_solver_cg3d_blob_tip": "1b7db4ac27448b5b982cead1ea86e719c59e6684",
+      "only_non_added_file_base_to_tip": ".gitignore (+6 lines)"
+    },
+    "note": "the declared freeze is the third Pass-5 source commit (9ed10aa -> fd5ab42 -> b65bdce); compatible with R3-6, which required the new freeze to come after the harness fixes"
+  },
+
+  "G_reproduction": {
+    "unit_checks": {"result": "88/88 checks passed", "log_structurally_identical_to_committed": true},
+    "matrix": {
+      "verdicts": {"PASS": 8, "FAIL_SOLVER": 3},
+      "verdicts_identical_to_committed": true,
+      "metric_fields_compared": 311,
+      "metric_fields_bit_identical": 311,
+      "per_case": {"case-01": 7, "case-02": 8, "case-03": 50, "case-04": 34, "case-05": 49, "case-06": 41, "case-07": 39, "case-08": 23, "case-09": 20, "case-10": 16, "case-11": 24},
+      "raw_npz_compared": 39,
+      "raw_npz_byte_identical_sha256": 39
+    },
+    "figures": {
+      "method": "regenerated through the committed plotting helper from the tracked raw npz using the manifest's plane/index and the driver's exact titles",
+      "fig1_field_pixel_identical": 6,
+      "fig1_field_tested": 6,
+      "cases": ["case-03", "case-04", "case-05", "case-07", "case-08", "case-09"],
+      "fig_cap_theta90": "pixel-identical",
+      "fig_cap_theta120": "pixel-identical",
+      "fig_cap_theta60": "max|d| = 1",
+      "note": "a first comparison with substituted titles mismatched on title pixels only, because savefig uses bbox_inches='tight'; corrected before reporting"
+    }
+  },
+
+  "B_convention": {
+    "code_default_nw_sign": 1.0,
+    "canonical_branch": "n_w = +grad(g)/|grad(g)| = fluid -> solid (R1 Eqs. 34-38)",
+    "circle_fit_relation": "cos(theta_liquid) = -(z_c - z_w)/R",
+    "source_diff_pass4_to_pass5": ["experimental/leclaire_cg/solver.py (nw_sign default -1.0 -> +1.0)", "experimental/leclaire_cg/geometry.py (circle-fit sign + tangent derivation)", "tests/leclaire_cg/artifact.py (script string, new fig_contact_angle)"],
+    "operators_lattice_untouched": true,
+    "raw_field_invariant_check": {
+      "method": "reviewer rebuilt F, the 3-pass smoothed g, and both candidate normals by hand and evaluated angle(F, n_w) at the wall sites of the case-04 final states",
+      "nw_plus_grad_g_mean_deg": {"60": 62.38, "90": 88.10, "120": 109.23},
+      "nw_plus_grad_g_median_deg": {"60": 67.90, "90": 88.41, "120": 108.15},
+      "nw_minus_grad_g_mean_deg": {"60": 117.62, "90": 91.90, "120": 70.77},
+      "nw_minus_grad_g_median_deg": {"60": 112.10, "90": 91.59, "120": 71.85},
+      "conclusion": "the canonical +grad(g) branch is the one that reproduces the prescribed liquid-side angle; the negation returns the complement"
+    },
+    "analytic_lock": {
+      "circular": false,
+      "construction_check": "reference cap built from the interface tangent; validated by an independent chord-angle test (residuals 0.064-0.128 deg against a 0.6 deg bound)",
+      "angles": [30, 60, 90, 120, 150],
+      "instrument_recovery_residuals": "<= 2.2e-14 deg",
+      "reversed_sign_yields_complement": true,
+      "minus_grad_g_rejected": true,
+      "secant_converges_from_three_starting_branches": true
+    }
+  },
+
+  "C_contact_angle": {
+    "committed_driver_deg": {"60": 65.19106789854757, "90": 95.6997517245359, "120": 129.40464687611498},
+    "reviewer_own_contour_and_fit_deg": {"60": 64.85, "90": 96.29, "120": 128.99},
+    "reviewer_independent_2atan_h_over_a_deg": {"60": 63.29, "90": 91.19, "120": 112.48},
+    "gate_deg": 15.0,
+    "max_error_deg": 9.40,
+    "fit_rms_geom_lu": {"60": 0.0353, "90": 0.0501, "120": 0.0719},
+    "fit_rms_geom_gate": 0.30,
+    "realised_geometry": "prescribed 60 deg gives a spreading film (z_c = -3.83 below the wall plane, cap h/a = 0.62); Pass-4 gave a bead (h/a = 1.79, angle through liquid ~126 deg)",
+    "wedge_figures_regenerated": "fig_cap_theta90 and fig_cap_theta120 pixel-identical, fig_cap_theta60 max|d| = 1",
+    "verdict": "PASS, independently reproduced"
+  },
+
+  "D_slit_pc": {
+    "reviewer_pc_measured": {"60": 2.032042e-03, "90": -1.986821e-08, "120": -2.141317e-03},
+    "committed_pc_measured": {"60": 2.0509443965117113e-03, "90": -4.221145025740114e-07, "120": -2.1566911179287107e-03},
+    "theory_2_sigma_cos_theta_over_h": {"60": 2.0e-03, "90": 0.0, "120": -2.0e-03},
+    "ratios_reviewer": {"60": 1.016, "120": 1.071},
+    "meniscus_xy": {"60": {"near_wall": 13.765, "centre": 13.096, "difference": -0.669}, "90": {"near_wall": 13.500, "centre": 13.500, "difference": 0.0}, "120": {"near_wall": 13.223, "centre": 13.932, "difference": 0.709}},
+    "z_invariance_max_abs_deviation": 0.0,
+    "geometry": "plates transverse to the meniscus (normals +-y), both contact lines active, x sealed at both ends, exactly z-invariant",
+    "verdict": "PASS, independently reproduced; the Pass-4 sign inversion is gone"
+  },
+
+  "E_jurin": {
+    "committed": {"verdict": "FAIL_SOLVER", "rise_final": null, "capillary_interface_exists": false, "classification_rule": "contract E3: precheck passed but the tube emptied -> physical/numerical failure reported directly"},
+    "reviewer_raw_field_findings": {
+      "t0000_centre_column_psi_z16_to_20": [-1.0, -1.0, 1.0, 1.0, -1.0],
+      "initial_condition_is_disconnected": true,
+      "artifacts_claim": "metadata 'liquid column continuous from reservoir into capillary'; README 'a connected column inside the capillary' - both false for the committed initial state",
+      "t_mid_and_t_final_tube_liquid_fraction_by_layer": "0.000 at every layer z >= 16, whole cross-section",
+      "free_surface_settles_at_z": 15,
+      "tube_mouth_z": 18,
+      "precheck_blind_spot": "the precheck only tests that the volume-conservation levels (M = 13.22, L = 21.56) lie inside the measurement windows; it never tests that the liquid can reach the mouth (M < neck = 18) nor that a closed box can support the column"
+    },
+    "reviewer_two_arm_experiment": {
+      "what_changed_vs_committed": "initial condition only; geometry, sigma, beta, nu, theta_c, gravity identical",
+      "arm_A_immersed": {"ic": "psi=+1 for z < 24 everywhere", "tube_liquid_frac_t0": 0.1000, "tube_liquid_frac_t3000": 0.1042, "meniscus_motion": "none"},
+      "arm_B_immersed_and_seeded": {"ic": "as A plus tube seeded to z = 26", "tube_liquid_frac_t0": 0.1333, "tube_liquid_frac_t3000": 0.1375, "meniscus_motion": "none"},
+      "closed_box_limit_estimate": {"capillary_drive": 2.5e-3, "gas_backpressure_slope_per_lu": 7.25e-3, "predicted_rise_lu": 0.33, "theory_rise_lu": 8.333, "p0": 0.3333, "A_cap": 160, "V_gas": 7360},
+      "conclusion": "the closed box cannot exhibit the Jurin rise; the configuration is invalid for the claim, independent of the solver"
+    },
+    "classification": "INVALID_TEST / INVALID_CONFIGURATION, not FAIL_SOLVER"
+  },
+
+  "F_raw_artifacts": {
+    "pass05_raw_npz_committed_and_tracked": 39,
+    "pass04_raw_npz_backfilled": 39,
+    "distinct_source_raw_paths_referenced": 16,
+    "referenced_paths_not_committed": 0,
+    "committed_verify_manifest_paths_result": "36 referenced, 36 trackable, 0 missing, 0 ignored, VERDICT OK",
+    "manifest_script_version_stale": "all 36 entries say \"pass-04\" while script says tests/leclaire_cg/pass05.py",
+    "reproduce_scripts": {"files": 11, "broken": 11, "error": "ModuleNotFoundError: No module named 'pass04'", "root_cause": "artifact.Case.write_reproduce hardcodes import pass04", "verified_by_running": "results/leclaire_cg/pass-05/case-04-contact-angle/reproduce.py"},
+    "verdict": "PASS for the raw/figure binding; the reproduction path is broken (W-3)"
+  },
+
+  "H_preserved_science": {
+    "operators_py_untouched_since_pass4": true,
+    "lattice_py_untouched_since_pass4": true,
+    "eq4_u_dot_grad_rho": "preserved (A1-A4 non-zero-state checks pass)",
+    "xw_1d_cartesian_gradient": "preserved (grad_l17.* checks pass)",
+    "beta_recolouring": "preserved (case-05 pass, positivity exclusions unchanged)",
+    "unrelaxed_perturbation_ordering": "preserved",
+    "A_equals_9over4_omega_sigma": "preserved, not retuned (asserted in unit checks; 2.25 in case-11 metrics)",
+    "f64_conservation": "preserved (case-10 unchanged in the rerun)"
+  },
+
+  "I_mechanical_sigma": {
+    "r3_7_items_implemented": {"raw_distribution_retained": true, "one_interface_isolated": true, "bulk_window_between_interfaces": true, "tv_consistency_reported": true},
+    "reviewer_recompute_from_Ndist": {"sigma_mech": 0.019999960, "sigma_input": 0.02, "ratio": 0.999998, "committed_ratio": 0.999995, "difference_explained": "the snapshot stores Ndist as float32"},
+    "window_sensitivity": {"15:47": 0.999998, "20:45": 1.0, "10:55": 1.000025, "5:60": 1.0158, "0:64": 2.0},
+    "bulk_sensitivity": {"44:51": 0.999998, "48:56": 0.999691, "0:8": -0.999688, "30:38": -2.71447},
+    "verdict_rule": "PASS only when premises close and the ratio is inside the 0.7-1.3 band, otherwise EXPLORATORY_UNGATED",
+    "scientific_note": "the observable is close to an algebraic identity (sum(P_N-P_T) = (2/9)A*sum|F| with sum|F| ~ TV = 2), so it verifies the implemented moment prefactor rather than measuring an independent sigma",
+    "implication_for_laplace": "mechanical ~ 1.00 vs Laplace ~ 1.127 sigma_input - still no uniform prefactor, but a 13 percent gap rather than the 47 percent reported in Pass-4"
+  },
+
+  "J_durable_docs": {
+    "correct": ["EXECUTION_REPORT.md section 0", "VALIDATION_ATLAS.md Pass-5 section", "SCIENCE_MASTERLINE.md", "WETTING_PHASE_CONVENTION.md", "REFERENCE_MANIFEST.md (stale paragraph removed)"],
+    "wrong_or_incomplete": {
+      "generated_artifact_convention_strings": "W-1",
+      "provenance_stale_sentence": "PROVENANCE.md item 4 still says R5 came by local search rather than download",
+      "missing_superseded_banners": ["results/leclaire_cg/PROVENANCE.md", "results/leclaire_cg/summary.json", "results/leclaire_cg/UNIT_CHECKS.log"],
+      "stage_name_mismatch": "pass-05/VALIDATION_REPORT.md says BI-CG-LECLAIRE-PASS4-001 while SUMMARY.json says BI-CG-LECLAIRE-WETTING-CLOSURE-001",
+      "atlas_vs_verdict": "atlas says case-11 does not contribute a validating verdict; the case verdict is PASS and is counted in the PASS-8 headline"
+    }
+  },
+
+  "findings": {
+    "blocking": [
+      {
+        "id": "W-1",
+        "title": "every generated Pass-5 artifact states the rejected wall-normal convention",
+        "detail": "SUMMARY.json, VALIDATION_REPORT.md (2 places), case-04/07/08 READMEs, case-04 metrics.json (wall_normal) and metadata.json (wall_normal_sign=-1) all say n_w = -grad(g) solid->fluid, while the frozen solver runs nw_sign=+1 = +grad(g) fluid->solid and the report prose states the canonical version. Generated by five hardcoded strings in tests/leclaire_cg/pass05.py (lines 391, 403, 674, 806, 1209).",
+        "why_blocking": "the contract's section J requires one consistent current statement; the machine-readable record is false and re-introduces the exact confusion external review R3-1 removed"
+      },
+      {
+        "id": "W-2",
+        "title": "case-08 is an invalid test misclassified as a solver failure, with a false initial-condition claim",
+        "detail": "the initial state is two disconnected liquid bodies (gas between z ~ 14 and z ~ 18) contrary to the metadata/README 'connected column' claim; no liquid ever enters the tube; a new two-arm experiment shows the closed box caps the rise at ~0.33 lu against a theoretical 8.33 lu because the trapped gas back-pressure (7.25e-3 per lu) dwarfs the capillary drive (2.5e-3)",
+        "why_blocking": "the closure record would permanently attribute a test-design defect to the solver, and the one wetting validation of the rise is not closed"
+      }
+    ],
+    "non_blocking": [
+      {"id": "W-3", "title": "all eleven reproduce.py scripts are broken", "detail": "import pass04 / pass04.run_one with no pass04.py at the tip; artifact.Case.write_reproduce hardcodes the module; violates VALIDATION_ARTIFACT_SPEC sections 5.1, 8, 11"},
+      {"id": "W-4", "title": "R3-9 cleanup half done; two headline files disagree", "detail": "PROVENANCE.md still carries the stale R5 'local search' sentence; no superseded banners in PROVENANCE.md/summary.json/UNIT_CHECKS.log; VALIDATION_REPORT.md names the wrong stage"},
+      {"id": "W-5", "title": "atlas contradicts the mechanical-sigma verdict; stale script_version", "detail": "atlas says case-11 contributes no validating verdict while its verdict is PASS and counted; all 36 manifest entries say script_version pass-04; harness docstring says it writes pass-04"},
+      {"id": "W-6", "title": "case-09 FAIL_SOLVER remains unattributed", "detail": "wall-band gate -6.83 percent with an explicit non-attribution note; bit-identical to Pass-4, so not convention-driven; the label should be qualified in the report"},
+      {"id": "W-7", "title": "verify_manifest_paths.py does not verify trackedness", "detail": "it runs git check-ignore, so an untracked and unignored file would pass although the docstring claims the file is verified as tracked"},
+      {"id": "W-8", "title": "sigma_extrapolated_large_R is still mislabelled", "detail": "it is the slope of sigma_local against R_measured (units sigma/length), printed as a 1/R -> 0 limit; carried from Pass-4 P4-8"}
+    ]
+  },
+
+  "pass4_findings_status": {
+    "P4-1_convention_sign": "FIXED in code and instrument; artifact metadata still wrong (W-1)",
+    "P4-2_circle_fit_sign_and_circular_tests": "FIXED (tangent-based construction with an independent chord check; reversed-sign assertion)",
+    "P4-3_raw_fields_not_committed": "FIXED (39 pass-05 raw npz tracked and committed; all referenced paths resolve; figures regenerate)",
+    "P4-4_candidate_cannot_run_its_harness": "FIXED (one command reproduces 311/311 fields and 39/39 raw snapshots)",
+    "P4-5_R5_provenance_corrections": "PARTIAL (REFERENCE_MANIFEST fixed, PROVENANCE.md not)",
+    "P4-6_case07_verdict_logic": "FIXED (the case now passes legitimately; the INVALID_TEST-on-sign-failure mapping no longer fires)",
+    "P4-7_case11_premises_and_recomputability": "FIXED (N_i retained; I recomputed the observable)",
+    "P4-8_sigma_extrapolated_mislabelled": "NOT FIXED (W-8)",
+    "P4-9_case06_transpose_regression": "unchanged (correctly labelled axis symmetry)",
+    "P4-10_case09_no_contact_line_observable": "unchanged (W-6)",
+    "P4-11_durable_record_leftovers": "PARTIAL (W-4)"
+  },
+
+  "escalation": {
+    "human_required_considered": true,
+    "human_required_triggered": false,
+    "owner_question": "case-08 cannot close inside the current closed box. Option 1: keep the closed-box design, mark case-08 INVALID_TEST with the trapped-gas reasoning and drop the rise from the closure claim (cheapest). Option 2: implement a constant-pressure gas boundary or enlarge the gas reservoir until p0*dV/V_gas << 2*sigma*cos(theta)/h, then rerun the same geometry with an immersed initial condition (scope extension beyond the current contract)."
+  },
+
+  "files_written": [
+    ".agent/evidence/BI-CG-LECLAIRE-WETTING-CLOSURE-001/FRESH_REVIEW.md",
+    ".agent/evidence/BI-CG-LECLAIRE-WETTING-CLOSURE-001/FRESH_REVIEW_SESSION.json"
+  ],
+  "staging_artifacts_left_for_reproduction": {
+    "dir": ".review_runtime/BI-CG-LECLAIRE-WETTING-CLOSURE-001/",
+    "contents": ["run/ (staged frozen source + committed harness + my matrix results)", "matrix_rerun.log", "unit_rerun.log", "recompute_raw.py", "jurin_experiment.py", "jurin_experiment.log", "regen_figs.py", "regen_figs2.py", "figs*/", "staged_hashes.txt"]
+  }
+}
