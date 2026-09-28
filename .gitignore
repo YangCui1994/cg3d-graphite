@@ -27,3 +27,6 @@ tests_output/
 
 # Leclaire reference PDFs (copyrighted/CC-BY publisher versions; not redistributed)
 docs/research/leclaire_cg/_refs/
+
+# Pass-5: raw NPZ snapshots referenced by render manifests are durable evidence
+!results/leclaire_cg/pass-*/**/raw/*.npz

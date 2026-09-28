@@ -310,10 +310,23 @@ def contact_angle_circle_fit(zs, rs, z_wall):
     radius ``R``, so its contour satisfies ``r^2 + (z - z_c)^2 = R^2``.
     A least-squares fit gives
 
-        cos(theta) = (z_c - z_wall) / R
+        cos(theta_liquid) = -(z_c - z_wall) / R
 
-    with ``theta`` measured **through the psi > 0 (red) phase**.  That
-    convention is stated wherever an angle is reported from this function.
+    with ``theta_liquid`` measured **through the psi > 0 liquid/red phase**
+    (WETTING_PHASE_CONVENTION.md section 4).  The sign matters: the pass-4
+    instrument used ``+(z_c - z_wall)/R`` and therefore reported the
+    complementary angle, 180 - theta_liquid.  Flagged as external-review
+    blocker R3-2.
+
+    Derivation of the sign, so it is not a convention guess.  The drop is a
+    red/liquid cap occupying the +z side of a wall at z_w.  At the contact
+    point the interface tangent, pointing away from the contact line into
+    the drop, is T = (-cos(theta), sin(theta)) in (r, z); the inward normal
+    is T rotated by +90 degrees, N = (-sin(theta), -cos(theta)).  The circle
+    centre is C = contact + R*N, so z_c = z_w - R cos(theta), giving the
+    relation above.  Checks: theta = 0 (flat, perfectly wetting) gives
+    z_c - z_w = -R; theta = 90 gives z_c = z_w; theta = 180 (full sphere)
+    gives z_c - z_w = +R.
 
     Returns ``(theta_deg, R, z_c, rms)`` where ``rms`` is the linearised
     residual (radius^2 units), and ``rms_geom`` (lu) is available from
@@ -342,7 +355,7 @@ def contact_angle_circle_fit(zs, rs, z_wall):
     # in LATTICE UNITS.  This is the quantity a fit-quality gate should use.
     d = np.sqrt(rs ** 2 + (zs - z_c) ** 2) - R
     rms_geom = float(np.sqrt(np.mean(d ** 2)))
-    cos_t = (z_c - z_wall) / R
+    cos_t = -(z_c - z_wall) / R        # liquid-side sign, R3-2
     if cos_t < -1.0 or cos_t > 1.0:
         return float("nan"), R, float(z_c), rms
     contact_angle_circle_fit.last_rms_geom = rms_geom

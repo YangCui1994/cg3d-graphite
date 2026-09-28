@@ -119,7 +119,7 @@ class Case:
             plotted_variable=plotted,
             psi_scale=[PSI_VMIN, PSI_VMAX],
             colormap=CMAP_PSI,
-            script="tests/leclaire_cg/pass04.py",
+            script="tests/leclaire_cg/pass05.py",
             script_version="pass-04",
         )
         if extra:
@@ -187,6 +187,50 @@ class Case:
         return self._save(fig, stem, ylabel, source_raw)
 
     # ---------------- text artifacts ----------------
+    def fig_contact_angle(self, zs, rs, R, zc, theta_deg, z_wall, stem,
+                          title, source_raw=None):
+        """Sessile-cap figure: wall, contour, fitted circle, liquid-side wedge.
+
+        WETTING_PHASE_CONVENTION.md section 6 requires the wall, the interface
+        contour, the fitted curve and the liquid-side angle wedge to be
+        visually inspectable so the reported phase-side angle can be checked
+        by eye rather than trusted.
+        """
+        fig, ax = plt.subplots(figsize=(4.6, 4.2))
+        th = np.deg2rad(theta_deg) if np.isfinite(theta_deg) else np.deg2rad(90.0)
+        zz = np.linspace(z_wall, zc + R, 200)
+        rr = np.sqrt(np.maximum(R ** 2 - (zz - zc) ** 2, 0.0))
+        ax.plot(rr, zz, "-", color="0.45", lw=1.0, label="fitted circle")
+        ax.plot(-rr, zz, "-", color="0.45", lw=1.0)
+        ax.plot(rs, zs, "o", ms=3.5, color="#c0392b",
+                label="psi=0 contour (measured)")
+        ax.plot(-np.asarray(rs), np.asarray(zs), "o", ms=3.5, color="#c0392b")
+        ax.axhline(z_wall, color="k", lw=1.2, label="wall")
+        ax.axhspan(z_wall - 1.2, z_wall, color=(0.25, 0.25, 0.25), alpha=0.85)
+        r_c = float(np.sqrt(max(R ** 2 - (z_wall - zc) ** 2, 0.0)))
+        arc = np.linspace(0.0, th, 40)
+        rad = 0.34 * R
+        ax.plot(r_c - rad * np.cos(arc), z_wall + rad * np.sin(arc),
+                "-", color="#1f6fb4", lw=1.6)
+        ax.plot([r_c - rad, r_c - rad], [z_wall, z_wall + rad], ":", lw=0.8,
+                color="0.4")
+        ax.annotate("theta_liquid = %.1f deg" % theta_deg,
+                    xy=(r_c - rad * np.cos(th / 2), z_wall + rad * np.sin(th / 2)),
+                    xytext=(r_c + 0.25 * R, z_wall + 0.55 * R), fontsize=8,
+                    arrowprops=dict(arrowstyle="->", lw=0.7, color="#1f6fb4"))
+        ax.set_aspect("equal")
+        ax.set_xlabel("r [lu]")
+        ax.set_ylabel("z [lu]")
+        ax.set_title(title + "  (angle through liquid/red)", fontsize=8)
+        ax.legend(fontsize=6.5, loc="upper right")
+        ax.text(0.01, 0.99, "candidate %s" % self.candidate[:12],
+                transform=ax.transAxes, va="top", fontsize=6, color="0.3")
+        return self._save(fig, stem, "contact angle through liquid/red",
+                          source_raw,
+                          {"theta_liquid_deg": float(theta_deg),
+                           "R_fit": float(R), "z_centre": float(zc),
+                           "z_wall": float(z_wall), "phase_side": "liquid/red"})
+
     def write_metrics(self, metrics, timeseries=None):
         with io.open(os.path.join(self.dir, "metrics.json"), "w",
                      encoding="utf-8") as fh:

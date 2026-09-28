@@ -251,82 +251,108 @@ def main():
                          [0.0 if np.abs(bad.sum(axis=-1) - rho_r).max() > 1e-6
                           else 1.0], 0.0))
 
-    # ---- WETTING CONVENTION LOCK (normative, geometric, non-LBM) -------
+    # ---- WETTING CONVENTION LOCK (independent analytic geometry) -------
     # Authority: docs/research/leclaire_cg/WETTING_PHASE_CONVENTION.md.
     #     g     = 1 solid, 0 fluid
-    #     n_w   = -grad(g)/|grad(g)|      -> solid into fluid
-    #     F     = grad(psi)               -> gas(blue) toward liquid(red)
-    #     theta = angle(F, n_w)           -> measured through LIQUID/red
-    # A sessile droplet must never be used to pick this sign; this block is
-    # the authority and the droplet test only consumes it.
+    #     n_w   = +grad(g)/|grad(g)|   -> fluid into solid   (R1 Eqs. 34-38)
+    #     F     = grad(psi)            -> gas(blue) toward liquid(red)
+    #     theta = theta_liquid, measured through red/liquid
+    #
+    # These tests are INDEPENDENT: the reference caps are constructed from the
+    # interface TANGENT at the contact point, not from the measurement formula
+    # cos(theta) = -(z_c - z_w)/R.  The pass-4 suite was circular -- it built
+    # the reference with the same sign the instrument used -- so it could not
+    # see the reversed sign (external-review blockers R3-1 / R3-2).
+
+    def _cap_contour(theta_deg, R, z_wall):
+        """Reference sessile red/liquid cap, symmetric about the r = 0 axis.
+
+        Built from the interface TANGENT at the contact point, not from the
+        measurement formula.  At the contact point the interface tangent
+        pointing into the drop is T = (-cos t, sin t) in (r, z), so the
+        inward normal is T rotated +90 deg, N = (-sin t, -cos t).  The circle
+        centre lies on the symmetry axis at C = (0, z_wall + R*N_z), and the
+        contact point is then at r = R sin t.  Both the centre height and the
+        contact radius therefore follow from the tangent direction alone.
+        """
+        t = np.deg2rad(theta_deg)
+        c_z = z_wall - R * np.cos(t)          # from N = (-sin t, -cos t)
+        r_contact = R * np.sin(t)             # circle meets the wall here
+        zs = np.linspace(z_wall + 0.02, c_z + R - 0.25, 40)
+        dr2 = R ** 2 - (zs - c_z) ** 2
+        rs = np.sqrt(np.maximum(dr2, 0.0))
+        keep = (dr2 > 0) & (rs > 0)
+        return zs[keep], rs[keep], r_contact, c_z
+
+    R_ref, z_w = 9.0, 1.0
+    for t_deg in (30.0, 60.0, 90.0, 120.0, 150.0):
+        zs, rs, r_c, c_z = _cap_contour(t_deg, R_ref, z_w)
+        # (0) independent verification of the CONSTRUCTION, not the
+        #     instrument: the chord from the contact point to a nearby
+        #     contour point must make the requested angle with the wall
+        tgt = np.array([rs[0] - r_c, zs[0] - z_w])
+        tgt = tgt / np.linalg.norm(tgt)
+        ang_chord = np.degrees(np.arctan2(tgt[1], -tgt[0]))
+        results.append(check(f"convention.cap_construction_{int(t_deg)}deg",
+                             abs(ang_chord - t_deg), 0.6))
+        # (1) the instrument must recover the liquid-side angle
+        th, Rf, zcf, rms = G_geom.contact_angle_circle_fit(zs, rs, z_w)
+        results.append(check(
+            f"convention.liquid_side_angle_{int(t_deg)}deg",
+            abs(th - t_deg), 0.05))
+        # (2) the test must FAIL if the circle-fit sign is reversed
+        cos_flipped = (zcf - z_w) / Rf
+        flipped = np.degrees(np.arccos(np.clip(cos_flipped, -1, 1)))
+        results.append(check(
+            f"convention.reversed_sign_is_complementary_{int(t_deg)}deg",
+            0.0 if abs(flipped - (180.0 - t_deg)) < 0.05 else 1.0, 0.0))
+
+    # (3) +grad(g) is the canonical R1 wall-normal branch
     n_c = 24
     solid_w = np.zeros((n_c, n_c, n_c), dtype=bool)
-    solid_w[:, :, :3] = True                      # floor: solid for z < 3
+    solid_w[:, :, :3] = True                      # floor: solid z < 3
     fluid_w = ~solid_w
-    nw_w = op.wall_normals(solid_w, sign=-1.0)    # canonical
+    nw_canon = op.wall_normals(solid_w, sign=+1.0)
     wall_nodes = np.zeros_like(solid_w)
     for _i in range(1, 19):
         wall_nodes |= op._shift_fwd(solid_w, L.E[_i]).astype(bool)
     wall_nodes &= fluid_w
-    # The box is periodic, so the wrap makes the topmost layer adjacent to
-    # the solid at z = 0 as well.  Restrict to the floor band so the
-    # assertion tests the floor normal and not the wrap-implied one.
     band = np.zeros_like(solid_w)
-    band[:, :, 3:8] = True
+    band[:, :, 3:8] = True                        # avoid the periodic wrap
     wall_nodes &= band
-    nw_at_wall = nw_w[wall_nodes]
-    # for a flat floor the canonical normal must point solid -> fluid (+z)
-    results.append(check("convention.nw_points_solid_to_fluid",
+    nw_at_wall = nw_canon[wall_nodes]
+    # floor: grad(g) points into the solid, i.e. -z; that IS the canonical n_w
+    results.append(check("convention.nw_is_plus_grad_g_fluid_to_solid",
                          [np.abs(nw_at_wall[:, 0]).max(),
                           np.abs(nw_at_wall[:, 1]).max(),
-                          np.abs(nw_at_wall[:, 2] - 1.0).max()], 1e-9))
+                          np.abs(nw_at_wall[:, 2] + 1.0).max()], 1e-9))
+    nw_flip = op.wall_normals(solid_w, sign=-1.0)
+    results.append(check("convention.minus_grad_g_is_rejected",
+                         [0.0 if np.abs(nw_flip[wall_nodes][:, 2] - 1.0).max()
+                          < 1e-9 else 1.0], 0.0))
 
-    # the specified analytic branch: F = (-sin t, 0, cos t) with n_w = +z
-    # gives angle(F, n_w) = t, which is the angle through the liquid
-    # R1's secant is deliberately stopped at n = 2 because in a simulation it
-    # is re-applied every step from a good initial guess.  A single
-    # application is therefore a partial step, not a solver; the analytic
-    # test must verify that its FIXED POINT is the requested branch, i.e.
-    # that iterating it converges to theta and not to the complementary one.
-    for t_deg in (60.0, 90.0, 120.0):
+    # (4) the R1 secant must converge to the branch consistent with the
+    #     phase definitions: angle(F, n_w) = theta_liquid
+    for t_deg in (30.0, 60.0, 90.0, 120.0, 150.0):
         t = np.deg2rad(t_deg)
         for start_deg in (t_deg, 180.0 - t_deg, 90.0):
             sd = np.deg2rad(start_deg)
             Fx = np.zeros((n_c, n_c, n_c, 3))
             Fx[..., 0] = -np.sin(sd)
-            Fx[..., 2] = np.cos(sd)
+            Fx[..., 2] = -np.cos(sd)          # n_w is -z for this floor
             for _ in range(40):
-                Fx = op.secant_contact_angle(Fx, wall_nodes, nw_w, t)
+                Fx = op.secant_contact_angle(Fx, wall_nodes, nw_canon, t)
                 Fx = Fx / np.maximum(np.linalg.norm(Fx, axis=-1,
                                                     keepdims=True), 1e-30)
             ang = np.degrees(np.arccos(np.clip(
-                np.einsum("...a,...a->...", Fx[wall_nodes], nw_w[wall_nodes]),
-                -1.0, 1.0)))
+                np.einsum("...a,...a->...", Fx[wall_nodes],
+                          nw_canon[wall_nodes]), -1.0, 1.0)))
             results.append(check(
-                f"convention.secant_fixed_point_{int(t_deg)}"
-                f"_from_{int(start_deg)}",
+                f"convention.secant_branch_{int(t_deg)}_from_{int(start_deg)}",
                 np.abs(ang - t_deg).max(), 1e-6))
 
-    # flipping n_w must produce the COMPLEMENTARY branch (180 - theta) and
-    # must therefore be rejected by the canonical convention
-    nw_flip = op.wall_normals(solid_w, sign=+1.0)
-    t60 = np.deg2rad(60.0)
-    F_analytic = np.zeros((n_c, n_c, n_c, 3))
-    F_analytic[..., 0] = -np.sin(t60)
-    F_analytic[..., 2] = np.cos(t60)
-    F_bad = op.secant_contact_angle(F_analytic.copy(), wall_nodes, nw_flip, t60)
-    ang_bad = np.degrees(np.arccos(np.clip(
-        np.einsum("...a,...a->...", F_bad[wall_nodes], nw_w[wall_nodes]),
-        -1.0, 1.0)))
-    results.append(check("convention.flipped_nw_is_complementary",
-                         0.0 if np.abs(ang_bad.mean() - (180.0 - 60.0)) < 25.0
-                         else 1.0, 0.0))
-    results.append(check("convention.flipped_nw_fails_canonical_gate",
-                         0.0 if np.abs(ang_bad.mean() - 60.0) > 15.0 else 1.0,
-                         0.0))
-
-    # the canonical sign is derived, not defaulted: the solver must expose
-    # -1 and must mark any override non-canonical
+    # (5) the canonical branch is derived, not a tunable: no physical
+    #     wetting_sign parameter may exist
     import inspect as _ins
     from leclaire_cg.solver import LeclaireCG3D as _S
     _sig = _ins.signature(_S.__init__).parameters
@@ -335,21 +361,12 @@ def main():
     results.append(check("convention.override_is_labelled_debug",
                          0.0 if "nw_sign_override" in _sig else 1.0, 0.0))
 
-    # ---- contact-angle instrument validated on a synthetic contour -----
-    # The circle-fit instrument replaced a spherical-cap estimate whose
-    # error changed sign between passes.  Before it is trusted on a
-    # simulation it must recover a known angle from an exact circle.
-    import math as _m
-    for ang in (30.0, 60.0, 90.0, 120.0, 150.0):
-        R_t = 8.0
-        zc_t = R_t * _m.cos(_m.radians(ang))
-        z_top = zc_t + R_t          # apex of the cap; contour stops here
-        zs_t = np.linspace(0.5, max(z_top - 0.5, 1.0), 24)
-        rs_t = np.sqrt(np.maximum(R_t ** 2 - (zs_t - zc_t) ** 2, 0.0))
-        th, Rf, zcf, rms = G_geom.contact_angle_circle_fit(zs_t, rs_t, 0.0)
-        results.append(check(f"instrument.circle_fit_recovers_{int(ang)}deg",
-                             abs(th - ang), 0.05))
-
+    # ---- contact-angle instrument validated on an INDEPENDENT contour --
+    # The pass-4 synthetic block constructed its reference with z_c = R cos t
+    # and then checked the instrument that used the same sign, so it was
+    # circular and could not detect the reversed sign (external review R3-2).
+    # It is replaced by the analytic construction above and by the
+    # liquid-side checks in the convention block.
     # ---- recolouring conserves both components exactly ----------------
     Nr = rng.random((3, 3, 3, 19))
     fr = rng.random((3, 3, 3))

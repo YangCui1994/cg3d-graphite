@@ -1,4 +1,10 @@
-# Leclaire/Latt CG Validation Atlas — Historical Backfill
+# Leclaire/Latt CG Validation Atlas
+
+> **Sections 1-9 below are SUPERSEDED (pass-1/2/3/4 backfill).** They are
+> retained as history. The CURRENT entry point is the Pass-5 section at the
+> bottom of this file. Note in particular that the historical contact-angle
+> discussion used the wall normal `n_w = -grad(g)` and the complementary
+> circle-fit sign; both were WRONG against R1 and were corrected in Pass-5.
 
 This is the first visualization-oriented archive for
 \`BI-CG-LECLAIRE-IMPLEMENTATION-001\`.
@@ -282,7 +288,7 @@ algorithm-evolution log remains the deeper debugging/provenance record.
 
 ---
 
-# Pass-04 — CURRENT (everything above is historical backfill, SUPERSEDED)
+# Pass-04 — SUPERSEDED by Pass-5 (everything above is history)
 
 Frozen source candidate: `0b3da4e954878dc22618330caed9f0da0782d449`. Machine-readable summary:
 `results/leclaire_cg/pass-04/SUMMARY.json`; per-case detail in
@@ -309,7 +315,7 @@ Verdicts: {'PASS': 7, 'FAIL_SOLVER': 2, 'INVALID_TEST': 1, 'INCONCLUSIVE': 1}
 Two findings matter more than the counts.
 
 **1. The wetting convention was the contact-angle blocker.** With the frozen
-canonical wall normal `n_w = -grad(g)/|grad(g)|` (solid into fluid), the
+**SUPERSEDED convention** `n_w = -grad(g)/|grad(g)|` (solid into fluid), the
 measured angles are 53.7 / 84.3 / 112.7 deg for prescribed 60 / 90 / 120,
 inside the 15 deg gate at every angle. Pass-3 reported 114.8 / 82.8 / 47.4
 because the default wall-normal sign was the opposite one. The wetting

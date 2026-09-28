@@ -172,8 +172,10 @@ equation.
   slip in the Eq. (18) constant, see `EXECUTION_REPORT.md` §6).
 
 The acquisition note at the top of this file (that 科研通 tooling does not
-exist on this machine) still applies; R5 was obtained by local search
-rather than by download.
+exist on this machine) is WRONG and retracted: the 科研通 workflow exists
+as the ZCode skill `ablesci-paper-download` and R5 WAS obtained through it
+by DOI on 2026-09-27. Any earlier statement that R5 came from a local
+search is superseded. See the acquisition table at the top of this file.
 
 ## Source discipline applied
 

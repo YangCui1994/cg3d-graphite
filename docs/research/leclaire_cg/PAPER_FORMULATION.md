@@ -644,7 +644,7 @@ Preprocessing, once, before the time loop:
 1. smooth the binary solid indicator `g` three times with a D3Q27-weighted
    3×3×3 stencil: `g⁽ⁿ⁾(α,β,γ) = Σ_{i,j,k=−1}^{1} w(i²+j²+k²) g⁽ⁿ⁻¹⁾(α+i,β+j,γ+k)`
    (Eq. 34) with `w(0)=8/27, w(1)=2/27, w(2)=1/54, w(3)=1/216` (Eqs. 35–38);
-2. `n_w = ∇g⁽³⁾` at the fluid sites near the boundary, using the same gradient
+2. `n_w = +∇g/|∇g|` (fluid -> solid) at the fluid sites near the boundary, using the same gradient
    operator as §4.3; store it.
 
 R1 notes the gradient of the **un**smoothed grey image may be used directly if a

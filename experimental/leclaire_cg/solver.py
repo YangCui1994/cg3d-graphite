@@ -79,14 +79,15 @@ class LeclaireCG3D:
         self.wetting = wetting
         # CANONICAL wall normal, frozen by WETTING_PHASE_CONVENTION.md:
         #     g = 1 in solid, 0 in fluid
-        #     n_w = -grad(g)/|grad(g)|   (solid -> fluid)
-        # With g increasing into the solid, grad(g) points INTO the solid,
-        # so the canonical n_w is the NEGATIVE gradient: sign = -1.
-        # The sign is NOT a physical parameter. nw_sign_override exists only
-        # as a labelled non-canonical debug switch for regression probing and
-        # must never be used to make a validation case pass.
+        #     n_w = +grad(g)/|grad(g)|   (fluid -> solid)
+        # R1 Sec. II.E / Eqs. (34)-(38) define n_w = grad(g^(3)).  With g
+        # increasing into the solid, +grad(g) points fluid -> solid, so the
+        # canonical branch is the POSITIVE gradient: sign = +1.
+        # The sign is NOT a physical parameter and must not be calibrated
+        # from a desired result.  nw_sign_override exists only as a labelled
+        # non-canonical debug switch for regression probing.
         self.nw_sign_override = nw_sign_override
-        self.nw_sign = -1.0 if nw_sign_override is None else float(
+        self.nw_sign = +1.0 if nw_sign_override is None else float(
             nw_sign_override)
         self.recolor_form = recolor_form
         self.perturbation_coeff = perturbation_coeff

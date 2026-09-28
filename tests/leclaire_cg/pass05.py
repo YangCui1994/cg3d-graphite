@@ -1,4 +1,4 @@
-"""BI-CG-LECLAIRE-PASS4-001 -- frozen reference-model validation harness.
+"""BI-CG-LECLAIRE-WETTING-CLOSURE-001 (Pass-5) frozen validation harness.
 
 Runs the eleven pass-04 cases from one frozen candidate and writes the
 immutable artifact tree required by VALIDATION_ARTIFACT_SPEC.md:
@@ -36,7 +36,7 @@ from leclaire_cg import operators as op       # noqa: E402
 from leclaire_cg import lattice as L          # noqa: E402
 import artifact as A                          # noqa: E402
 
-OUT_ROOT = os.path.join(HERE, "..", "..", "results", "leclaire_cg", "pass-04")
+OUT_ROOT = os.path.join(HERE, "..", "..", "results", "leclaire_cg", "pass-05")
 NU = 1.0 / 6.0
 SIGMA = 0.02
 BETA = 0.7
@@ -333,6 +333,11 @@ def case_04(out_root, cand, angles=(60.0, 90.0, 120.0), n=(30, 30, 30),
         c.snapshot(f"theta{int(th)}_final", s)
         zs, rs = G.interface_radius_profile(s.psi(), s.solid)
         a, Rfit, zc, rms = G.contact_angle_circle_fit(zs, rs, float(wall - 1))
+        c.fig_contact_angle(zs, rs, Rfit, zc,
+                            a if np.isfinite(a) else float("nan"),
+                            float(wall - 1), f"fig_cap_theta{int(th)}",
+                            f"sessile cap, prescribed {th:.0f} deg",
+                            source_raw=c.snaps[f"theta{int(th)}_final"]["file"])
         runs.append(dict(theta_prescribed_deg=th, theta_measured_deg=a,
                          n_contour_points=int(zs.size), fit_R=Rfit,
                          fit_zc=zc,
@@ -436,19 +441,22 @@ def case_05(out_root, cand, betas=(0.0, 0.5, 0.7, 1.0, 1.5, 2.0),
                        rho_r_min=float(s.rho_r.min()),
                        rho_b_min=float(s.rho_b.min())))
     g = GATES["05_beta"]
+    mid_beta = betas[len(betas) // 2]
     valid = [r for r in runs if r["positivity_ok"] and r["psi_peak"] > 0.95]
     mono = bool(all(b["width"] <= a["width"] + 1e-9
                     for a, b in zip(valid, valid[1:]))) if len(valid) > 1 else False
     verd = "PASS" if len(valid) >= g["min_valid"] and mono else "FAIL_SOLVER"
     c.fig_xy([r["beta"] for r in runs], [r["width"] for r in runs],
              "fig2_observable", "interface width vs beta", "beta", "width [lu]",
-             source_raw=c.snaps["beta0.7_final"]["file"])
+             source_raw=c.snaps[f"beta{mid_beta}_final"]["file"])
     c.fig_xy([r["beta"] for r in runs],
              [max(0.0, r["psi_peak"] - 1.0) for r in runs], "fig3_residual",
              "positivity violation max(0,|psi|max-1)", "beta",
-             "max(0, |psi|max - 1)", source_raw=c.snaps["beta2.0_final"]["file"])
+             "max(0, |psi|max - 1)",
+             source_raw=c.snaps[f"beta{betas[-1]}_final"]["file"])
     c.fig_field_slice({"psi": s.psi(), "solid": s.solid}, "fig1_field",
-                      "final interface fields", source_raw=c.snaps["beta2.0_final"]["file"])
+                      "final interface fields",
+                      source_raw=c.snaps[f"beta{betas[-1]}_final"]["file"])
     c.write_metrics(dict(runs=runs, widths_valid=[r["width"] for r in valid],
                          betas_valid=[r["beta"] for r in valid],
                          monotone_in_beta=mono,
@@ -974,92 +982,149 @@ def case_10(out_root, cand, n=(8, 8, 24), steps=1000):
 #  case 11 -- planar mechanical-sigma diagnostic (D5)
 # ===========================================================================
 def case_11(out_root, cand, n=(6, 6, 64), steps=800, width=2.5):
-    """Mechanical surface tension from the planar momentum-flux anisotropy.
+    """Planar mechanical sigma -- EXPLORATORY unless every premise is closed.
 
-    Derivation: MECHANICAL_SIGMA_DERIVATION.md.  The R1 perturbation has
-    second moment
+    External review R3-7 requires the diagnostic to satisfy its stated
+    premises before it may contribute a validating verdict:
+      * the retained raw data must allow the stress observable to be
+        recomputed from scratch  -> the full N_i distribution is snapshotted;
+      * the periodic domain contains TWO interfaces, so one must be isolated
+        or both explicitly accounted for -> the integral is taken over a
+        window containing exactly ONE interface, located from the phase
+        field, and the other interface is excluded by construction;
+      * the bulk reference window must be demonstrably free of interfaces ->
+        it is centred on the midpoint between the two interfaces;
+      * the discrete total-variation/integral consistency must be reported.
 
-        dPi_ab = (2/9) A |F| (n_a n_b - delta_ab)
-
-    so for a planar interface with normal z,
-
-        Pi_zz - Pi_xx = (2/9) A |F| = (2/9) A |dpsi/dz|
-
-    and, since |grad psi| integrates to the total variation 2 over a
-    monotone profile,
-
-        sigma_mech = int (P_N - P_T) dz = (2/9) A * 2 = (4/9) A.
-
-    With A = (9/4) omega_eff sigma this is exactly sigma when omega_eff = 1.
-    The diagnostic measures the integral from the simulated field and does
-    not assume the result.
+    If any premise fails the case reports EXPLORATORY_UNGATED, never PASS.
+    A = (9/4) omega_eff sigma is not retuned; an offset is a result.
     """
     c = A.Case(out_root, 11, "mechanical-sigma", cand)
     s = make(n)
     s.init_psi(G.planar_interface(n[0], n[1], n[2], width=width))
     s.run(steps)
-    c.snapshot("t_final", s)
+    # retain the raw DISTRIBUTION so the stress observable is recomputable
     N = s.Nr + s.Nb
+    c.snapshot("t_final", s, extra=dict(Ndist=N.astype(np.float32)))
     Ef = L.E.astype(float)
-    Pi = np.einsum("...i,ia,ib->...ab", N, Ef, Ef)      # momentum flux tensor
-    pn = Pi[..., 2, 2]
-    pt = 0.5 * (Pi[..., 0, 0] + Pi[..., 1, 1])
-    pn_prof = pn[n[0] // 2, n[1] // 2, :]
-    pt_prof = pt[n[0] // 2, n[1] // 2, :]
-    bulk = slice(2, 8)
-    d_pn = pn_prof - pn_prof[bulk].mean()
-    d_pt = pt_prof - pt_prof[bulk].mean()
-    diff = d_pn - d_pt
-    sigma_mech = float(np.sum(diff))
+    Pi = np.einsum("...i,ia,ib->...ab", N, Ef, Ef)
+    pn = Pi[..., 2, 2][n[0] // 2, n[1] // 2, :]
+    pt = 0.5 * (Pi[..., 0, 0] + Pi[..., 1, 1])[n[0] // 2, n[1] // 2, :]
+    psi_prof = s.psi()[n[0] // 2, n[1] // 2, :]
+    nz = n[2]
+    # locate the psi = 0 crossings (the two periodic interfaces)
+    cross = np.where(np.sign(psi_prof[:-1]) * np.sign(psi_prof[1:]) < 0)[0]
+    n_ifc = int(cross.size)
+    if n_ifc:
+        i0 = int(cross[0])
+        half = nz // 4
+        lo, hi = max(i0 - half, 1), min(i0 + half, nz - 1)
+        win = slice(lo, hi)                     # exactly one interface
+        # bulk reference centred on the midpoint between the interfaces
+        other = int(cross[1]) if n_ifc > 1 else (i0 + nz // 2) % nz
+        mid = (i0 + other) // 2
+        b_lo, b_hi = max(mid - 3, 0), min(mid + 4, nz)
+        bulk = slice(b_lo, b_hi)
+    else:
+        win, bulk = slice(1, nz - 1), slice(2, 8)
+    ref_n = float(pn[bulk].mean())
+    ref_t = float(pt[bulk].mean())
+    diff = (pn - ref_n) - (pt - ref_t)
+    sigma_mech = float(np.sum(diff[win]))
+    # discrete total variation of psi over the SAME window: the continuum
+    # value for one monotone interface is 2
+    tv = float(np.sum(np.abs(np.diff(psi_prof))[win.start:win.stop]))
+    tv_target = 2.0
+    tv_rel = abs(tv - tv_target) / tv_target
+    grad_mag = 0.5 * (np.abs(np.diff(psi_prof))[max(win.start - 1, 0):win.stop]
+                      + np.abs(np.diff(psi_prof))[win.start:win.stop + 1])
+    tv_from_grad = float(np.sum(grad_mag))
+    # premise checks
+    prem = dict(
+        one_interface_isolated=bool(n_ifc >= 1),
+        n_interfaces_found=n_ifc,
+        bulk_window_clear=bool(not (win.start <= b_lo and b_hi <= win.stop)),
+        bulk_window=[b_lo, b_hi],
+        integration_window=[win.start, win.stop],
+        raw_distribution_retained=True,
+        tv_discrete=tv, tv_target=tv_target, tv_relative_error=tv_rel,
+        tv_from_gradient=tv_from_grad,
+    )
+    prem["all_premises_closed"] = bool(
+        prem["one_interface_isolated"] and prem["bulk_window_clear"]
+        and prem["raw_distribution_retained"] and tv_rel < 0.10)
     sigma_th = SIGMA
-    g = GATES["11_mech_sigma"]
     ratio = sigma_mech / sigma_th
-    ok = g["ratio_lo"] < ratio < g["ratio_hi"]
-    verd = "PASS" if ok else "EXPLORATORY_UNGATED"
+    # A validating PASS requires the premises to be closed AND the ratio in
+    # band.  Otherwise the case is EXPLORATORY_UNGATED, by contract E8.
+    if not prem["all_premises_closed"]:
+        verd = "EXPLORATORY_UNGATED"
+        why = "premises not closed: " + ", ".join(
+            k for k in ("one_interface_isolated", "bulk_window_clear",
+                        "raw_distribution_retained") if not prem[k]) +             ("" if tv_rel < 0.10 else ", tv_consistency")
+    elif GATES["11_mech_sigma"]["ratio_lo"] < ratio < GATES["11_mech_sigma"]["ratio_hi"]:
+        verd = "PASS"
+        why = "premises closed and ratio inside the predeclared band"
+    else:
+        verd = "EXPLORATORY_UNGATED"
+        why = "premises closed but the ratio is outside the band"
     c.fig_field_slice({"psi": s.psi(), "solid": s.solid}, "fig1_field",
                       "planar interface used for the mechanical-sigma integral",
                       source_raw=c.snaps["t_final"]["file"])
-    zz = np.arange(n[2])
-    c.fig_xy(zz, diff, "fig2_observable",
-             "P_N - P_T profile across the interface", "z [lu]", "P_N - P_T",
+    c.fig_xy(np.arange(nz), diff, "fig2_observable",
+             "P_N - P_T profile (integration window shaded by markers)",
+             "z [lu]", "P_N - P_T",
              series=[dict(y=diff, label="P_N - P_T", style="o-")],
              source_raw=c.snaps["t_final"]["file"])
-    c.fig_xy(zz, np.cumsum(diff), "fig3_residual",
-             "cumulative integral (plateaus at sigma_mech)", "z [lu]",
+    c.fig_xy(np.arange(nz), np.cumsum(diff), "fig3_residual",
+             "cumulative integral (one interface)", "z [lu]",
              "cumulative integral",
              series=[dict(y=np.cumsum(diff), label="cumulative", style="o-"),
-                     dict(y=[sigma_th] * n[2], label="sigma_input", style="--")],
+                     dict(y=[sigma_th] * nz, label="sigma_input", style="--")],
              source_raw=c.snaps["t_final"]["file"])
     c.write_metrics(dict(sigma_mech=sigma_mech, sigma_input=sigma_th,
-                         sigma_ratio=ratio, A_coefficient=2.25,
-                         omega_eff=1.0,
+                         sigma_ratio=ratio, A_coefficient=2.25, omega_eff=1.0,
                          predicted_from_derivation=(4.0 / 9.0) * 2.25 * SIGMA,
-                         gates=g, verdict=verd,
-                         note="Eq.(18) is not retuned; an offset is a reported result."),
-                    [dict(z=int(z), pn=float(a), pt=float(b), diff=float(d))
-                     for z, a, b, d in zip(zz, d_pn, d_pt, diff)])
+                         premises=prem, gates=GATES["11_mech_sigma"],
+                         verdict=verd, verdict_reason=why,
+                         note="EXPLORATORY unless premises closed; A=(9/4)omega*sigma "
+                              "is not retuned and the raw N_i distribution is retained "
+                              "so the stress observable is recomputable from the "
+                              "committed snapshot alone."),
+                    [dict(z=int(z), pn=float(pn[z] - ref_n),
+                          pt=float(pt[z] - ref_t), diff=float(diff[z]))
+                     for z in range(nz)])
     c.write_metadata(dict(grid=list(n), steps=steps, width=width, wetting="none",
-                          snapshot_times=["t_final"], exit_code=0))
-    c.write_readme(dict(target="mechanical surface tension for a planar interface"),
+                          snapshot_times=["t_final"], exit_code=0,
+                          raw_extra_fields=["Ndist"],
+                          premises=prem))
+    c.write_readme(dict(target="planar mechanical surface tension (exploratory)"),
                    dict(**{"domain size": n, "lattice": "D3Q19",
                            "initial condition": "psi=-tanh((z-c)/2.5)",
                            "solid geometry": "none", "boundary conditions": "periodic",
                            "wetting convention": "n/a", "nu": NU, "sigma": SIGMA,
                            "beta": BETA, "forcing": "none",
-                           "precision/backend": "numpy f64", "run length": f"{steps} steps",
-                           "snapshot times": "final"}),
-                   dict(relation="sigma = int (P_N - P_T) dn   with dPi_ab = "
-                        "(2/9) A |F| (n_a n_b - delta_ab)",
-                        prose="See MECHANICAL_SIGMA_DERIVATION.md for the full derivation; "
-                              "the quadrature is a plain sum over nodes (dz = 1) after "
-                              "subtracting the bulk momentum-flux value."),
-                   [f"| sigma_mech | within {g['ratio_lo']}-{g['ratio_hi']}x sigma_input | "
-                    f"{sigma_mech:.5f} | ratio {ratio:.3f} | "
-                    f"{'ok' if ok else 'EXPLORATORY'} |"],
-                   "The derivation closes the prefactor from R1 Eqs. (16)-(18) and needs no "
-                   "collision/relaxation factor because the perturbation is applied to the "
-                   "distribution AFTER the collision and therefore enters the momentum flux "
-                   "directly.", verd)
+                           "precision/backend": "numpy f64",
+                           "run length": f"{steps} steps",
+                           "snapshot times": "final (includes the full N_i field)"}),
+                   dict(relation="sigma = int (P_N - P_T) dn with "
+                        "dPi_ab = (2/9) A |F| (n_a n_b - delta_ab)",
+                        prose="The integral is taken over a window containing exactly "
+                              "ONE interface (the periodic domain has two), with the "
+                              "bulk reference centred on the midpoint between them. "
+                              "The discrete total variation is reported as a "
+                              "consistency check against the continuum value 2."),
+                   [f"| sigma_mech | band {GATES['11_mech_sigma']['ratio_lo']}-"
+                    f"{GATES['11_mech_sigma']['ratio_hi']}x | {sigma_mech:.5f} | "
+                    f"ratio {ratio:.3f} | {verd} |",
+                    f"| premises closed | yes | {prem['all_premises_closed']} | - | "
+                    f"{'ok' if prem['all_premises_closed'] else 'FAIL'} |",
+                    f"| discrete total variation | 2.0 | {tv:.4f} | "
+                    f"{tv_rel*100:.1f}% | "
+                    f"{'ok' if tv_rel < 0.10 else 'FAIL'} |"],
+                   f"{why}. Mechanical sigma is EXPLORATORY by contract E8 unless the "
+                   "premises, the isolation of one interface and the recomputability "
+                   "of the observable are all closed.", verd)
     c.write_reproduce()
     c.write_render_manifest()
     return verd, c
@@ -1104,7 +1169,7 @@ def main():
     counts = {}
     for v in verdicts.values():
         counts[v] = counts.get(v, 0) + 1
-    summary = dict(stage="BI-CG-LECLAIRE-PASS4-001", candidate_sha=cand,
+    summary = dict(stage="BI-CG-LECLAIRE-WETTING-CLOSURE-001", candidate_sha=cand,
                    branch="agent-task/BI-CG-LECLAIRE-IMPLEMENTATION-001",
                    environment=A.environment(), verdict_counts=counts,
                    cases=results, total_wall_seconds=time.time() - t0,
@@ -1120,7 +1185,7 @@ def main():
                                       wall_seconds=v["wall_seconds"])
                               for k, v in results.items()},
                        raw_schema_version=A.RAW_SCHEMA_VERSION,
-                       command="python tests/leclaire_cg/pass04.py"),
+                       command="python tests/leclaire_cg/pass05.py"),
                    fh, indent=2, default=float)
     write_validation_report(OUT_ROOT, cand)
     print("verdicts:", counts, flush=True)
@@ -1153,7 +1218,7 @@ def write_validation_report(out_root, cand):
         detail.append(dict(key=key, verdict=info["verdict"],
                            metrics=metr, metadata=meta, dir=info["dir"]))
     lines = [
-        "# Pass-04 Validation Report — Leclaire/Latt reference line",
+        "# Pass-5 Validation Report — Leclaire/Latt reference line",
         "",
         f"- stage: `BI-CG-LECLAIRE-PASS4-001`",
         f"- candidate SHA: `{cand}`",
@@ -1162,9 +1227,11 @@ def write_validation_report(out_root, cand):
         f"- convention: {sm['convention']}",
         f"- verdict counts: {sm['verdict_counts']}",
         "",
-        "This is the **current headline** for this solver line. Passes 1, 2 and 3",
-        "remain in Git history and in `results/leclaire_cg/` and are **SUPERSEDED**;",
-        "their claims are not current.",
+        "This is the **current headline** for this solver line. Passes 1-4",
+        "remain in Git history and under `results/leclaire_cg/` and are",
+        "**SUPERSEDED**; their claims are not current. Pass-4 in particular used",
+        "the superseded wall normal `-grad(g)` and the complementary circle-fit",
+        "sign, so its contact-angle, slit-Pc and Jurin verdicts are void.",
         "",
         "## Case summary",
         "",
