@@ -1292,7 +1292,7 @@ def main():
     counts = {}
     for v in verdicts.values():
         counts[v] = counts.get(v, 0) + 1
-    summary = dict(stage="BI-CG-LECLAIRE-WETTING-CLOSURE-001", candidate_sha=cand,
+    summary = dict(stage=STAGE, candidate_sha=cand,
                    branch="agent-task/BI-CG-LECLAIRE-IMPLEMENTATION-001",
                    environment=A.environment(), verdict_counts=counts,
                    cases=results, total_wall_seconds=time.time() - t0,
@@ -1338,7 +1338,7 @@ def write_validation_report(out_root, cand):
         detail.append(dict(key=key, verdict=info["verdict"],
                            metrics=metr, metadata=meta, dir=info["dir"]))
     lines = [
-        "# Pass-5 Validation Report — Leclaire/Latt reference line",
+        f"# Validation Report — Leclaire/Latt reference line ({PASS_TAG})",
         "",
         f"- stage: `BI-CG-LECLAIRE-JURIN-PROVENANCE-CLOSURE-001`",
         f"- candidate SHA: `{cand}`",
