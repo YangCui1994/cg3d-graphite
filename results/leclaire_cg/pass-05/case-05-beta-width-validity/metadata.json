@@ -1,0 +1,31 @@
+{
+  "grid": [
+    6,
+    6,
+    32
+  ],
+  "steps": 600,
+  "betas": [
+    0.0,
+    0.5,
+    0.7,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "wetting": "none",
+  "snapshot_times": [
+    "beta0.0_final",
+    "beta0.5_final",
+    "beta0.7_final",
+    "beta1.0_final",
+    "beta1.5_final",
+    "beta2.0_final"
+  ],
+  "exit_code": 0,
+  "candidate_sha": "b65bdce3758dd967df1a3f5559c7014f97fd960b",
+  "case_id": "case-05",
+  "case_name": "beta-width-validity",
+  "raw_schema_version": "l17c_core_raw_v1",
+  "wall_seconds": 18.110479831695557
+}

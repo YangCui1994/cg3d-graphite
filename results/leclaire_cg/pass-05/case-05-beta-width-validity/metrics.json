@@ -1,0 +1,75 @@
+{
+  "runs": [
+    {
+      "beta": 0.0,
+      "width": 19.99999999999994,
+      "psi_peak": 0.05733943963426529,
+      "positivity_ok": true,
+      "rho_r_min": 0.5025802605944965,
+      "rho_b_min": 0.47133028018281714
+    },
+    {
+      "beta": 0.5,
+      "width": 1.838714819891559,
+      "psi_peak": 0.997003262159277,
+      "positivity_ok": true,
+      "rho_r_min": 0.0022908337196226774,
+      "rho_b_min": 0.001498368920361229
+    },
+    {
+      "beta": 0.7,
+      "width": 1.4690258335867161,
+      "psi_peak": 0.9998668653544,
+      "positivity_ok": true,
+      "rho_r_min": 0.000125954047672139,
+      "rho_b_min": 6.656732279997612e-05
+    },
+    {
+      "beta": 1.0,
+      "width": 1.123044756744,
+      "psi_peak": 0.9999998452806443,
+      "positivity_ok": true,
+      "rho_r_min": 2.3517998431656598e-07,
+      "rho_b_min": 7.735967782446956e-08
+    },
+    {
+      "beta": 1.5,
+      "width": 0.6646710755564421,
+      "psi_peak": 1.0168378666505138,
+      "positivity_ok": false,
+      "rho_r_min": -0.007673448507684228,
+      "rho_b_min": -0.008418933325256004
+    },
+    {
+      "beta": 2.0,
+      "width": 0.4047728102839133,
+      "psi_peak": 1.1140932155687555,
+      "positivity_ok": false,
+      "rho_r_min": -0.057046607784371324,
+      "rho_b_min": -0.05461582662927566
+    }
+  ],
+  "widths_valid": [
+    1.838714819891559,
+    1.4690258335867161,
+    1.123044756744
+  ],
+  "betas_valid": [
+    0.5,
+    0.7,
+    1.0
+  ],
+  "monotone_in_beta": true,
+  "invalid_by_positivity": [
+    1.5,
+    2.0
+  ],
+  "invalid_by_dissolution": [
+    0.0
+  ],
+  "gates": {
+    "positivity_tol": 1e-09,
+    "min_valid": 1
+  },
+  "verdict": "PASS"
+}

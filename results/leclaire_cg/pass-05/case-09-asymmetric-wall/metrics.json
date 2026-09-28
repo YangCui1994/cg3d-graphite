@@ -1,0 +1,28 @@
+{
+  "closed_box": {
+    "x_minus": true,
+    "x_plus": true,
+    "y_minus": true,
+    "y_plus": true,
+    "all_closed": true
+  },
+  "wall_band_red_relative": -0.06830797819444548,
+  "max_red_excursion": 2.7491544394499874e-13,
+  "max_blue_excursion": 2.7414768867726837e-13,
+  "late_red_rate_per_step": -2.419255906715989e-13,
+  "late_blue_rate_per_step": -2.558711760987838e-13,
+  "red_drift": 3.6288838600739837e-10,
+  "blue_drift": 3.838067641481757e-10,
+  "n_components_final": 1,
+  "component_sizes": [
+    1100
+  ],
+  "max_abs_v": 0.0003275183846265769,
+  "gates": {
+    "wall_band": 0.02,
+    "excursion": 0.02,
+    "late_rate": 1e-06
+  },
+  "verdict": "FAIL_SOLVER",
+  "attribution": "wall-band change is NOT attributed to wall mass transfer; no stationary reference case was run"
+}

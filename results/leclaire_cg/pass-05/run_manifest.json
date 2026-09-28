@@ -1,0 +1,83 @@
+{
+  "stage": "BI-CG-LECLAIRE-WETTING-CLOSURE-001",
+  "candidate_sha": "b65bdce3758dd967df1a3f5559c7014f97fd960b",
+  "environment": {
+    "host": "Yang",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.13.9",
+    "numpy": "2.3.5",
+    "matplotlib": "3.10.6",
+    "backend": "numpy-f64",
+    "generated_utc": "2026-09-28T10:30:31Z"
+  },
+  "cases": {
+    "case-01": {
+      "dir": "case-01-uniform-stationarity",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "wall_seconds": 1.3012456893920898
+    },
+    "case-02": {
+      "dir": "case-02-planar-interface",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "wall_seconds": 4.845935821533203
+    },
+    "case-03": {
+      "dir": "case-03-laplace-multi-radius",
+      "exit_code": 0,
+      "verdict": "FAIL_SOLVER",
+      "wall_seconds": 355.2778310775757
+    },
+    "case-04": {
+      "dir": "case-04-contact-angle",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "wall_seconds": 565.5311918258667
+    },
+    "case-05": {
+      "dir": "case-05-beta-width-validity",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "wall_seconds": 18.112718105316162
+    },
+    "case-06": {
+      "dir": "case-06-axis-symmetry-isotropy",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "wall_seconds": 39.39030361175537
+    },
+    "case-07": {
+      "dir": "case-07-slit-capillary-pressure",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "wall_seconds": 62.66683006286621
+    },
+    "case-08": {
+      "dir": "case-08-jurin-equilibrium",
+      "exit_code": 0,
+      "verdict": "FAIL_SOLVER",
+      "wall_seconds": 238.02623438835144
+    },
+    "case-09": {
+      "dir": "case-09-asymmetric-wall",
+      "exit_code": 0,
+      "verdict": "FAIL_SOLVER",
+      "wall_seconds": 39.95905828475952
+    },
+    "case-10": {
+      "dir": "case-10-conservation",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "wall_seconds": 11.60567331314087
+    },
+    "case-11": {
+      "dir": "case-11-mechanical-sigma",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "wall_seconds": 6.099671840667725
+    }
+  },
+  "raw_schema_version": "l17c_core_raw_v1",
+  "command": "python tests/leclaire_cg/pass05.py"
+}

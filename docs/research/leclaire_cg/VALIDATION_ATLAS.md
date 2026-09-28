@@ -334,3 +334,56 @@ pressure difference is still ~0 and the curved-meniscus driving is not
 established); case-08 is `INCONCLUSIVE` (reachability precheck passes, the
 capillary level is still not measurable); case-09 fails its wall-band gate
 without attribution to wall mass transfer.
+
+---
+
+# Pass-5 — CURRENT (`BI-CG-LECLAIRE-WETTING-CLOSURE-001`)
+
+Frozen source candidate `b65bdce3758dd967df1a3f5559c7014f97fd960b`. Machine-readable summary:
+`results/leclaire_cg/pass-05/SUMMARY.json`; per-case detail in
+`results/leclaire_cg/pass-05/VALIDATION_REPORT.md`. Every earlier section in
+this file is historical and SUPERSEDED.
+
+Verdicts: {'PASS': 8, 'FAIL_SOLVER': 3}
+
+| case | verdict | artifact |
+|---|---|---|
+| case-01 | **PASS** | `case-01-uniform-stationarity/README.md` |
+| case-02 | **PASS** | `case-02-planar-interface/README.md` |
+| case-03 | **FAIL_SOLVER** | `case-03-laplace-multi-radius/README.md` |
+| case-04 | **PASS** | `case-04-contact-angle/README.md` |
+| case-05 | **PASS** | `case-05-beta-width-validity/README.md` |
+| case-06 | **PASS** | `case-06-axis-symmetry-isotropy/README.md` |
+| case-07 | **PASS** | `case-07-slit-capillary-pressure/README.md` |
+| case-08 | **FAIL_SOLVER** | `case-08-jurin-equilibrium/README.md` |
+| case-09 | **FAIL_SOLVER** | `case-09-asymmetric-wall/README.md` |
+| case-10 | **PASS** | `case-10-conservation/README.md` |
+| case-11 | **PASS** | `case-11-mechanical-sigma/README.md` |
+
+## What changed and why it matters
+
+**The wall normal was the root of the Pass-4 wetting results.** R1
+Eqs. (34)-(38) define `n_w = grad(g)`; with `g = 1` in the solid that points
+**fluid -> solid**. Pass-4 used the negation. The contact-angle instrument
+had the matching error: it used `cos(theta) = +(z_c - z_w)/R` where the
+sessile liquid-side relation is `cos(theta_liquid) = -(z_c - z_w)/R`, so it
+returned the complementary angle. Both are corrected in the frozen Pass-5
+source and both are now locked by independent analytic geometry tests at
+30/60/90/120/150 degrees whose construction is driven by the interface
+tangent, not by the measurement formula.
+
+**Raw fields are tracked.** The repository-wide `*.npz` ignore rule silently
+excluded the Pass-4 raw snapshots that the render manifests reference.
+Pass-5 adds an explicit exception and ships every referenced raw NPZ;
+`tests/leclaire_cg/verify_manifest_paths.py` asserts that each manifest's
+`source_raw` path exists and is not ignored.
+
+**Mechanical sigma is exploratory.** Case 11 reports
+`EXPLORATORY_UNGATED` unless its premises are closed in code: one interface
+isolated, a clean bulk window, the full `N_i` distribution retained so the
+observable is recomputable, and a discrete total-variation consistency
+check. It does not contribute a validating verdict.
+
+**Laplace remains open.** The sigma calibration is outside the predeclared
+band and was not retuned; the result is preserved as an open calibration
+question.

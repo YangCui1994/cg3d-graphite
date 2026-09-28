@@ -1,0 +1,22 @@
+{
+  "grid": [
+    8,
+    8,
+    8
+  ],
+  "steps": 400,
+  "initial": "psi=+1, u=0",
+  "solid": "none",
+  "bc": "periodic",
+  "wetting": "none",
+  "snapshot_times": [
+    0,
+    400
+  ],
+  "exit_code": 0,
+  "candidate_sha": "b65bdce3758dd967df1a3f5559c7014f97fd960b",
+  "case_id": "case-01",
+  "case_name": "uniform-stationarity",
+  "raw_schema_version": "l17c_core_raw_v1",
+  "wall_seconds": 1.2999467849731445
+}

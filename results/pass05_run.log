@@ -1,0 +1,13 @@
+[              PASS] case-01  (1.3 s, exit 0)
+[              PASS] case-02  (4.8 s, exit 0)
+[       FAIL_SOLVER] case-03  (355.3 s, exit 0)
+[              PASS] case-04  (565.5 s, exit 0)
+[              PASS] case-05  (18.1 s, exit 0)
+[              PASS] case-06  (39.4 s, exit 0)
+[              PASS] case-07  (62.7 s, exit 0)
+[       FAIL_SOLVER] case-08  (238.0 s, exit 0)
+[       FAIL_SOLVER] case-09  (40.0 s, exit 0)
+[              PASS] case-10  (11.6 s, exit 0)
+[              PASS] case-11  (6.1 s, exit 0)
+VALIDATION_REPORT.md written
+verdicts: {'PASS': 8, 'FAIL_SOLVER': 3}

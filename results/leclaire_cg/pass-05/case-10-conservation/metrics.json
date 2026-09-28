@@ -1,0 +1,26 @@
+{
+  "runs": [
+    {
+      "overlay": "None",
+      "steps": 1000,
+      "red_drift_per_step": 1.482476363889873e-13,
+      "blue_drift_per_step": 1.3073986337985842e-13,
+      "total_drift_per_step": 2.787601260934025e-13,
+      "red_mass": 799.9996067728256
+    },
+    {
+      "overlay": "f64_arithmetic",
+      "steps": 1000,
+      "red_drift_per_step": 1.0118128557223826e-14,
+      "blue_drift_per_step": 1.000444171950221e-14,
+      "total_drift_per_step": 2.0236257114447652e-14,
+      "red_mass": 799.9996067728256
+    }
+  ],
+  "gates": {
+    "total_per_step": 1e-12,
+    "comp_per_step": 1e-09
+  },
+  "verdict": "PASS",
+  "scope_limitation": "EXTERNAL REVIEW B10: this result is for the isolated NumPy/f64 reference implementation only. The project's earlier conservation defect was precision/backend specific, so this must NOT be generalised to a Taichi/f32 port without repeating the audit there."
+}

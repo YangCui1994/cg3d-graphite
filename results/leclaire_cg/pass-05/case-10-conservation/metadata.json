@@ -1,0 +1,23 @@
+{
+  "grid": [
+    8,
+    8,
+    24
+  ],
+  "steps": 1000,
+  "arms": [
+    "None",
+    "f64_arithmetic"
+  ],
+  "wetting": "none",
+  "snapshot_times": [
+    "overlay_None_final",
+    "overlay_f64_arithmetic_final"
+  ],
+  "exit_code": 0,
+  "candidate_sha": "b65bdce3758dd967df1a3f5559c7014f97fd960b",
+  "case_id": "case-10",
+  "case_name": "conservation",
+  "raw_schema_version": "l17c_core_raw_v1",
+  "wall_seconds": 11.604262590408325
+}

@@ -1,0 +1,30 @@
+{
+  "grid": [
+    28,
+    28,
+    28
+  ],
+  "steps": 1000,
+  "radii": [
+    6.0,
+    7.0,
+    8.0,
+    9.0
+  ],
+  "initial": "tanh droplet",
+  "solid": "none",
+  "bc": "periodic",
+  "wetting": "none",
+  "snapshot_times": [
+    "R6_final",
+    "R7_final",
+    "R8_final",
+    "R9_final"
+  ],
+  "exit_code": 0,
+  "candidate_sha": "b65bdce3758dd967df1a3f5559c7014f97fd960b",
+  "case_id": "case-03",
+  "case_name": "laplace-multi-radius",
+  "raw_schema_version": "l17c_core_raw_v1",
+  "wall_seconds": 355.27494192123413
+}

@@ -1,22 +1,26 @@
 # EXECUTION REPORT — BI-CG-LECLAIRE-IMPLEMENTATION-001
 
-## 0. CURRENT HEADLINE — pass-04 (this is the only current summary)
+## 0. CURRENT HEADLINE — Pass-5 (`BI-CG-LECLAIRE-WETTING-CLOSURE-001`)
 
-**Every section below section 0 is a historical record and is explicitly
-`SUPERSEDED`.** Passes 1, 2 and 3 are retained because their errors are part
-of the provenance; none of their claims is current. Read
-`results/leclaire_cg/pass-04/VALIDATION_REPORT.md` for the current
-machine-readable summary and `docs/research/leclaire_cg/VALIDATION_ATLAS.md`
-for the current visual entry point.
+**Everything below this section is history and is SUPERSEDED.** Passes 1-4
+are retained because their errors are part of the provenance; none of their
+claims is current. In particular **Pass-4 used the superseded wall normal
+`n_w = -grad(g)` and the complementary circle-fit sign, so its contact-angle,
+slit-Pc and Jurin verdicts are void.**
+
+Current machine-readable summary: `results/leclaire_cg/pass-05/VALIDATION_REPORT.md`
+and `SUMMARY.json`. Current visual entry point:
+`docs/research/leclaire_cg/VALIDATION_ATLAS.md` (Pass-5 section).
 
 | item | value |
 |---|---|
-| stage | `BI-CG-LECLAIRE-PASS4-001` |
-| frozen source candidate | `0b3da4e954878dc22618330caed9f0da0782d449` |
-| evidence tree | `results/leclaire_cg/pass-04/` |
-| unit checks | 73/73 (`results/unit_checks.log`) |
-| pass-04 verdicts | {'PASS': 7, 'FAIL_SOLVER': 2, 'INVALID_TEST': 1, 'INCONCLUSIVE': 1} |
-| backend scope | NumPy/f64 reference only; **not** ported to Taichi/f32 |
+| stage | `BI-CG-LECLAIRE-WETTING-CLOSURE-001` |
+| frozen source candidate | `b65bdce3758dd967df1a3f5559c7014f97fd960b` |
+| evidence tree | `results/leclaire_cg/pass-05/` |
+| unit checks | 88/88 |
+| Pass-5 verdicts | {'PASS': 8, 'FAIL_SOLVER': 3} |
+| convention | red=liquid, blue=gas; `F = grad(psi)` gas->liquid; `g = 1` solid; `n_w = +grad(g)` fluid->solid; `theta = theta_liquid` |
+| backend scope | NumPy/f64 reference only; not ported to Taichi/f32 |
 
 | case | verdict |
 |---|---|
@@ -26,24 +30,19 @@ for the current visual entry point.
 | case-04 | **PASS** | `case-04-contact-angle/README.md` |
 | case-05 | **PASS** | `case-05-beta-width-validity/README.md` |
 | case-06 | **PASS** | `case-06-axis-symmetry-isotropy/README.md` |
-| case-07 | **INVALID_TEST** | `case-07-slit-capillary-pressure/README.md` |
-| case-08 | **INCONCLUSIVE** | `case-08-jurin-equilibrium/README.md` |
+| case-07 | **PASS** | `case-07-slit-capillary-pressure/README.md` |
+| case-08 | **FAIL_SOLVER** | `case-08-jurin-equilibrium/README.md` |
 | case-09 | **FAIL_SOLVER** | `case-09-asymmetric-wall/README.md` |
 | case-10 | **PASS** | `case-10-conservation/README.md` |
 | case-11 | **PASS** | `case-11-mechanical-sigma/README.md` |
 
-Gates were declared in `tests/leclaire_cg/pass04.py::GATES` before the run and
-were not edited afterwards, with one documented exception recorded in
-case-04's README: the contact-angle fit-quality gate was switched from the
-linearised residual (radius-squared units) to the geometric residual in
-lattice units, because the former mixed dimensions and scales as R^2. Both
-quantities are reported for every angle so the change is auditable.
-
-`A = (9/4) omega_eff sigma` was **not** retuned anywhere in this round.
+Gates are declared in `tests/leclaire_cg/pass05.py::GATES` and were NOT
+edited after the run. `A = (9/4) omega_eff sigma` was NOT retuned.
 
 ---
 
-## 1. Summary (SUPERSEDED — pass-1/2/3)
+
+## 1. Summary (SUPERSEDED) (SUPERSEDED — pass-1/2/3)
 
 Delivered: an isolated, paper-faithful Leclaire-2017 D3Q19
 colour-gradient candidate (`L17_CORE`) in `experimental/leclaire_cg/`, an
@@ -349,7 +348,7 @@ over 1.5k steps is not zero, and 1.5k steps is short.
 
 ---
 
-## 5b. Validation pass 3  [SUPERSEDED by pass-04] — post-review correction candidate
+## 5b. Validation pass 3  [SUPERSEDED by Pass-5]  [SUPERSEDED by pass-04] — post-review correction candidate
 
 Candidate **`5a3929fa1cefb7359893d6c19ed0ec8a7c80a91d`**, produced in response to external review
 `EXTERNAL_SCIENTIFIC_REVIEW_CHANGES_REQUESTED.md` (reviewed candidate
@@ -403,7 +402,7 @@ change of question as much as of answer. Where a verdict moved, the report
 says which of the two it is.
 
 
-## 6. The Laplace calibration  [SUPERSEDED by pass-04] — RESOLVED
+## 6. The Laplace calibration  [SUPERSEDED by Pass-5]  [SUPERSEDED by pass-04] — RESOLVED
 
 **Outcome: the model now reproduces R1 Eq. (18)'s interfacial tension.** The
 offset that dominated validation pass 1 was an arithmetic error in the

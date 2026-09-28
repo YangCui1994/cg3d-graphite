@@ -1,0 +1,32 @@
+{
+  "steps": 600,
+  "arms": [
+    [
+      32,
+      16,
+      16,
+      0,
+      2
+    ],
+    [
+      16,
+      32,
+      16,
+      1,
+      2
+    ]
+  ],
+  "wetting": "none",
+  "snapshot_times": [
+    "axis0_init",
+    "axis0_final",
+    "axis1_init",
+    "axis1_final"
+  ],
+  "exit_code": 0,
+  "candidate_sha": "b65bdce3758dd967df1a3f5559c7014f97fd960b",
+  "case_id": "case-06",
+  "case_name": "axis-symmetry-isotropy",
+  "raw_schema_version": "l17c_core_raw_v1",
+  "wall_seconds": 39.388949155807495
+}

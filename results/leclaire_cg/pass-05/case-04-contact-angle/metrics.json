@@ -1,0 +1,46 @@
+{
+  "runs": [
+    {
+      "theta_prescribed_deg": 60.0,
+      "theta_measured_deg": 65.19106789854757,
+      "n_contour_points": 11,
+      "fit_R": 11.205460350067856,
+      "fit_zc": -3.701739391207557,
+      "fit_rms": 0.7925134730184075,
+      "fit_rms_geom": 0.03530672720352711,
+      "psi_peak": 0.9999999999999987,
+      "max_abs_v": 0.0007581835819515545
+    },
+    {
+      "theta_prescribed_deg": 90.0,
+      "theta_measured_deg": 95.6997517245359,
+      "n_contour_points": 16,
+      "fit_R": 7.854862546637154,
+      "fit_zc": 1.7801091138070748,
+      "fit_rms": 0.7863763417308228,
+      "fit_rms_geom": 0.050077671645575444,
+      "psi_peak": 0.9999999999999928,
+      "max_abs_v": 0.0007197936967640077
+    },
+    {
+      "theta_prescribed_deg": 120.0,
+      "theta_measured_deg": 129.40464687611498,
+      "n_contour_points": 20,
+      "fit_R": 6.613755413179022,
+      "fit_zc": 5.198366846005323,
+      "fit_rms": 0.9524963653137885,
+      "fit_rms_geom": 0.07194479970547266,
+      "psi_peak": 0.9999999999999607,
+      "max_abs_v": 0.0008496770339327069
+    }
+  ],
+  "gates": {
+    "min_contour_pts": 6,
+    "max_fit_rms_geom": 0.3,
+    "max_angle_err_deg": 15.0,
+    "min_snapshots": 3
+  },
+  "verdict": "PASS",
+  "phase_convention": "theta measured through psi>0 liquid/red",
+  "wall_normal": "n_w = -grad(g)/|grad(g)|  (solid->fluid)"
+}
