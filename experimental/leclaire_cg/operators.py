@@ -304,9 +304,10 @@ def wall_normals(solid, sign=+1.0):
 
     The convention is FROZEN by docs/research/leclaire_cg/
     WETTING_PHASE_CONVENTION.md: ``g = 1`` in solid and ``0`` in fluid, and
-    ``n_w = -grad(g)/|grad(g)|`` pointing from solid into fluid, which is
-    ``sign = -1`` here.  ``sign`` is retained only as a labelled
+    ``n_w = +grad(g)/|grad(g)|``, which points from fluid into solid, i.e.
+    ``sign = +1`` here.  ``sign`` is retained only as a labelled
     non-canonical debug switch; it is not a physical parameter of L17_CORE.
+    (Pass-4 used ``-grad(g)``; that is superseded.)
     """
     g = smooth_solid(solid)
     solid = np.asarray(solid)

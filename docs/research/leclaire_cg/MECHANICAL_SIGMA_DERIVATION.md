@@ -88,58 +88,86 @@ independent of the profile width or shape. Hence
 At `ω_eff = 1` this is exactly `σ_input`. **The derivation therefore
 predicts `sigma_mech / sigma_input = 1` with no free parameter.**
 
-## 6. Measured value and the honest gap
+## 6. Measured value
 
-pass-04, `case-11-mechanical-sigma`, σ_input = 0.02, ω_eff = 1:
+Two passes have run this diagnostic. **The Pass-4 number is a failed
+diagnostic and is kept only as history; the Pass-5 number is the current
+result.**
+
+### 6.1 Pass-4 — failed diagnostic (superseded)
 
 | quantity | value |
 |---|---|
-| `sigma_mech` measured | **0.01537** |
+| `sigma_mech` | 0.01537 |
 | `sigma_input` | 0.02000 |
-| ratio | **0.768** |
+| ratio | 0.768 |
 | prediction from §5 | 1.000 |
 
-The diagnostic is reported against a 0.7–1.3 band (declared before the
-run) and passes, but the prediction is 1.0 and the measurement is 0.768.
-That 23 % shortfall is a real residual and is **not** explained here.
-Candidate causes, none of which was tested:
+That run integrated over the whole periodic domain, which contains **two**
+interfaces, and subtracted a bulk reference taken from a window that was not
+demonstrably clear of the interface shoulder. External review R3-7 therefore
+required the geometry and the reference window to be corrected, and
+reclassified the result as `EXPLORATORY / UNGATED`. The 23 % shortfall in
+that run is **not** explained by any physical effect; it was a diagnostic
+defect.
 
-1. **Discrete `∫|F| dz`.** §5 uses the continuum total variation. The
-   discrete isotropic stencil sums to the total variation only up to the
-   stencil's truncation error, and for the finite interface width used
-   here (2.5 lu) that error is not necessarily small.
-2. **Bulk reference.** A single window on one side is used. A non-zero
-   residual slope in the bulk (a slowly varying background) would bias the
-   integral.
-3. **Equilibration.** 800 steps at this width; the profile is close to but
-   not necessarily exactly at the discrete fixed point.
-4. **Single centreline.** The integral uses one column; a small y- or
-   x-dependence would add noise, though not a systematic 23 %.
+### 6.2 Pass-5 — corrected and recomputable
 
-## 7. Comparison with the other two estimates of σ
+The case now isolates exactly ONE of the two periodic interfaces, places
+the bulk reference at the midpoint between them, retains the full `N_i`
+distribution in the raw snapshot so the stress observable is recomputable
+from the committed file alone, and reports the discrete total variation as
+a consistency check.
 
-| route | value | ratio to σ_input |
-|---|---|---|
-| input | 0.02000 | 1.000 |
-| mechanical (this diagnostic) | 0.01537 | 0.768 |
-| Laplace, free-intercept regression (case 03) | see pass-04 SUMMARY | ~1.1 |
+| quantity | value |
+|---|---|
+| `sigma_mech` | **0.0199999067** |
+| `sigma_input` | 0.0200000000 |
+| ratio | **0.9999953** |
+| discrete total variation | 2.0000 (continuum target 2, rel. error 0.0000) |
+| interfaces in the integration window | 1 |
 
-The mechanical and Laplace routes **disagree by roughly a factor of 1.5**.
-That is the most useful thing this diagnostic produced: it rules out the
-simplest explanation of the Laplace offset (a single global constant by
-which the solver's surface tension is wrong), because a global constant
-would move both estimators in the same direction. Whatever produces the
-Laplace offset is therefore specific to the Laplace geometry or to its
-pressure estimator, not a uniform prefactor on the perturbation.
+The committed stress profile sums over the stated integration window to the
+same 0.0199999067, so the reported metric is reproduced by the profile
+itself at the text-evidence level. All four E8 premises are closed, so this
+is a validating verdict rather than an exploratory one.
 
-This conclusion is offered as a constraint on the next investigation, not
-as a diagnosis.
+*Precision note.* The retained raw arrays are f32 even though the solver is
+f64 (schema `l17c_core_raw_f32_v2`, stated explicitly for this reason). For
+this integral the f32 retention is sufficient; a binary-level recomputation
+reproduces the quoted ratio to the precision the raw file carries.
+
+## 7. Comparison with the other estimates of σ
+
+| route | value / σ_input |
+|---|---|
+| input | 1.000 |
+| mechanical (this diagnostic, Pass-5) | **1.000** |
+| Laplace, per-radius local values (case 03) | 1.018 – 1.056 |
+| Laplace, zero-intercept fit | 1.041 |
+| Laplace, free-intercept regression | 1.127 |
+
+The Pass-4 comparison in this section previously read 0.768 for the
+mechanical route and concluded that a single global prefactor was ruled out.
+The Pass-5 result **sharpens** that conclusion rather than reversing it: the
+mechanical observable now returns σ_input essentially exactly, while the
+Laplace routes sit 2–13 % high with a clear finite-radius/intercept
+structure.
+
+The consequence is that suspicion moves further away from a global
+amplitude error in the R1 perturbation — which mechanical sigma now
+contradicts at the 5e-6 level — and toward the Laplace measurement itself:
+slope/intercept coupling, the finite-radius correction, the pressure
+estimator, and the radius definition. That is a constraint on the next
+investigation, not a diagnosis.
 
 ## 8. Status
 
 - prefactor: **closed** from R1 Eqs. (16) and (18) plus the D3Q19 moment
   algebra; no factor invented.
+- premises (external review E8): **all closed** — one interface isolated, clean
+  bulk window, full `N_i` retained, discrete total-variation consistency
+  verified at 2.0000.
 - gate: 0.7–1.3, declared before the run.
-- verdict: **PASS** against that band, with the 0.768 ratio reported and
-  the 23 % residual left explicitly unexplained.
-- `A = (9/4) ω_eff σ` was **not** retuned.
+- verdict: **PASS**, ratio 0.9999953.
+- `A = (9/4) omega_eff sigma` was **not** retuned.

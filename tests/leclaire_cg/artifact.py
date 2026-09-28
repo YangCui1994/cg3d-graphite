@@ -14,7 +14,7 @@ Layout written per case:
         render_manifest.json
         reproduce.py
 
-Scratch/utility module for the pass-04 runner; it is committed because the
+Utility module for the Pass-5 runner; it is committed because the
 reproduce scripts and render manifests reference it.
 """
 from __future__ import annotations
@@ -34,7 +34,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt            # noqa: E402
 
-RAW_SCHEMA_VERSION = "l17c_core_raw_v1"
+# Schema note: every retained array is stored as f32 even though the solver
+# runs in f64. That is sufficient for the plotted diagnostics and for the
+# stress integral, and it is stated explicitly so a recomputation from the
+# raw file knows the precision it is working with (review R4 section 9).
+RAW_SCHEMA_VERSION = "l17c_core_raw_f32_v2"
 
 # Frozen rendering conventions (VALIDATION_ARTIFACT_SPEC section 7)
 PSI_VMIN, PSI_VMAX = -1.0, 1.0
@@ -119,8 +123,8 @@ class Case:
             plotted_variable=plotted,
             psi_scale=[PSI_VMIN, PSI_VMAX],
             colormap=CMAP_PSI,
-            script="tests/leclaire_cg/pass05.py",
-            script_version="pass-04",
+            script="tests/leclaire_cg/pass06.py",
+            script_version="pass-06",
         )
         if extra:
             rec.update(extra)
@@ -311,8 +315,8 @@ class Case:
             "sys.path.insert(0, os.path.join(os.path.dirname(__file__),\n"
             "                                '..', '..', '..', 'tests',\n"
             "                                'leclaire_cg'))\n"
-            "import pass04\n"
-            f"pass04.run_one({self.idx}, out_root=os.path.join(os.path.dirname(__file__), '..'))\n")
+            "import pass06\n"
+            f"pass06.run_one({self.idx}, out_root=os.path.join(os.path.dirname(__file__), '..'))\n")
         with io.open(os.path.join(self.dir, "reproduce.py"), "w",
                      encoding="utf-8") as fh:
             fh.write(body)

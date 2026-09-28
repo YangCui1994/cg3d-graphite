@@ -163,7 +163,7 @@ and weak links are as valuable as results:
 3. Per-test shell exit codes are captured by the driver; the driver's own
    exit code was logged by hand into `results/leclaire_cg_run.log`.
 4. Reference PDFs are not in the repository, so a reviewer must re-obtain
-   them and verify the digests. R5 in particular was obtained **late**,
-   after the first validation pass, by local search rather than download;
-   its digest is recorded so the reviewer can confirm they are reading
-   the same bytes.
+   them and verify the digests. R5 was obtained via the **科研通**
+   (`ablesci-paper-download`) workflow by DOI on 2026-09-27; any earlier
+   statement that it came from a local search is retracted. Its digest is
+   recorded so the reviewer can confirm they are reading the same bytes.

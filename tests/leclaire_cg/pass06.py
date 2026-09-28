@@ -1,9 +1,9 @@
 """BI-CG-LECLAIRE-WETTING-CLOSURE-001 (Pass-5) frozen validation harness.
 
-Runs the eleven pass-04 cases from one frozen candidate and writes the
+Runs the eleven Pass-5 canonical cases from one frozen candidate and writes
 immutable artifact tree required by VALIDATION_ARTIFACT_SPEC.md:
 
-    results/leclaire_cg/pass-04/
+    results/leclaire_cg/pass-05/
         VALIDATION_REPORT.md
         SUMMARY.json
         run_manifest.json
@@ -12,7 +12,8 @@ immutable artifact tree required by VALIDATION_ARTIFACT_SPEC.md:
 Binding sources:
   docs/research/leclaire_cg/WETTING_PHASE_CONVENTION.md      (convention)
   docs/research/leclaire_cg/VALIDATION_ARTIFACT_SPEC.md      (artifacts)
-  .agent/episodes/.../LECLAIRE_PASS4_VALIDATION_CONTRACT.md   (scope/gates)
+  .agent/episodes/.../LECLAIRE_WETTING_CLOSURE_CONTRACT.md   (scope)
+  .agent/evidence/.../EXTERNAL_SCIENTIFIC_REVIEW_R4_CHANGES_REQUESTED.md
 
 Gates are declared in GATES below and are NOT edited after results are seen.
 """
@@ -36,7 +37,9 @@ from leclaire_cg import operators as op       # noqa: E402
 from leclaire_cg import lattice as L          # noqa: E402
 import artifact as A                          # noqa: E402
 
-OUT_ROOT = os.path.join(HERE, "..", "..", "results", "leclaire_cg", "pass-05")
+PASS_TAG = "pass-06"
+STAGE = "BI-CG-LECLAIRE-JURIN-PROVENANCE-CLOSURE-001"
+OUT_ROOT = os.path.join(HERE, "..", "..", "results", "leclaire_cg", PASS_TAG)
 NU = 1.0 / 6.0
 SIGMA = 0.02
 BETA = 0.7
@@ -278,7 +281,7 @@ def case_03(out_root, cand, radii=(6.0, 7.0, 8.0, 9.0), n=(28, 28, 28),
         radii=list(radii), runs=runs,
         sigma_input=SIGMA, sigma_free_intercept=sig_free,
         sigma_zero_intercept=sig_zero, intercept=intercept, r2=r2,
-        sigma_ratio=ratio, sigma_extrapolated_large_R=sig_inf, r2_vs_invR=r2b,
+        sigma_ratio=ratio, sigma_1overR_fit_unstable=sig_inf, r2_vs_invR=r2b,
         gates=g, verdict=verd,
         note="Eq.(18) A=(9/4)omega*sigma is NOT retuned; an offset is a result."),
         ts)
@@ -308,7 +311,7 @@ def case_03(out_root, cand, radii=(6.0, 7.0, 8.0, 9.0), n=(28, 28, 28),
                     f"{intercept:.2e} | - | ok |",
                     f"| sigma_zero_intercept | - | {sig_zero:.5f} | "
                     f"{sig_zero / SIGMA:.3f}x | reported |",
-                    f"| sigma_extrapolated(1/R->0) | - | {sig_inf:.5f} | "
+                    f"| 1/R two-param fit (UNSTABLE, not a limit) | - | {sig_inf:.5f} | "
                     f"{sig_inf / SIGMA:.3f}x | reported |"],
                    "The +offset is an unresolved calibration result, not a gate "
                    "to be tuned away. See MECHANICAL_SIGMA_DERIVATION.md.", verd)
@@ -388,10 +391,10 @@ def case_04(out_root, cand, angles=(60.0, 90.0, 120.0), n=(30, 30, 30),
             f"{'fit ok' if r in fits else 'FIT QUALITY FAIL'} |" for r in runs]
     c.write_metrics(dict(runs=runs, gates=g, verdict=verd,
                          phase_convention="theta measured through psi>0 liquid/red",
-                         wall_normal="n_w = -grad(g)/|grad(g)|  (solid->fluid)"),
+                         wall_normal="n_w = +grad(g)/|grad(g)| = fluid -> solid"),
                     ts)
     c.write_metadata(dict(grid=list(n), steps=steps, angles=list(angles),
-                          wetting="leclaire", wall_normal_sign=-1,
+                          wetting="leclaire", wall_normal_sign=+1,
                           snapshot_times=[f"theta{int(a)}_init" for a in angles]
                           + [f"theta{int(a)}_final" for a in angles], exit_code=0))
     c.write_readme(dict(target="static contact angle vs prescribed, frozen convention"),
@@ -400,7 +403,7 @@ def case_04(out_root, cand, angles=(60.0, 90.0, 120.0), n=(30, 30, 30),
                            "solid geometry": f"floor slab, {wall} layers",
                            "boundary conditions": "periodic + no-slip solid",
                            "wetting convention":
-                               "n_w = -grad(g)/|grad(g)| solid->fluid; theta through liquid/red",
+                               "n_w = +grad(g)/|grad(g)| = fluid -> solid; theta through liquid/red",
                            "nu": NU, "sigma": SIGMA, "beta": BETA, "forcing": "none",
                            "precision/backend": "numpy f64", "run length": f"{steps} steps",
                            "snapshot times": "initial and final per angle"}),
@@ -627,14 +630,23 @@ def case_07(out_root, cand, angles=(60.0, 90.0, 120.0), n=(28, 14, 10),
     # the quotient is a division by ~zero.  The 90 deg arm is therefore gated
     # on an absolute near-zero bound scaled by the 60 deg theory value, and
     # the ratio band is applied only to the 60/120 arms.
-    p60 = next(r for r in runs if abs(r["theta_prescribed_deg"] - 60.0) < 1e-9)
-    p90 = next(r for r in runs if abs(r["theta_prescribed_deg"] - 90.0) < 1e-9)
-    p120 = next(r for r in runs if abs(r["theta_prescribed_deg"] - 120.0) < 1e-9)
-    zero_bound = 0.05 * abs(p60["pc_theory"])
-    sign_ok = bool(p60["pc_measured"] > 0 and p120["pc_measured"] < 0)
-    zero_ok = bool(abs(p90["pc_measured"]) <= max(zero_bound, 1e-6))
+    def _arm(deg):
+        for r in runs:
+            if abs(r["theta_prescribed_deg"] - deg) < 1e-9:
+                return r
+        return None
+    p60, p90, p120 = _arm(60.0), _arm(90.0), _arm(120.0)
+    # The gate is built from whichever of the reference angles are present, so
+    # a reduced sweep still exercises the same physics without raising.
+    ref = p60 if p60 is not None else runs[0]
+    zero_bound = 0.05 * abs(ref["pc_theory"])
+    sign_ok = bool(p60 is not None and p120 is not None
+                   and p60["pc_measured"] > 0 and p120["pc_measured"] < 0)
+    zero_ok = bool(p90 is not None
+                   and abs(p90["pc_measured"]) <= max(zero_bound, 1e-6))
     ratio_ok = all(g["ratio_lo"] < abs(r["pc_ratio"]) < g["ratio_hi"]
-                   for r in (p60, p120) if r["pc_ratio"] is not None)
+                   for r in (p60, p120)
+                   if r is not None and r["pc_ratio"] is not None)
     ok = bool(sign_ok and zero_ok and ratio_ok)
     verd = "PASS" if ok else "FAIL_SOLVER"
     c.fig_field_slice({"psi": s.psi(), "solid": s.solid}, "fig1_field",
@@ -657,7 +669,9 @@ def case_07(out_root, cand, angles=(60.0, 90.0, 120.0), n=(28, 14, 10),
                          sign_change_across_60_120=bool(sign_ok),
                          zero_at_90_ok=zero_ok, zero_bound=zero_bound,
                          ratio_band_ok=ratio_ok,
-                         pc90_theory_is_zero=float(p90["pc_theory"]),
+                         pc90_theory_is_zero=(float(p90["pc_theory"])
+                                               if p90 is not None else None),
+                         angles_run=[r["theta_prescribed_deg"] for r in runs],
                          note="ratio gate applied to the 60/120 arms only; the "
                               "90 deg arm is gated on an absolute near-zero bound"),
                     ts)
@@ -671,7 +685,7 @@ def case_07(out_root, cand, angles=(60.0, 90.0, 120.0), n=(28, 14, 10),
                            "initial condition": "yz-plane interface at mid-x; liquid low-x, gas high-x",
                            "solid geometry": "two plates normal to y; x ends sealed; z periodic",
                            "boundary conditions": "periodic in z, no-slip solid, sealed x",
-                           "wetting convention": "n_w = -grad(g)/|grad(g)|; theta through liquid/red",
+                           "wetting convention": "n_w = +grad(g)/|grad(g)| = fluid -> solid; theta through liquid/red",
                            "nu": NU, "sigma": SIGMA, "beta": BETA, "forcing": "none",
                            "precision/backend": "numpy f64", "run length": f"{steps} steps",
                            "snapshot times": "initial and final per angle"}),
@@ -694,135 +708,212 @@ def case_07(out_root, cand, angles=(60.0, 90.0, 120.0), n=(28, 14, 10),
 # ===========================================================================
 #  case 08 -- closed-system Jurin equilibrium (D3), reachability prechecked
 # ===========================================================================
-def jurin_geometry(n=(20, 16, 48), wall=4, neck=18):
-    """Reservoir below, narrow slit above, floor and ceiling solid."""
+def jurin_geometry(n=(24, 16, 44), wall=3, x_w=10, z_channel=8):
+    """Connected reservoir + vertical capillary slit.
+
+    Topology (external review R4 section 6):
+
+        z >= z_channel :  x <  x_w   reservoir, open in y
+                          x == x_w   solid barrier
+                          x >  x_w   capillary slit, y in [wall, ny-wall)
+        z <  z_channel :  fully open channel joining reservoir and slit
+
+    The reservoir free surface therefore sits ABOVE the channel top, so the
+    capillary entrance is submerged in the reservoir and the liquid column is
+    topologically connected at t = 0.  This replaces the Pass-4/5 layout, in
+    which the slit walls began above the reservoir surface and a gas gap
+    separated a detached capillary slug from the reservoir, so that Jurin's
+    law did not apply to the initialised topology at all.
+    """
     s = np.zeros(n, dtype=bool)
-    s[:, :, 0] = True
-    s[:, :, -1] = True
-    s[:, :wall, neck:] = True
-    s[:, n[1] - wall:, neck:] = True
+    s[:, :, 0] = True                              # floor
+    s[:, :, -1] = True                             # ceiling
+    upper = np.zeros(n, dtype=bool)
+    upper[:, :, z_channel:] = True
+    xx = np.arange(n[0])[:, None, None]
+    yy = np.arange(n[1])[None, :, None]
+    s |= upper & (xx == x_w)                       # barrier
+    cap = upper & (xx > x_w)
+    s |= cap & ((yy < wall) | (yy >= n[1] - wall))  # slit walls
     return s
 
 
-def jurin_precheck(n, wall, neck, g_acc, theta_deg, z_res0, z_cap0):
-    """Mandatory reachability precheck (contract D3)."""
+def jurin_sections(n, wall, x_w, z_channel):
+    """Fluid cross-sectional areas of the three regions."""
+    return dict(
+        channel=n[0] * n[1],
+        reservoir=x_w * n[1],
+        capillary=(n[0] - x_w - 1) * (n[1] - 2 * wall),
+    )
+
+
+def jurin_precheck(n=(24, 16, 44), wall=3, x_w=10, z_channel=8, g_acc=2.5e-4,
+                   theta_deg=60.0, z_fill=20.0):
+    """Reachability precheck for the CONNECTED geometry (review J1).
+
+    Derives the closed-system volume/Jurin prediction for this exact
+    topology, then verifies that both the reservoir free surface and the
+    capillary meniscus land inside their measurable windows and that the
+    free surface stays in the reservoir region above the channel.
+
+    Volume balance (liquid volume is conserved; the channel stays full):
+        V0 = A_ch*z_channel + A_res*(z_fill - z_channel)
+                              + A_cap*(z_fill - z_channel)
+        V(M) = A_ch*z_channel + A_res*(M - z_channel)
+                              + A_cap*(M + dh - z_channel)
+    """
     h = n[1] - 2 * wall
     dh = 2.0 * SIGMA * np.cos(np.deg2rad(theta_deg)) / (1.0 * g_acc * h)
-    A_res = n[0] * n[1]
-    A_cap = n[0] * h
-    vol = A_res * z_res0 + A_cap * max(z_cap0 - neck, 0)
-    M = (vol - A_cap * (dh - neck)) / (A_res + A_cap)
+    A = jurin_sections(n, wall, x_w, z_channel)
+    V0 = (A["channel"] * z_channel
+          + (A["reservoir"] + A["capillary"]) * (z_fill - z_channel))
+    M = (V0 - A["channel"] * z_channel - A["capillary"] * dh
+         + (A["reservoir"] + A["capillary"]) * z_channel) / (
+        A["reservoir"] + A["capillary"])
     L = M + dh
     return dict(gap=h, dh_theory=dh, reservoir_level_predicted=M,
-                capillary_level_predicted=L, reservoir_window=[1, neck],
-                capillary_window=[neck, n[2] - 2],
-                inside_capillary=bool(neck <= L <= n[2] - 2),
-                inside_reservoir=bool(1 <= M < neck),
-                clearance_to_top=float(n[2] - 2 - L))
+                capillary_level_predicted=L,
+                reservoir_window=[z_channel, n[2] - 2],
+                capillary_window=[z_channel, n[2] - 2],
+                inside_capillary=bool(z_channel <= L <= n[2] - 2),
+                inside_reservoir=bool(z_channel <= M <= n[2] - 2),
+                free_surface_in_reservoir=bool(M >= z_channel),
+                clearance_to_top=float(n[2] - 2 - L),
+                connected_at_t0=True,
+                sections=A, z_fill=z_fill)
 
 
-def case_08(out_root, cand, n=(20, 16, 48), wall=4, neck=18, theta_deg=60.0,
-            g_acc=3.0e-4, z_res0=14, z_cap0=20, steps=4000):
+def case_08(out_root, cand, n=(24, 16, 44), wall=3, x_w=10, z_channel=8,
+            theta_deg=60.0, g_acc=2.5e-4, z_fill=20.0, steps=4000):
+    """Closed-system equilibrium Jurin rise in a CONNECTED geometry.
+
+    External review R4 section 6: the previous case was not a connected
+    Jurin system -- a gas gap separated a detached capillary slug from the
+    reservoir -- so Jurin's law did not describe the initialised topology
+    and its FAIL_SOLVER classification was withdrawn.  The geometry here is
+    connected by construction (reservoir, barrier, slit and a lower channel),
+    the precheck is derived for that exact topology, and the tube empties is
+    no longer interpretable as a solver failure of the Jurin prediction.
+    """
     c = A.Case(out_root, 8, "jurin-equilibrium", cand)
-    pre = jurin_precheck(n, wall, neck, g_acc, theta_deg, z_res0, z_cap0)
-    solid = jurin_geometry(n, wall, neck)
-    if not (pre["inside_capillary"] and pre["inside_reservoir"]):
+    pre = jurin_precheck(n=n, wall=wall, x_w=x_w, z_channel=z_channel,
+                         g_acc=g_acc, theta_deg=theta_deg, z_fill=z_fill)
+    solid = jurin_geometry(n=n, wall=wall, x_w=x_w, z_channel=z_channel)
+    if not (pre["inside_capillary"] and pre["inside_reservoir"]
+            and pre["free_surface_in_reservoir"]):
         c.write_metadata(dict(precheck=pre, verdict="INVALID_CONFIGURATION"))
+        c.write_metrics(dict(precheck=pre, verdict="INVALID_CONFIGURATION",
+                             gates=GATES["08_jurin"]))
         return "INVALID_CONFIGURATION", c
     s = make(n, solid=solid, theta_c=np.deg2rad(theta_deg), fz=-g_acc)
+    # initial state: everything below z_fill is liquid, so the channel, the
+    # reservoir and the capillary all start full and CONNECTED
     psi = np.full(n, -1.0)
-    psi[:, :, :z_res0] = 1.0
-    psi[:, wall:n[1] - wall, neck:z_cap0] = 1.0
+    psi[:, :, :int(z_fill)] = 1.0
     psi[solid] = 0.0
     s.init_psi(psi)
     c.snapshot("t0000", s)
     ts = []
+    capL = float("nan")
     for t in range(0, steps + 1, max(1, steps // 10)):
         if t:
             s.run(t - s.time)
         p = s.psi()
-        cap = p[n[0] // 2, n[1] // 2, neck:]
-        fcap = ~solid[n[0] // 2, n[1] // 2, neck:]
+        # capillary meniscus: slit centre column, above the channel
+        cap = p[n[0] - 2, n[1] // 2, z_channel:]
+        fcap = ~solid[n[0] - 2, n[1] // 2, z_channel:]
         wi = np.where(fcap & (cap > 0))[0]
-        capL = float(neck + wi.max()) if wi.size else float("nan")
-        res = p[1, 1, :neck]
-        wi2 = np.where(res > 0)[0]
-        resL = float(wi2.max()) if wi2.size else float("nan")
+        capL = float(z_channel + wi.max()) if wi.size else float("nan")
+        # reservoir free surface: mid-y column in the reservoir region
+        res = p[2, n[1] // 2, z_channel:]
+        fres = ~solid[2, n[1] // 2, z_channel:]
+        wi2 = np.where(fres & (res > 0))[0]
+        resL = float(z_channel + wi2.max()) if wi2.size else float("nan")
         ts.append(dict(t=s.time, capillary_level=capL, reservoir_level=resL,
                        rise=(capL - resL) if np.isfinite(capL)
                        and np.isfinite(resL) else float("nan"),
                        max_v=maxv(s)))
-        if t in (steps // 2,):
+        if t == steps // 2:
             c.snapshot("t_mid", s)
     c.snapshot("t_final", s)
     g = GATES["08_jurin"]
     rise = ts[-1]["rise"]
     ratio = rise / pre["dh_theory"] if np.isfinite(rise) else None
     ok = ratio is not None and g["rise_ratio_lo"] < ratio < g["rise_ratio_hi"]
-    # Contract E3 case 08: "If precheck passes but the tube empties or no
-    # interface exists, report the physical/numerical failure directly."
-    # The precheck passed and it is recorded in the metrics, so a missing
-    # capillary interface is a solver outcome, not an inconclusive test.
     if ok:
         verd = "PASS"
-    elif not np.isfinite(capL):
+    elif not np.isfinite(capL) or not np.isfinite(ts[-1]["reservoir_level"]):
+        # The precheck passed for a CONNECTED geometry, so a missing level is
+        # a solver outcome.  Reported directly, as the closure contract asks.
         verd = "FAIL_SOLVER"
     else:
         verd = "FAIL_SOLVER"
     c.fig_field_slice({"psi": s.psi(), "solid": s.solid}, "fig1_field",
-                      "Jurin equilibrium, final psi (reservoir + capillary)",
+                      "connected Jurin geometry, final psi (reservoir + capillary)",
                       plane="xz", source_raw=c.snaps["t_final"]["file"])
-    c.fig_xy([r["t"] for r in ts], [r["rise"] for r in ts], "fig2_observable",
-             "capillary rise above reservoir level vs t", "t [steps]", "rise [lu]",
-             series=[dict(y=[r["rise"] for r in ts], label="measured", style="o-"),
-                     dict(y=[pre["dh_theory"]] * len(ts), label="Jurin theory",
-                          style="--")],
-             source_raw=c.snaps["t_final"]["file"])
     c.fig_xy([r["t"] for r in ts],
-             [r["rise"] - pre["dh_theory"] for r in ts], "fig3_residual",
+             [r["capillary_level"] for r in ts], "fig2_observable",
+             "capillary and reservoir levels vs t", "t [steps]", "z [lu]",
+             series=[dict(y=[r["capillary_level"] for r in ts],
+                          label="capillary meniscus", style="o-"),
+                     dict(y=[r["reservoir_level"] for r in ts],
+                          label="reservoir free surface", style="s--"),
+                     dict(y=[pre["reservoir_level_predicted"]
+                             + pre["dh_theory"]] * len(ts),
+                          label="Jurin prediction", style=":")],
+             source_raw=c.snaps["t_final"]["file"])
+    c.fig_xy([r["t"] for r in ts], [r["rise"] for r in ts], "fig3_residual",
              "rise residual (measured - Jurin)", "t [steps]", "residual [lu]",
              source_raw=c.snaps["t_final"]["file"])
     c.write_metrics(dict(precheck=pre, rise_final=rise,
                          rise_theory=pre["dh_theory"], rise_ratio=ratio,
-                         theta_prescribed_deg=theta_deg, g=g_acc, gap=pre["gap"],
-                         gates=g, verdict=verd,
-                         precheck_passed=bool(pre["inside_capillary"]
-                                              and pre["inside_reservoir"]),
+                         theta_prescribed_deg=theta_deg, g=g_acc,
+                         gap=pre["gap"], gates=g, verdict=verd,
+                         geometry="connected reservoir + barrier + slit + lower "
+                                  "channel (external review R4 section 6)",
                          capillary_interface_exists=bool(np.isfinite(capL)),
-                         classification_rule="contract E3: precheck passed but "
-                         "the tube emptied -> physical/numerical failure reported "
-                         "directly"), ts)
-    c.write_metadata(dict(grid=list(n), steps=steps, wall=wall, neck=neck,
-                          theta_deg=theta_deg, gravity=g_acc,
-                          initial="liquid column continuous from reservoir into capillary",
+                         reservoir_interface_exists=bool(
+                             np.isfinite(ts[-1]["reservoir_level"]))), ts)
+    c.write_metadata(dict(grid=list(n), steps=steps, wall=wall, x_w=x_w,
+                          z_channel=z_channel, theta_deg=theta_deg,
+                          gravity=g_acc, z_fill=z_fill,
+                          initial="liquid fills everything below z_fill: channel, "
+                                  "reservoir and capillary start full and connected",
                           wetting="leclaire", precheck=pre,
-                          snapshot_times=["t0000", "t_mid", "t_final"], exit_code=0))
-    c.write_readme(dict(target="closed-system equilibrium Jurin rise"),
+                          snapshot_times=["t0000", "t_mid", "t_final"],
+                          exit_code=0))
+    c.write_readme(dict(target="closed-system equilibrium Jurin rise, connected geometry"),
                    dict(**{"domain size": n, "lattice": "D3Q19",
-                           "initial condition": f"liquid fills z<{z_res0} in the reservoir and "
-                           f"z<{z_cap0} in the capillary (a connected column inside the capillary)",
-                           "solid geometry": f"floor+ceiling solid; slit walls for z>={neck}",
+                           "initial condition": f"psi=+1 for z<{z_fill} (channel, reservoir "
+                           f"and capillary all full and topologically connected)",
+                           "solid geometry": "floor+ceiling; barrier at x=x_w above the "
+                           "channel; slit walls at y<wall and y>=ny-wall above the channel",
                            "boundary conditions": "periodic lateral; no-slip solid; closed box",
-                           "wetting convention": "n_w=-grad(g)/|grad(g)|; theta through liquid/red",
+                           "wetting convention": "n_w=+grad(g)/|grad(g)| fluid->solid; "
+                           "theta through liquid/red",
                            "nu": NU, "sigma": SIGMA, "beta": BETA,
                            "forcing": f"gravity fz=-{g_acc} (R1 Eqs. 6-9)",
-                           "precision/backend": "numpy f64", "run length": f"{steps} steps",
+                           "precision/backend": "numpy f64",
+                           "run length": f"{steps} steps",
                            "snapshot times": "initial, intermediate, final"}),
                    dict(relation="dh = 2 sigma cos(theta) / (rho g h)",
-                        prose="Equilibrium rise of the capillary meniscus above the flat "
-                              "reservoir level. The initial condition already places liquid "
-                              "inside the capillary, and the reachability precheck aborts as "
-                              "INVALID_CONFIGURATION if the predicted equilibrium leaves the "
-                              "measurement window."),
-                   [f"| predicted capillary level | inside [{pre['capillary_window'][0]},"
-                    f"{pre['capillary_window'][1]}] | {pre['capillary_level_predicted']:.2f} | "
-                    f"- | ok |",
+                        prose="The reservoir free surface sits above the channel top, so "
+                              "the capillary entrance is submerged and the liquid column "
+                              "is connected at t=0. The precheck solves the volume balance "
+                              "for this exact topology and aborts as INVALID_CONFIGURATION "
+                              "if either interface leaves its measurable window."),
+                   [f"| predicted capillary meniscus | inside "
+                    f"[{pre['capillary_window'][0]},{pre['capillary_window'][1]}] | "
+                    f"{pre['capillary_level_predicted']:.2f} | - | ok |",
+                    f"| predicted reservoir surface | above channel ({z_channel}), inside "
+                    f"[{pre['reservoir_window'][0]},{pre['reservoir_window'][1]}] | "
+                    f"{pre['reservoir_level_predicted']:.2f} | - | ok |",
                     f"| rise | within {g['rise_ratio_lo']}-{g['rise_ratio_hi']}x theory | "
-                    f"{rise if rise is not None else float('nan'):.3f} | "
+                    f"{rise if np.isfinite(rise) else float('nan'):.3f} | "
                     f"ratio {ratio if ratio else float('nan'):.3f} | "
                     f"{'ok' if ok else 'FAIL'} |"],
-                   "Closed-system equilibrium test; dynamic Washburn imbibition is out of "
-                   "scope for this stage.", verd)
+                   "Connected closed-system equilibrium test; dynamic Washburn "
+                   "imbibition remains out of scope for this stage.", verd)
     c.write_reproduce()
     c.write_render_manifest()
     return verd, c
@@ -1206,7 +1297,7 @@ def main():
                    environment=A.environment(), verdict_counts=counts,
                    cases=results, total_wall_seconds=time.time() - t0,
                    gates=GATES, raw_schema_version=A.RAW_SCHEMA_VERSION,
-                   convention="n_w=-grad(g)/|grad(g)| solid->fluid; theta through liquid/red")
+                   convention="n_w = +grad(g)/|grad(g)| = fluid -> solid; theta through liquid/red")
     with io.open(os.path.join(OUT_ROOT, "SUMMARY.json"), "w", encoding="utf-8") as fh:
         json.dump(summary, fh, indent=2, default=float)
     with io.open(os.path.join(OUT_ROOT, "run_manifest.json"), "w", encoding="utf-8") as fh:
@@ -1217,7 +1308,7 @@ def main():
                                       wall_seconds=v["wall_seconds"])
                               for k, v in results.items()},
                        raw_schema_version=A.RAW_SCHEMA_VERSION,
-                       command="python tests/leclaire_cg/pass05.py"),
+                       command="python tests/leclaire_cg/pass06.py"),
                    fh, indent=2, default=float)
     write_validation_report(OUT_ROOT, cand)
     print("verdicts:", counts, flush=True)
@@ -1249,14 +1340,14 @@ def write_validation_report(out_root, cand):
     lines = [
         "# Pass-5 Validation Report — Leclaire/Latt reference line",
         "",
-        f"- stage: `BI-CG-LECLAIRE-PASS4-001`",
+        f"- stage: `BI-CG-LECLAIRE-JURIN-PROVENANCE-CLOSURE-001`",
         f"- candidate SHA: `{cand}`",
         f"- branch: `agent-task/BI-CG-LECLAIRE-IMPLEMENTATION-001`",
         f"- raw-data schema: `{sm['raw_schema_version']}`",
         f"- convention: {sm['convention']}",
         f"- verdict counts: {sm['verdict_counts']}",
         "",
-        "This is the **current headline** for this solver line. Passes 1-4",
+        "This is the **current headline** for this solver line. Passes 1-5",
         "remain in Git history and under `results/leclaire_cg/` and are",
         "**SUPERSEDED**; their claims are not current. Pass-4 in particular used",
         "the superseded wall normal `-grad(g)` and the complementary circle-fit",
