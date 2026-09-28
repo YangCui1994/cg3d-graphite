@@ -115,7 +115,13 @@ def case_01(out_root, cand):
     c.write_metrics(dict(max_abs_v=ts[-1]["max_v"], max_abs_drho=ts[-1]["max_drho"],
                          red_mass_drift=abs(m1[0] - m0[0]),
                          blue_mass_drift=abs(m1[1] - m0[1]),
-                         gates=g, verdict=verd), ts)
+                         gates=g, verdict=verd,
+                         precheck_passed=bool(pre["inside_capillary"]
+                                              and pre["inside_reservoir"]),
+                         capillary_interface_exists=bool(np.isfinite(capL)),
+                         classification_rule="contract E3: precheck passed but "
+                         "the tube emptied -> physical/numerical failure reported "
+                         "directly"), ts)
     c.write_metadata(dict(grid=list(n), steps=400, initial="psi=+1, u=0",
                           solid="none", bc="periodic", wetting="none",
                           snapshot_times=[0, 400], exit_code=0))
@@ -464,7 +470,13 @@ def case_05(out_root, cand, betas=(0.0, 0.5, 0.7, 1.0, 1.5, 2.0),
                                                 if not r["positivity_ok"]],
                          invalid_by_dissolution=[r["beta"] for r in runs
                                                  if r["psi_peak"] <= 0.95],
-                         gates=g, verdict=verd), ts)
+                         gates=g, verdict=verd,
+                         precheck_passed=bool(pre["inside_capillary"]
+                                              and pre["inside_reservoir"]),
+                         capillary_interface_exists=bool(np.isfinite(capL)),
+                         classification_rule="contract E3: precheck passed but "
+                         "the tube emptied -> physical/numerical failure reported "
+                         "directly"), ts)
     c.write_metadata(dict(grid=list(n), steps=steps, betas=list(betas),
                           wetting="none",
                           snapshot_times=[f"beta{b}_final" for b in betas],
@@ -621,11 +633,22 @@ def case_07(out_root, cand, angles=(60.0, 90.0, 120.0), n=(28, 14, 10),
                          max_abs_v=maxv(s)))
         ts.append(dict(theta=th, pc_measured=pc, pc_theory=pc_theory))
     g = GATES["07_slit_pc"]
-    ratios = [r["pc_ratio"] for r in runs if r["pc_ratio"] is not None]
-    sign_ok = (runs[0]["pc_measured"] > 0 > runs[-1]["pc_measured"])
-    ok = (len(ratios) == len(runs) and sign_ok
-          and all(g["ratio_lo"] < abs(x) < g["ratio_hi"] for x in ratios))
-    verd = "PASS" if ok else ("FAIL_SOLVER" if sign_ok else "INVALID_TEST")
+    # The contract's sanity rule is: 60 -> Pc positive; 90 -> approximately
+    # zero; 120 -> Pc negative.  A ratio test cannot express "approximately
+    # zero", because the theory Pc at 90 deg is 2*sigma*cos(90)/h ~ 1e-19 and
+    # the quotient is a division by ~zero.  The 90 deg arm is therefore gated
+    # on an absolute near-zero bound scaled by the 60 deg theory value, and
+    # the ratio band is applied only to the 60/120 arms.
+    p60 = next(r for r in runs if abs(r["theta_prescribed_deg"] - 60.0) < 1e-9)
+    p90 = next(r for r in runs if abs(r["theta_prescribed_deg"] - 90.0) < 1e-9)
+    p120 = next(r for r in runs if abs(r["theta_prescribed_deg"] - 120.0) < 1e-9)
+    zero_bound = 0.05 * abs(p60["pc_theory"])
+    sign_ok = bool(p60["pc_measured"] > 0 and p120["pc_measured"] < 0)
+    zero_ok = bool(abs(p90["pc_measured"]) <= max(zero_bound, 1e-6))
+    ratio_ok = all(g["ratio_lo"] < abs(r["pc_ratio"]) < g["ratio_hi"]
+                   for r in (p60, p120) if r["pc_ratio"] is not None)
+    ok = bool(sign_ok and zero_ok and ratio_ok)
+    verd = "PASS" if ok else "FAIL_SOLVER"
     c.fig_field_slice({"psi": s.psi(), "solid": s.solid}, "fig1_field",
                       "slit meniscus, final psi (walls transverse)",
                       plane="xy", source_raw=c.snaps[f"theta{int(angles[-1])}_final"]["file"])
@@ -643,7 +666,13 @@ def case_07(out_root, cand, angles=(60.0, 90.0, 120.0), n=(28, 14, 10),
              "Pc residual (measured - theory)", "theta [deg]", "residual",
              source_raw=c.snaps[f"theta{int(angles[-1])}_final"]["file"])
     c.write_metrics(dict(runs=runs, gap=h, sigma=SIGMA, gates=g, verdict=verd,
-                         sign_change_across_60_120=bool(sign_ok)), ts)
+                         sign_change_across_60_120=bool(sign_ok),
+                         zero_at_90_ok=zero_ok, zero_bound=zero_bound,
+                         ratio_band_ok=ratio_ok,
+                         pc90_theory_is_zero=float(p90["pc_theory"]),
+                         note="ratio gate applied to the 60/120 arms only; the "
+                              "90 deg arm is gated on an absolute near-zero bound"),
+                    ts)
     c.write_metadata(dict(grid=list(n), steps=steps, angles=list(angles),
                           solid="two plates at low/high y, x ends sealed",
                           wetting="leclaire", geometry_rev="transverse_v2",
@@ -742,7 +771,16 @@ def case_08(out_root, cand, n=(20, 16, 48), wall=4, neck=18, theta_deg=60.0,
     rise = ts[-1]["rise"]
     ratio = rise / pre["dh_theory"] if np.isfinite(rise) else None
     ok = ratio is not None and g["rise_ratio_lo"] < ratio < g["rise_ratio_hi"]
-    verd = "PASS" if ok else ("FAIL_SOLVER" if ratio is not None else "INCONCLUSIVE")
+    # Contract E3 case 08: "If precheck passes but the tube empties or no
+    # interface exists, report the physical/numerical failure directly."
+    # The precheck passed and it is recorded in the metrics, so a missing
+    # capillary interface is a solver outcome, not an inconclusive test.
+    if ok:
+        verd = "PASS"
+    elif not np.isfinite(capL):
+        verd = "FAIL_SOLVER"
+    else:
+        verd = "FAIL_SOLVER"
     c.fig_field_slice({"psi": s.psi(), "solid": s.solid}, "fig1_field",
                       "Jurin equilibrium, final psi (reservoir + capillary)",
                       plane="xz", source_raw=c.snaps["t_final"]["file"])
@@ -759,7 +797,13 @@ def case_08(out_root, cand, n=(20, 16, 48), wall=4, neck=18, theta_deg=60.0,
     c.write_metrics(dict(precheck=pre, rise_final=rise,
                          rise_theory=pre["dh_theory"], rise_ratio=ratio,
                          theta_prescribed_deg=theta_deg, g=g_acc, gap=pre["gap"],
-                         gates=g, verdict=verd), ts)
+                         gates=g, verdict=verd,
+                         precheck_passed=bool(pre["inside_capillary"]
+                                              and pre["inside_reservoir"]),
+                         capillary_interface_exists=bool(np.isfinite(capL)),
+                         classification_rule="contract E3: precheck passed but "
+                         "the tube emptied -> physical/numerical failure reported "
+                         "directly"), ts)
     c.write_metadata(dict(grid=list(n), steps=steps, wall=wall, neck=neck,
                           theta_deg=theta_deg, gravity=g_acc,
                           initial="liquid column continuous from reservoir into capillary",
@@ -1192,9 +1236,6 @@ def main():
     return 0
 
 
-if __name__ == "__main__":
-    sys.exit(main())
-
 
 def write_validation_report(out_root, cand):
     """Generate VALIDATION_REPORT.md from the just-written evidence.
@@ -1276,3 +1317,5 @@ def write_validation_report(out_root, cand):
         fh.write("\n".join(lines))
     print("VALIDATION_REPORT.md written", flush=True)
 
+if __name__ == "__main__":
+    sys.exit(main())
