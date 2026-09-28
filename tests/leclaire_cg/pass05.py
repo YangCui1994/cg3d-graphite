@@ -115,13 +115,7 @@ def case_01(out_root, cand):
     c.write_metrics(dict(max_abs_v=ts[-1]["max_v"], max_abs_drho=ts[-1]["max_drho"],
                          red_mass_drift=abs(m1[0] - m0[0]),
                          blue_mass_drift=abs(m1[1] - m0[1]),
-                         gates=g, verdict=verd,
-                         precheck_passed=bool(pre["inside_capillary"]
-                                              and pre["inside_reservoir"]),
-                         capillary_interface_exists=bool(np.isfinite(capL)),
-                         classification_rule="contract E3: precheck passed but "
-                         "the tube emptied -> physical/numerical failure reported "
-                         "directly"), ts)
+                         gates=g, verdict=verd), ts)
     c.write_metadata(dict(grid=list(n), steps=400, initial="psi=+1, u=0",
                           solid="none", bc="periodic", wetting="none",
                           snapshot_times=[0, 400], exit_code=0))
@@ -470,13 +464,7 @@ def case_05(out_root, cand, betas=(0.0, 0.5, 0.7, 1.0, 1.5, 2.0),
                                                 if not r["positivity_ok"]],
                          invalid_by_dissolution=[r["beta"] for r in runs
                                                  if r["psi_peak"] <= 0.95],
-                         gates=g, verdict=verd,
-                         precheck_passed=bool(pre["inside_capillary"]
-                                              and pre["inside_reservoir"]),
-                         capillary_interface_exists=bool(np.isfinite(capL)),
-                         classification_rule="contract E3: precheck passed but "
-                         "the tube emptied -> physical/numerical failure reported "
-                         "directly"), ts)
+                         gates=g, verdict=verd), ts)
     c.write_metadata(dict(grid=list(n), steps=steps, betas=list(betas),
                           wetting="none",
                           snapshot_times=[f"beta{b}_final" for b in betas],
