@@ -1,0 +1,41 @@
+{
+  "precheck": {
+    "gap": 10,
+    "dh_theory": 8.000000000000002,
+    "reservoir_level_predicted": 16.363636363636363,
+    "capillary_level_predicted": 24.363636363636367,
+    "reservoir_window": [
+      8,
+      42
+    ],
+    "capillary_window": [
+      8,
+      42
+    ],
+    "inside_capillary": true,
+    "inside_reservoir": true,
+    "free_surface_in_reservoir": true,
+    "clearance_to_top": 17.636363636363633,
+    "connected_at_t0": true,
+    "sections": {
+      "channel": 352,
+      "reservoir": 144,
+      "capillary": 120
+    },
+    "z_fill": 20.0
+  },
+  "rise_final": 1.0,
+  "rise_theory": 8.000000000000002,
+  "rise_ratio": 0.12499999999999997,
+  "theta_prescribed_deg": 60.0,
+  "g": 0.00025,
+  "gap": 10,
+  "gates": {
+    "rise_ratio_lo": 0.5,
+    "rise_ratio_hi": 1.5
+  },
+  "verdict": "FAIL_SOLVER",
+  "geometry": "connected reservoir + barrier + slit + lower channel (external review R4 section 6)",
+  "capillary_interface_exists": true,
+  "reservoir_interface_exists": true
+}

@@ -1,0 +1,63 @@
+{
+  "runs": [
+    {
+      "wave_axis": 0,
+      "domain": [
+        32,
+        16,
+        16
+      ],
+      "mode": 2,
+      "wavelength": 16.0,
+      "amplitude_trace": [
+        1.5029112338589803,
+        0.8044654069217183,
+        0.349261032837421,
+        0.13426302229830006,
+        0.0471556241920782
+      ],
+      "times": [
+        0,
+        100,
+        200,
+        400,
+        600
+      ],
+      "amplitude_final": 0.0471556241920782,
+      "max_abs_v": 0.00026766705454148084
+    },
+    {
+      "wave_axis": 1,
+      "domain": [
+        16,
+        32,
+        16
+      ],
+      "mode": 2,
+      "wavelength": 16.0,
+      "amplitude_trace": [
+        1.5029112338589807,
+        0.8044654069217154,
+        0.3492610328374092,
+        0.13426302229829945,
+        0.04715562419207071
+      ],
+      "times": [
+        0,
+        100,
+        200,
+        400,
+        600
+      ],
+      "amplitude_final": 0.04715562419207071,
+      "max_abs_v": 0.0002676670545413074
+    }
+  ],
+  "equal_wavelength": true,
+  "amplitude_asymmetry": 1.5892071295026446e-13,
+  "gates": {
+    "asymmetry": 0.05
+  },
+  "verdict": "PASS",
+  "scope": "axis symmetry on a cubic lattice, not general rotational isotropy"
+}

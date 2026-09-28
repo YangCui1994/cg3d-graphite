@@ -387,3 +387,60 @@ check. It does not contribute a validating verdict.
 **Laplace remains open.** The sigma calibration is outside the predeclared
 band and was not retuned; the result is preserved as an open calibration
 question.
+
+---
+
+# Pass-06 — CURRENT (`BI-CG-LECLAIRE-JURIN-PROVENANCE-CLOSURE-001`)
+
+Frozen source candidate `9773a439f9f994225ce6515bd9f755815aa2c5af`. Machine-readable summary:
+`results/leclaire_cg/pass-06/SUMMARY.json`; per-case detail in
+`results/leclaire_cg/pass-06/VALIDATION_REPORT.md`. Every earlier section in
+this file is historical and SUPERSEDED.
+
+Verdicts: {'PASS': 8, 'FAIL_SOLVER': 3}
+
+| case | verdict | artifact |
+|---|---|---|
+| case-01 | **PASS** | `case-01-uniform-stationarity/README.md` |
+| case-02 | **PASS** | `case-02-planar-interface/README.md` |
+| case-03 | **FAIL_SOLVER** | `case-03-laplace-multi-radius/README.md` |
+| case-04 | **PASS** | `case-04-contact-angle/README.md` |
+| case-05 | **PASS** | `case-05-beta-width-validity/README.md` |
+| case-06 | **PASS** | `case-06-axis-symmetry-isotropy/README.md` |
+| case-07 | **PASS** | `case-07-slit-capillary-pressure/README.md` |
+| case-08 | **FAIL_SOLVER** | `case-08-jurin-equilibrium/README.md` |
+| case-09 | **FAIL_SOLVER** | `case-09-asymmetric-wall/README.md` |
+| case-10 | **PASS** | `case-10-conservation/README.md` |
+| case-11 | **PASS** | `case-11-mechanical-sigma/README.md` |
+
+## What changed in this pass
+
+**Case-08 is now a connected Jurin system.** The Pass-5 geometry put a
+detached capillary slug above a gas gap, with the slit walls starting above
+the reservoir free surface, so Jurin's law did not describe the initialised
+topology. The replacement has a reservoir, a solid barrier and a capillary
+slit above a lower liquid channel; the fluid domain is verified to be a
+single connected component, the reservoir free surface sits above the
+channel top so the capillary entrance is submerged, and the reachability
+precheck solves the closed-system volume balance for that exact three-area
+topology.
+
+**All current artifacts state the canonical convention.** Pass-5's harness
+emitted the superseded `n_w = -grad(g)` into its machine-readable metrics,
+metadata, README and summary while the executed solver used `+grad(g)`.
+That was fixed at the source, not in the generated JSON, and the harness now
+derives its pass tag and stage id from single module constants.
+
+**Mechanical sigma is a validating verdict.** Case-11 reports
+`sigma_mech / sigma_input = 0.9999953` with one interface isolated, a clean
+bulk window, the full `N_i` distribution retained so the observable is
+recomputable from the committed raw file, and a discrete total variation of
+2.0000 against the continuum 2. Raw arrays are f32 while the solver is f64;
+the schema `l17c_core_raw_f32_v2` states that explicitly.
+
+**Laplace remains open.** The per-radius local values are 2-6 % high and
+decrease with radius, the zero-intercept fit gives ~1.04, and the
+free-intercept regression ~1.13 with a negative intercept. The free-intercept
+gate honestly fails and the coefficient was not retuned; the 1/R
+two-parameter fit is reported as unstable and is not claimed as a large-R
+limit.

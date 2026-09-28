@@ -1,0 +1,66 @@
+{
+  "radii": [
+    6.0,
+    7.0,
+    8.0,
+    9.0
+  ],
+  "runs": [
+    {
+      "R_nominal": 6.0,
+      "R_measured": 5.869461618176743,
+      "dp": 0.007196036512853017,
+      "two_over_R": 0.3407467550015718,
+      "sigma_local": 0.0211184300575946,
+      "psi_peak": 0.9999999996890654,
+      "positivity_ok": true,
+      "max_abs_v": 0.00040751994499851836
+    },
+    {
+      "R_nominal": 7.0,
+      "R_measured": 6.868001997278793,
+      "dp": 0.006066728998377273,
+      "two_over_R": 0.29120550646205845,
+      "sigma_local": 0.02083315343890214,
+      "psi_peak": 0.9999999989539111,
+      "positivity_ok": true,
+      "max_abs_v": 0.00034332376959612617
+    },
+    {
+      "R_nominal": 8.0,
+      "R_measured": 7.909886120011655,
+      "dp": 0.005219724767761928,
+      "two_over_R": 0.25284814087779217,
+      "sigma_local": 0.02064371424540057,
+      "psi_peak": 0.9999999964631185,
+      "positivity_ok": true,
+      "max_abs_v": 0.00030279328899082583
+    },
+    {
+      "R_nominal": 9.0,
+      "R_measured": 8.891988587062059,
+      "dp": 0.004579951123345046,
+      "two_over_R": 0.2249215662411018,
+      "sigma_local": 0.0203624365590431,
+      "psi_peak": 0.9999999880189354,
+      "positivity_ok": true,
+      "max_abs_v": 0.00034223777844989613
+    }
+  ],
+  "sigma_input": 0.02,
+  "sigma_free_intercept": 0.02253835338773174,
+  "sigma_zero_intercept": 0.020824271321621953,
+  "intercept": -0.0004872161219262497,
+  "r2": 0.9999556794396279,
+  "sigma_ratio": 1.126917669386587,
+  "sigma_1overR_fit_unstable": -0.00024286644147580096,
+  "r2_vs_invR": 0.9925496209255895,
+  "gates": {
+    "sigma_ratio_lo": 0.9,
+    "sigma_ratio_hi": 1.1,
+    "r2_min": 0.95,
+    "intercept_frac": 0.25
+  },
+  "verdict": "FAIL_SOLVER",
+  "note": "Eq.(18) A=(9/4)omega*sigma is NOT retuned; an offset is a result."
+}

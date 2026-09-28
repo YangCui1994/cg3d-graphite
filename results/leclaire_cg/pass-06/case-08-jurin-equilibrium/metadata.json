@@ -1,0 +1,52 @@
+{
+  "grid": [
+    24,
+    16,
+    44
+  ],
+  "steps": 4000,
+  "wall": 3,
+  "x_w": 10,
+  "z_channel": 8,
+  "theta_deg": 60.0,
+  "gravity": 0.00025,
+  "z_fill": 20.0,
+  "initial": "liquid fills everything below z_fill: channel, reservoir and capillary start full and connected",
+  "wetting": "leclaire",
+  "precheck": {
+    "gap": 10,
+    "dh_theory": 8.000000000000002,
+    "reservoir_level_predicted": 16.363636363636363,
+    "capillary_level_predicted": 24.363636363636367,
+    "reservoir_window": [
+      8,
+      42
+    ],
+    "capillary_window": [
+      8,
+      42
+    ],
+    "inside_capillary": true,
+    "inside_reservoir": true,
+    "free_surface_in_reservoir": true,
+    "clearance_to_top": 17.636363636363633,
+    "connected_at_t0": true,
+    "sections": {
+      "channel": 352,
+      "reservoir": 144,
+      "capillary": 120
+    },
+    "z_fill": 20.0
+  },
+  "snapshot_times": [
+    "t0000",
+    "t_mid",
+    "t_final"
+  ],
+  "exit_code": 0,
+  "candidate_sha": "9773a439f9f994225ce6515bd9f755815aa2c5af",
+  "case_id": "case-08",
+  "case_name": "jurin-equilibrium",
+  "raw_schema_version": "l17c_core_raw_f32_v2",
+  "wall_seconds": 247.36070275306702
+}

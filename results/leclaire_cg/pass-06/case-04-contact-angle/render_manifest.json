@@ -1,0 +1,114 @@
+{
+  "candidate_sha": "9773a439f9f994225ce6515bd9f755815aa2c5af",
+  "raw_schema_version": "l17c_core_raw_f32_v2",
+  "psi_scale": [
+    -1.0,
+    1.0
+  ],
+  "colormap": "RdBu_r",
+  "dpi": 160,
+  "figures": [
+    {
+      "figure": "figures/fig_cap_theta60.png",
+      "figure_svg": "figures/fig_cap_theta60.svg",
+      "source_candidate_sha": "9773a439f9f994225ce6515bd9f755815aa2c5af",
+      "source_raw": "raw/theta60_final.npz",
+      "plotted_variable": "contact angle through liquid/red",
+      "psi_scale": [
+        -1.0,
+        1.0
+      ],
+      "colormap": "RdBu_r",
+      "script": "tests/leclaire_cg/pass06.py",
+      "script_version": "pass-06",
+      "theta_liquid_deg": 65.19106789854757,
+      "R_fit": 11.205460350067856,
+      "z_centre": -3.701739391207557,
+      "z_wall": 1.0,
+      "phase_side": "liquid/red"
+    },
+    {
+      "figure": "figures/fig_cap_theta90.png",
+      "figure_svg": "figures/fig_cap_theta90.svg",
+      "source_candidate_sha": "9773a439f9f994225ce6515bd9f755815aa2c5af",
+      "source_raw": "raw/theta90_final.npz",
+      "plotted_variable": "contact angle through liquid/red",
+      "psi_scale": [
+        -1.0,
+        1.0
+      ],
+      "colormap": "RdBu_r",
+      "script": "tests/leclaire_cg/pass06.py",
+      "script_version": "pass-06",
+      "theta_liquid_deg": 95.6997517245359,
+      "R_fit": 7.854862546637154,
+      "z_centre": 1.7801091138070748,
+      "z_wall": 1.0,
+      "phase_side": "liquid/red"
+    },
+    {
+      "figure": "figures/fig_cap_theta120.png",
+      "figure_svg": "figures/fig_cap_theta120.svg",
+      "source_candidate_sha": "9773a439f9f994225ce6515bd9f755815aa2c5af",
+      "source_raw": "raw/theta120_final.npz",
+      "plotted_variable": "contact angle through liquid/red",
+      "psi_scale": [
+        -1.0,
+        1.0
+      ],
+      "colormap": "RdBu_r",
+      "script": "tests/leclaire_cg/pass06.py",
+      "script_version": "pass-06",
+      "theta_liquid_deg": 129.40464687611498,
+      "R_fit": 6.613755413179022,
+      "z_centre": 5.198366846005323,
+      "z_wall": 1.0,
+      "phase_side": "liquid/red"
+    },
+    {
+      "figure": "figures/fig1_field.png",
+      "figure_svg": "figures/fig1_field.svg",
+      "source_candidate_sha": "9773a439f9f994225ce6515bd9f755815aa2c5af",
+      "source_raw": "raw/theta120_final.npz",
+      "plotted_variable": "psi",
+      "psi_scale": [
+        -1.0,
+        1.0
+      ],
+      "colormap": "RdBu_r",
+      "script": "tests/leclaire_cg/pass06.py",
+      "script_version": "pass-06",
+      "slice": "xz",
+      "slice_index": 15,
+      "isosurface_level": 0.0
+    },
+    {
+      "figure": "figures/fig2_observable.png",
+      "figure_svg": "figures/fig2_observable.svg",
+      "source_candidate_sha": "9773a439f9f994225ce6515bd9f755815aa2c5af",
+      "source_raw": "raw/theta120_final.npz",
+      "plotted_variable": "measured theta [deg]",
+      "psi_scale": [
+        -1.0,
+        1.0
+      ],
+      "colormap": "RdBu_r",
+      "script": "tests/leclaire_cg/pass06.py",
+      "script_version": "pass-06"
+    },
+    {
+      "figure": "figures/fig3_residual.png",
+      "figure_svg": "figures/fig3_residual.svg",
+      "source_candidate_sha": "9773a439f9f994225ce6515bd9f755815aa2c5af",
+      "source_raw": "raw/theta120_final.npz",
+      "plotted_variable": "|theta_meas - theta_presc| [deg]",
+      "psi_scale": [
+        -1.0,
+        1.0
+      ],
+      "colormap": "RdBu_r",
+      "script": "tests/leclaire_cg/pass06.py",
+      "script_version": "pass-06"
+    }
+  ]
+}

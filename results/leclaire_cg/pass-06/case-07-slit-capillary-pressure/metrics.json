@@ -1,0 +1,56 @@
+{
+  "runs": [
+    {
+      "theta_prescribed_deg": 60.0,
+      "gap": 10,
+      "p_liquid": 0.3174490033932329,
+      "p_gas": 0.3194999477897446,
+      "pc_measured": 0.0020509443965117113,
+      "pc_theory": 0.0020000000000000005,
+      "pc_ratio": 1.0254721982558554,
+      "psi_peak": 0.9999990874212226,
+      "max_abs_v": 0.0005306556494425131
+    },
+    {
+      "theta_prescribed_deg": 90.0,
+      "gap": 10,
+      "p_liquid": 0.3184734936788744,
+      "p_gas": 0.3184730715643718,
+      "pc_measured": -4.221145025740114e-07,
+      "pc_theory": 2.4492935982947063e-19,
+      "pc_ratio": -1723413243997.796,
+      "psi_peak": 0.9999991492248521,
+      "max_abs_v": 0.00020371338832915852
+    },
+    {
+      "theta_prescribed_deg": 120.0,
+      "gap": 10,
+      "p_liquid": 0.31955035647923125,
+      "p_gas": 0.31739366536130253,
+      "pc_measured": -0.0021566911179287107,
+      "pc_theory": -0.001999999999999999,
+      "pc_ratio": 1.0783455589643558,
+      "psi_peak": 0.9999986384168293,
+      "max_abs_v": 0.0005392022861604469
+    }
+  ],
+  "gap": 10,
+  "sigma": 0.02,
+  "gates": {
+    "ratio_lo": 0.5,
+    "ratio_hi": 1.5,
+    "min_contour": 1
+  },
+  "verdict": "PASS",
+  "sign_change_across_60_120": true,
+  "zero_at_90_ok": true,
+  "zero_bound": 0.00010000000000000003,
+  "ratio_band_ok": true,
+  "pc90_theory_is_zero": 2.4492935982947063e-19,
+  "angles_run": [
+    60.0,
+    90.0,
+    120.0
+  ],
+  "note": "ratio gate applied to the 60/120 arms only; the 90 deg arm is gated on an absolute near-zero bound"
+}
