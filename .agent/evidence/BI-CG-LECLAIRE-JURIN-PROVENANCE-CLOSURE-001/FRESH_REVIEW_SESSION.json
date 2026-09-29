@@ -1,0 +1,272 @@
+{
+  "task": "BI-CG-LECLAIRE-JURIN-PROVENANCE-CLOSURE-001",
+  "attempt": 1,
+  "mode": "FRESH_SESSION (independent reviewer; executor transcript not read)",
+  "product_branch": "agent-task/BI-CG-LECLAIRE-IMPLEMENTATION-001",
+  "base": "6c30260dfe0c8b61ea9609e6bffa5c487312cf06",
+  "frozen_source_candidate": "9773a439f9f994225ce6515bd9f755815aa2c5af",
+  "evidence_tip": "5dca114bc40c40743029a9439101958b13eaf721",
+  "control_branch_read": "agent-dev/bilateral-episode-v0.1 @ 6c51469",
+  "predecessors": [
+    ".agent/evidence/BI-CG-LECLAIRE-WETTING-CLOSURE-001/EXTERNAL_SCIENTIFIC_REVIEW_R4_CHANGES_REQUESTED.md",
+    ".agent/evidence/BI-CG-LECLAIRE-PASS4-001/EXTERNAL_SCIENTIFIC_REVIEW_R3_CHANGES_REQUESTED.md",
+    ".agent/evidence/BI-CG-LECLAIRE-WETTING-CLOSURE-001/FRESH_REVIEW.md"
+  ],
+  "staging": "D:/2026_agent_work/01_GLM_LBM3D_porous_media/.review_runtime/BI-CG-LECLAIRE-JURIN-PROVENANCE-CLOSURE-001/",
+  "review_runtime": ".agent/evidence/BI-CG-LECLAIRE-JURIN-PROVENANCE-CLOSURE-001/FRESH_REVIEW.md",
+  "decision": "CHANGES_REQUESTED",
+  "candidate_modified": false,
+  "evidence_modified": false,
+  "no_gpu_used": true,
+  "no_taichi_used": true,
+
+  "1_freeze_invariant": {
+    "evidence_commit_parent_equals_freeze": true,
+    "commits_freeze_to_evidence": ["5dca114"],
+    "modified_files_freeze_to_evidence": ["docs/research/leclaire_cg/VALIDATION_ATLAS.md", "results/leclaire_cg/EXECUTION_REPORT.md", "results/pass06_run.log"],
+    "tests_or_experimental_change_freeze_to_evidence": false,
+    "frozen_sha_contains_the_evidence_harness": true,
+    "single_command_reproduces_matrix": true,
+    "command": "python tests/leclaire_cg/pass06.py (staged byte-exact copy of 9773a43; OUT_ROOT redirected into staging)",
+    "reproduction": {
+      "metric_fields_compared": 320,
+      "metric_fields_bit_identical": 320,
+      "per_case": {"case-01": 7, "case-02": 8, "case-03": 50, "case-04": 34, "case-05": 49, "case-06": 41, "case-07": 42, "case-08": 29, "case-09": 20, "case-10": 16, "case-11": 24},
+      "verdicts_identical": true,
+      "verdicts": {"PASS": 8, "FAIL_SOLVER": 3},
+      "raw_npz_byte_identical": "39/39",
+      "unit_checks": "88/88"
+    },
+    "isolation": {
+      "lbm_solver_cg3d_blob_base": "1b7db4ac27448b5b982cead1ea86e719c59e6684",
+      "lbm_solver_cg3d_blob_freeze": "1b7db4ac27448b5b982cead1ea86e719c59e6684",
+      "lbm_solver_cg3d_blob_tip": "1b7db4ac27448b5b982cead1ea86e719c59e6684",
+      "only_non_added_file_base_to_tip": ".gitignore"
+    },
+    "note": "results/pass06_run.log exists already in the freeze commit (an earlier run of a pre-freeze tree) and is overwritten by the evidence commit's run; the evidence-tip log matches SUMMARY.json wall times case by case"
+  },
+
+  "2_regression": {
+    "pass5_vs_pass6_metrics": "cases 01,02,03,05,06,07,09,10,11 bit-identical; case-04 differs only in the corrected wall_normal string; case-08 differs (new geometry)",
+    "pass5_vs_pass6_raw_arrays": "identical for the unchanged cases; only the schema_version string differs (l17c_core_raw_v1 -> l17c_core_raw_f32_v2)",
+    "source_diff_pass5_to_pass6": "operators.py docstring only; lattice.py, solver.py, geometry.py, test_lattice_tables.py untouched",
+    "contact_angle": {
+      "reviewer_liquid_side_deg": {"60": 64.85, "90": 96.29, "120": 128.99},
+      "reviewer_2atan_h_over_a_deg": {"60": 63.29, "90": 91.19, "120": 112.48},
+      "reported_deg": {"60": 65.19, "90": 95.70, "120": 129.40},
+      "complement_deg": {"60": 115.15, "90": 83.71, "120": 51.01},
+      "psi_at_fitted_centre": {"60": -1.000, "90": 1.000, "120": 0.999},
+      "gate_deg": 15.0,
+      "verdict": "PASS (regression confirmed)"
+    },
+    "slit_pc": {
+      "reviewer_pc": {"60": 2.0320e-3, "90": 0.0, "120": -2.1413e-3},
+      "reported_pc": {"60": 2.0509e-3, "90": -4.2211e-7, "120": -2.1567e-3},
+      "theory": {"60": 2.0e-3, "90": 0.0, "120": -2.0e-3},
+      "reviewer_ratio": {"60": 1.016, "120": 1.071},
+      "z_invariance": 0.0,
+      "x_ends_sealed": true,
+      "plates_solid": true,
+      "meniscus_edge_vs_centre": {"60": [13.765, 13.096], "90": [13.5, 13.5], "120": [13.223, 13.932]},
+      "verdict": "PASS (regression confirmed)"
+    }
+  },
+
+  "3_jurin": {
+    "3A_topology": {
+      "method": "reviewer 6-connectivity flood fill on the committed t0000 psi>0 field",
+      "liquid_components": 1,
+      "liquid_cells": 5632,
+      "touches_reservoir": true,
+      "touches_channel": true,
+      "touches_capillary": true,
+      "gas_components": 2,
+      "gas_pocket_cells_t0": {"reservoir_side": 3312, "capillary_side": 2760},
+      "sections_reviewer": {"channel": 352, "reservoir": 144, "capillary": 120},
+      "liquid_mass_drift_over_run": -4.227e-9,
+      "verdict": "PASS - connected_at_t0=true verified in fact; entrance submerged"
+    },
+    "3B_density_and_forcing": {
+      "bulk_total_density_liquid": 1.000000000,
+      "bulk_total_density_gas": 1.000000000,
+      "delta_rho": 0.0,
+      "density_contrast_implemented": false,
+      "body_force_path": "experimental/leclaire_cg/solver.py: m[..., idx] += rho * self.force[a]  (rho = total mixture density)",
+      "body_force_coupling": "total mixture, identical weight per unit volume in both phases",
+      "dpdz_liquid_column": -2.383422e-4,
+      "dpdz_gas_column": -2.348613e-4,
+      "rho_g_reference": -2.5e-4,
+      "conclusion": "both phases hydrostatic with the same gradient => the classical restoring term (rho_liquid-rho_gas) g dh vanishes => no finite classical Jurin equilibrium exists; dh = 2 sigma cos(theta)/(rho g h) is the weightless-gas form and is out of scope; a weightless gas would require dp/dz ~ 0 in the gas (measured 2.35e-4)",
+      "what_a_true_jurin_test_would_need": ["non-unit density ratio (gamma != 1)", "or a phase-selective body force", "or (for the closed-box issue only) an open/pressure-controlled gas boundary; this alone does not fix delta_rho = 0"]
+    },
+    "3C_reservoir_curvature": {
+      "sigma_over_R_reservoir": 6.757e-6,
+      "reservoir_surface_height_variance": 1.051e-5,
+      "verdict": "negligible, so the classical neglect of the reservoir term is justified; the failing premise is the density contrast"
+    },
+    "3C_meniscus": {
+      "z_y_across_slit": [20.43, 19.97, 19.65, 19.44, 19.34, 19.34, 19.44, 19.65, 19.97, 20.43],
+      "sag_lu": 1.091,
+      "arc_radius_lu": 12.0,
+      "sigma_over_R_arc": 1.67e-3,
+      "measured_pgas_minus_pliq_thin_window": {"slit_x22": 1.527e-3, "slit_x12": 1.670e-3, "reservoir_x2": 7.31e-4},
+      "realised_liquid_side_angle_deg": 65.4,
+      "note": "local Laplace balance at the meniscus closes to ~3 percent; the reservoir surface carries a 7.3e-4 residual against ~zero curvature"
+    },
+    "3D_levels": {
+      "node_threshold": {"t0": [19.0, 19.0], "t_final": [20.0, 19.0], "rise": 1.000},
+      "sub_grid_probe_columns": {"t0": [19.500, 19.500], "t_final": [20.203, 19.342], "rise": 0.861},
+      "sub_grid_region_means": {"t0": [19.500, 19.500], "t_final": [20.070, 19.500], "rise": 0.570},
+      "conclusion": "the harness's ~1 lu overstates the sub-grid rise by ~15 percent and the region-mean rise by ~75 percent; it is a probe convention, not a quantisation artefact - the rise is still ~0.86 lu against 8.00 lu theory"
+    },
+    "3E_equilibration": {
+      "levels_frozen_from_t": 400,
+      "level_drift_t1000_to_t4000_lu": 0.003,
+      "max_abs_u_fluid_t_final": 9.969e-4,
+      "mean_abs_u_fluid_t_final": 1.619e-4,
+      "solid_node_reservoir_blue_uptake_fraction": 0.05,
+      "classification": "stalled / lattice-pinned interface with a residual parasitic current, not a demonstrated equilibrium"
+    },
+    "3F_gravity_control": {
+      "committed_artifact_exists": false,
+      "committed_metadata_gravity_only": 0.00025,
+      "claim_source": "freeze commit message 9773a43 (g and 4g both give ~1 lu)",
+      "reviewer_staging_run": {
+        "g_2.5e-4": {"dh_theory": 8.0, "rise_node": 1.0, "rise_sub": 0.861, "rise_mean": 0.570, "cap_sub_final": 20.203, "res_sub_final": 19.342, "max_u": 9.97e-4},
+        "g_1.0e-3_4x": {"dh_theory": 2.0, "rise_node": 1.0, "rise_sub": 0.867, "rise_mean": 0.567, "cap_sub_final": 19.664, "res_sub_final": 18.797, "max_u": 1.29e-3}
+      },
+      "claim_confirmed": true,
+      "inference_valid": false,
+      "why": "with delta_rho = 0 there is no hydrostatic restoring force, so 1/g scaling is not expected; gravity-independence is a consequence of the model, not evidence about Jurin"
+    },
+    "3_verdict": "case-08 FAIL_SOLVER is a misclassification; correct classification is INVALID_TEST / out-of-scope theory (or a re-derived closed-system pressure-balance diagnostic)"
+  },
+
+  "4_mechanical_sigma": {
+    "reported": {"sigma_mech": 0.019999906698229764, "ratio": 0.9999953349114882},
+    "reviewer_from_f32_Ndist": {"sigma_mech": 0.0199999596, "ratio": 0.999997982},
+    "f32_storage_effect": {"absolute": 5.294e-8, "relative": 2.647e-6, "material": false},
+    "premises": {"one_interface_isolated": true, "integration_window": [15, 47], "bulk_window": [44, 51], "tv_discrete": 2.000000, "A_coefficient": 2.25, "omega_eff": 1.0},
+    "implication": "rules out a global perturbation-amplitude calibration error; points at the Laplace measurement/regression/finite-radius treatment"
+  },
+
+  "5_laplace": {
+    "reviewer_local_sigma_over_input": [1.0559, 1.0417, 1.0322, 1.0181],
+    "reviewer_R_measured": [5.869461618, 6.868001997, 7.909886120, 8.891988587],
+    "reviewer_dp": [7.1960365e-3, 6.0667292e-3, 5.2197262e-3, 4.5799514e-3],
+    "reviewer_free_intercept": {"sigma": 0.022538347, "ratio": 1.126917, "intercept": -4.872e-4, "r2": 0.9999557},
+    "reviewer_zero_intercept": {"sigma": 0.020824273, "ratio": 1.041214},
+    "reported": {"sigma_free": 0.022538353, "ratio": 1.126918, "intercept": -4.872161e-4, "r2": 0.999955679, "sigma_zero": 0.020824271, "ratio_zero": 1.041214},
+    "interpretation": "per-radius values only 2-6 percent high and falling monotonically with R; the 13 percent free-intercept slope reflects slope/intercept coupling and a negative intercept; the predeclared gate honestly fails and the FAIL_SOLVER verdict stands; A=(9/4)omega*sigma not retuned",
+    "renamed_field": {"sigma_1overR_fit_unstable": -2.4286644147580096e-4, "r2_vs_invR": 0.9925496209255895}
+  },
+
+  "6_asymmetric_wall": {
+    "box_closed": {"x": true, "y": true},
+    "masses_t0": {"red": 1320.0, "blue": 1400.0},
+    "masses_t_final": {"red": 1320.000000321, "blue": 1400.000000460},
+    "drift_reviewer": {"red": 3.21e-10, "blue": 4.60e-10},
+    "drift_reported": {"red": 3.629e-10, "blue": 3.838e-10},
+    "seven_percent_mass_creation_present": false,
+    "wall_band_red_relative": -0.068308,
+    "attribution": "NOT attributed to wall mass transfer; no stationary reference case was run",
+    "verdict_label_assessment": "FAIL_SOLVER defensible as a gate result; INCONCLUSIVE would be more honest until a stationary reference exists"
+  },
+
+  "7_artifacts": {
+    "raw_npz_tracked": 39,
+    "manifests": 11,
+    "source_raw_references": 36,
+    "missing_on_disk": 0,
+    "git_ignored": 0,
+    "manifest_candidate_sha_correct": "11/11",
+    "manifest_script": "tests/leclaire_cg/pass06.py",
+    "manifest_script_version": "pass-06",
+    "raw_schema_version": "l17c_core_raw_f32_v2",
+    "figures_regenerated_pixel_identical": {"fig1_field": "5/5", "fig_cap_theta90": true, "fig_cap_theta120": true, "fig_cap_theta60": "max|d|=1", "case-11_fig2_observable_from_reviewer_profile": "max|d|=1"},
+    "reproduce_py": {"files": 11, "broken": 11, "error": "ModuleNotFoundError: No module named 'pass06'", "cause": "sys.path inserts three levels up instead of four (artifact.Case.write_reproduce); fails from repo root and from the case directory"}
+  },
+
+  "8_provenance": {
+    "convention_current_everywhere": true,
+    "convention_stale_current_claims": "none; the only -grad(g) mentions remaining are explicitly labelled superseded history",
+    "stage_id_correct": true,
+    "render_script_version": "pass-06",
+    "r5_acquisition": "consistent 科研通 (PROVENANCE.md stale sentence retracted in place; REFERENCE_MANIFEST.md clean)",
+    "r5_mapping_status": "UNRESOLVED, still not silently closed",
+    "passes_1_to_5_marked_superseded": true,
+    "pass4_complementary_angle_history_only": true,
+    "mechanical_sigma_pass4_vs_pass5_separated": true,
+    "remaining_inconsistencies": [
+      "VALIDATION_ATLAS.md has two sections headed '— CURRENT' (Pass-5 line 340 and Pass-06 line 393)",
+      "SCIENCE_MASTERLINE.md header still says 'Updated through: Pass-4 fresh review + external review R3' and section 17's one-sentence truth still lists Pass-4 blockers as remaining, contradicting its own pass-06 section 12",
+      "MECHANICAL_SIGMA_DERIVATION.md still names the pass-04 artifact tree",
+      "top-level results/leclaire_cg/PROVENANCE.md still describes the pass-3 run with no superseded banner",
+      "masterline section 12 and the atlas present the Jurin outcome as a solver failure 'on a geometry where Jurin's law finally applies' - incorrect per the density-contrast finding"
+    ]
+  },
+
+  "9_preserved_formulation": {
+    "d3q19_tables": "preserved (lattice.py untouched)",
+    "mrt_structure": "preserved",
+    "eq4_u_dot_grad_rho": "preserved (A1-A4 checks pass)",
+    "xw_1d_gradient": "preserved",
+    "harmonic_viscosity": "preserved",
+    "explicit_beta_recoloring": "preserved",
+    "unrelaxed_perturbation_ordering": "preserved",
+    "A_equals_9over4_omega_sigma": "preserved, not retuned",
+    "f64_conservation": "preserved (case-10 identical; case-09 excursions ~1e-10)",
+    "only_source_change_pass5_to_pass6": "operators.wall_normals docstring"
+  },
+
+  "findings": {
+    "blocking": [
+      {"id": "B-1", "title": "classical Jurin's law is out of scope for the unit-density model", "detail": "measured delta_rho = 0 (both phases at total density 1.000000000), body force on the mixture, and equal hydrostatic gradients (-2.383e-4 liquid vs -2.349e-4 gas against rho g = 2.5e-4); the harness's dh = 8.00 lu and the 0.5-1.5 rise-ratio gate test a balance whose restoring term vanishes; case-08 FAIL_SOLVER and the masterline/atlas statement that it fails 'where Jurin's law finally applies' are wrong"},
+      {"id": "B-2", "title": "the gravity-scaling control has no committed artifact and its inference does not follow", "detail": "the freeze commit rests on a 4g run recorded nowhere in the evidence tree; my staging run confirms the numbers but shows gravity-independence is expected when delta_rho = 0, so 'no 1/g scaling' is not evidence of a solver failure"},
+      {"id": "B-3", "title": "current provenance contradicts itself", "detail": "two '— CURRENT' sections in the atlas; masterline header and section 17 contradicting its own section 12"}
+    ],
+    "non_blocking": [
+      {"id": "N-1", "title": "all eleven reproduce.py scripts are broken (off-by-one sys.path depth)"},
+      {"id": "N-2", "title": "the rise convention is undocumented (node 1.000 vs sub-grid 0.861 vs region-mean 0.570 lu)"},
+      {"id": "N-3", "title": "the state is stalled, not equilibrated (max|u| ~1e-3, 7.3e-4 reservoir residual, two gas pockets at different pressures, 5 percent gas uptake by the solid-node reservoir)"},
+      {"id": "N-4", "title": "case-09 FAIL_SOLVER is an unattributed gate failure; INCONCLUSIVE would be more honest"},
+      {"id": "N-5", "title": "small durable-record leftovers: pass-04 path in MECHANICAL_SIGMA_DERIVATION.md, un-bannered top-level PROVENANCE.md, two indistinguishable run logs in the frozen tree"}
+    ]
+  },
+
+  "required_answers": {
+    "1_binding_valid": "yes: 5dca114^ == 9773a43, no source/harness change, one command reproduces 320/320 fields, 11/11 verdicts, 39/39 raw",
+    "2_artifacts_reproducible": "yes for raw data and figures; no for the per-case reproduce.py scripts",
+    "3_convention_closed": "yes, in code and in every machine-readable artifact, with a non-circular analytic lock",
+    "4_contact_angle_validates": "yes: 64.85/96.29/128.99 (reviewer) and 65.19/95.70/129.40 (driver) for 60/90/120 deg",
+    "5_slit_pc_validates": "yes: +2.032e-3/~0/-2.141e-3, correct signs and 2-7 percent magnitudes",
+    "6_jurin_topology_valid": "yes: one liquid component of 5632 cells spanning reservoir, channel and capillary; areas 352/144/120; mass conserved to 4e-9",
+    "7_classical_jurin_applicable": "NO - delta_rho = 0 and the body force is on the mixture, so the restoring term vanishes and no finite classical equilibrium exists",
+    "8_density_diff_and_coupling": "delta_rho = 0; body force = rho_total * f_z acting equally on both phases; realised balance rho g dh = (p_gas,res - p_gas,slit) + sigma (kappa_c - kappa_r)",
+    "9_reservoir_curvature": "negligible (sigma/R = 6.8e-6); not the failing premise",
+    "10_subgrid_rise": "1.000 lu node threshold vs 0.861 lu sub-grid at the same probe columns vs 0.570 lu region mean - a 15 percent probe convention effect, not quantisation",
+    "11_equilibrated": "no: levels frozen after 400 steps but max|u| stays ~1e-3, the reservoir interface is out of local balance by 7.3e-4, and the gas pockets are not sealed in practice",
+    "12_gravity_scaling": "the relative rise is gravity-independent (1.00/0.861 at g; 1.00/0.867 at 4g where theory asks 8.00 -> 2.00 lu); it demonstrates the absence of a hydrostatic drive, not a Jurin solver failure",
+    "13_case08_classification": "FAIL_SOLVER must be withdrawn; INVALID_TEST / out-of-scope theory, or re-derive the closed-system pressure balance",
+    "14_mechanical_sigma_reproducible": "yes: 0.019999960 (ratio 0.999998) from the f32 Ndist; f32 cast effect 2.6e-6 relative",
+    "15_mechanical_plus_laplace": "rules out a global perturbation-amplitude error; points at the Laplace measurement/regression/finite-radius treatment",
+    "16_case09": "unresolved wall-band diagnostic rather than a solver failure; INCONCLUSIVE would be more honest",
+    "17_documents_consistent": "not yet: two CURRENT atlas sections, masterline header/section 17 vs section 12, stale pass-04 reference, un-bannered PROVENANCE.md, and an incorrect Jurin interpretation in the current science documents",
+    "18_ready_for_closure": "not as published, but close: the wetting formulation, convention, instrument and two of three wetting benchmarks are verified closed; remaining work is the Jurin re-scoping/documentation, the committed gravity control, reproduce.py, and the three document-consistency items"
+  },
+
+  "escalation": {
+    "human_required_considered": true,
+    "human_required_triggered": false,
+    "owner_question": "decide whether the reference line will support a true capillary-rise test at all - density-ratio support or phase-selective forcing (a scope extension beyond the frozen unit-density contract) - or whether the Jurin benchmark is retired from the closure claim and the stage closes on the two verified wetting benchmarks"
+  },
+
+  "files_written": [
+    ".agent/evidence/BI-CG-LECLAIRE-JURIN-PROVENANCE-CLOSURE-001/FRESH_REVIEW.md",
+    ".agent/evidence/BI-CG-LECLAIRE-JURIN-PROVENANCE-CLOSURE-001/FRESH_REVIEW_SESSION.json"
+  ],
+  "staging_artifacts_left_for_reproduction": {
+    "dir": ".review_runtime/BI-CG-LECLAIRE-JURIN-PROVENANCE-CLOSURE-001/",
+    "contents": ["run/ (staged frozen source + committed harness + reviewer matrix results)", "matrix_rerun.log", "unit_rerun.log", "jurin_physics.py", "recompute_cases.py", "gravity_control.py", "gravity_control.log", "figs/", "staged_hashes.txt"]
+  }
+}
