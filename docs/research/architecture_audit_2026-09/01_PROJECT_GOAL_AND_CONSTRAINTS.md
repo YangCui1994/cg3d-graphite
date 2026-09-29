@@ -62,3 +62,7 @@ This task only creates an audit input pack. Preserve production and reference li
 **INFERENCE / planning consequence:** treat optional diagnostic storage as a candidate architecture improvement before reducing the scientific domain solely on memory grounds. This is not authorization to modify it in this documentation task. Reservoirs, gas buffers, boundary padding and other allocations can enlarge the final domain; whether the supplied dimensions include them remains unspecified. Resampling from historical image voxels to 0.25 micrometre/lu also needs a geometry/connectivity validation rule. A capacity estimate does not establish physical resolution adequacy or acceptable execution time.
 
 For reproducible follow-up, retain the original allocation calculation if available: code SHA, field names/shapes/dtypes, diagnostic switches, extra domains, overhead convention and device/runtime environment. It is useful evidence but not a blocker to the architecture review.
+
+## Optional extension admitted to architecture review
+
+The owner subsequently agreed to consider gas dissolution and asked about decoupling it from compression. Evaluate a switchable module and time-split two-way coupling as a **proposal**, subject to pressure/inventory closure, conservation and timescale checks. This does not change the required weakly compressible no-dissolution baseline or authorize code changes. See [11](11_OPTIONAL_DISSOLUTION_ARCHITECTURE.md).

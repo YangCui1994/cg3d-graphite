@@ -8,7 +8,7 @@ Prepared 2026-09-29 using ChatGPT reasoning and read-only repository inspection.
 
 ## Questions for the architecture reviewer
 
-1. Reconstruct the research/development architecture for battery-electrode imbibition and trapped gas. Identify assets to retain, claims to narrow, missing physics/measurements, and a staged research roadmap. Compare production CG, L17 CG, and a specifically identified modern pseudopotential candidate without presuming a winner.
+1. Reconstruct the research/development architecture for runnable porous-media imbibition software, including battery-electrode two-sided invasion and trapped gas. Identify assets to retain, claims to narrow, missing physics/measurements, and a staged research roadmap. Compare production CG, L17 CG, and a specifically identified modern pseudopotential candidate without presuming a winner.
 2. Explain which historical failures arose from implementation, benchmark premises, instruments, evidence handling, or research governance. Propose a scientific-development harness with explicit decision ownership, falsification and reframe gates; distinguish proposed design from demonstrated causes.
 
 The earlier control-branch [GPT6_AUDIT_PACKAGE](https://github.com/YangCui1994/cg3d-graphite/blob/dddac98d16bb4b792a371fe4d74276aba702038b/.agent/episodes/bilateral-imbibition-v0.1/GPT6_AUDIT_PACKAGE.md) was narrower (framework audit after an episode). The current owner request explicitly expands the review to scientific architecture. That older document is historical input, not the scope of this audit.
@@ -37,6 +37,8 @@ The pack is based on the L17 package, on a separate documentation branch. Cross-
 
 6. [10 — Review readiness and recovered cloud context](10_REVIEW_READINESS_AND_GAPS.md), including the owner’s 0.25 micrometre/lu constraint, then the [implementation reference map](references/IMPLEMENTATION_REFERENCE_MAP.md). These supplements identify what remains missing before method selection.
 
+7. [11 — Optional dissolution architecture](11_OPTIONAL_DISSOLUTION_ARCHITECTURE.md) and [12 — GPT-6 Pro review brief](12_GPT6_PRO_REVIEW_BRIEF.md). The latter defines the independent review deliverable and read-only boundary.
+
 ## Evidence vocabulary
 
 - **FACT:** directly inspected code, Git relationship, file content, or stored number. A recorded PASS is a fact about a record, not universal physical validation.
@@ -48,8 +50,10 @@ Prefer source papers for what a paper says, frozen code for what executes, raw a
 
 ## Completion and limits
 
-All 14 requested files are supplied, plus two follow-up supplements. Inspection covers selected product/control documentation, solver operators, validation code and summaries, representative reviews, and Git ancestry/diffs. No simulation or benchmark rerun, no complete PDF audit, no exhaustive review of every historical branch, and no inspection of live Windows runtime state was performed. Literature discovery was bounded to identifying primary/review sources needed for the comparison, not claiming a systematic survey through 2026. Existing scientific evidence remains intact.
+All 14 requested files are supplied, plus four supplements (18 Markdown files total), including optional dissolution and the independent-review handoff brief. Inspection covers selected product/control documentation, solver operators, validation code and summaries, representative reviews, and Git ancestry/diffs. No simulation or benchmark rerun, no complete PDF audit, no exhaustive review of every historical branch, and no inspection of live Windows runtime state was performed. Literature discovery was bounded to identifying primary/review sources needed for the comparison, not claiming a systematic survey through 2026. Existing scientific evidence remains intact.
 
-Initial delivery verified the 14 requested files, their internal/source links, ancestry and unchanged production/source-harness files. Follow-up adds two supplements and updates navigation/constraints/reference priorities; only this audit directory is changed. No benchmark was rerun for these checks.
+Initial delivery verified the 14 requested files, their internal/source links, ancestry and unchanged production/source-harness files. Follow-up adds four supplements and updates navigation/constraints/reference priorities; only this audit directory is changed. No benchmark was rerun for these checks.
 
 Suggested review output: (a) claim/evidence corrections, (b) retain/adapt/replace/defer asset decisions, (c) alternative scientific routes with selection criteria, (d) proposed harness architecture and minimum implementation sequence, (e) unresolved owner decisions. Do not authorize a port or production promotion merely by finishing this review.
+
+Handoff static check (2026-09-29): 18 Markdown files; 56 relative file links resolve; 60 distinct commit-pinned repository file references exist in inspected Git objects; whitespace checks pass; all changes from the L17 package remain confined to this audit directory. External literature is tracked by its stated inspection status. These checks establish document integrity, not scientific validation.

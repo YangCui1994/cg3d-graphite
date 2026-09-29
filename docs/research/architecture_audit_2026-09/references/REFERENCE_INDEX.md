@@ -54,3 +54,7 @@ These entries close a gap in the first pack: generic SC reviews alone do not rep
 | P1 — Yang & Boek (2013), *A comparison study of multi-component Lattice Boltzmann models for flow in porous media applications*, [DOI](https://doi.org/10.1016/j.camwa.2012.11.022) | historical SC/free-energy/CG comparison; recover exact variants and matched controls, do not turn its ranking into a modern universal verdict |
 
 **Revised acquisition order:** obtain/reuse R2 and R5, the two application-specific P0 papers, and prior SC project assets first; use SC2/SC3 to select the modern candidate and then extract candidate-specific forcing/wetting primary papers (including SC6/SC7 where relevant). Many items have public access routes, so a “missing extraction” does not necessarily require the owner to locate a PDF. Original L17 author code is separately tracked in the [implementation reference map](IMPLEMENTATION_REFERENCE_MAP.md).
+
+## Optional gas dissolution — new review topic
+
+The four primary-source leads, equation/implementation caveats and their inspection status are in [11 — optional dissolution](../11_OPTIONAL_DISSOLUTION_ARCHITECTURE.md). They cover Henry-interface LBM, CST/VOF transfer, integrated pseudopotential bubble dissolution, and pore-confinement kinetics. They are a targeted reading queue, not completed PDF extractions or a mandate to change solver family. Optional dissolution is separate from mandatory weakly compressible imbibition delivery.

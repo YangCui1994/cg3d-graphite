@@ -33,17 +33,23 @@ The bounded cloud records returned for [Review进展](chatgpt-conversation://6ab
 
 **FACT / conversation content:** prior planning and review also prescribed the Jurin benchmark. The failed premise should therefore be audited across planning, implementation and review; assigning it solely to an executor or model is unsupported. Owner interest in visible execution sessions is an operational usability requirement, distinct from scientific validity.
 
-## Prioritized missing inputs
+## Remaining inputs by decision stage
 
-1. **Deferred application facts, not current review prerequisites:** geometry preprocessing and whether reservoirs/buffers are included; measured usable GPU memory and acceptable elapsed time (the owner has now supplied a single-5080 target, desired 70 × 100 × 100 micrometre domain and capacity estimates); intended observables and tolerance; fluid properties; wetting/contact-angle information; inlet/outlet pressure protocol; vented versus sealed gas and whether compression/dissolution matters. The 0.25 micrometre constraint is already recorded and need not be rediscovered.
-2. **Existing private assets:** exact R2/R5 PDFs already listed in the repository manifest; prior SC code with branch/commit, configurations and outcomes. Their absence from this clone does not prove they do not exist. Attachments and `_refs/` were not available through this inspection.
-3. **Application-specific full texts:** battery electrolyte filling and homogenized multicomponent SC papers added to the [reference queue](references/REFERENCE_INDEX.md). Extract the actual model, binder representation, mapping, validation and limitations before importing conclusions.
-4. **A fair comparison contract:** one named modern MCMP pseudopotential variant versus specified production/L17 variants, on matched geometry, dimensionless controls, wetting calibration, interface resolution and numerical cost. Single-component liquid-vapor improvements are not automatically noncondensable-air MCMP improvements.
-5. **Author implementation provenance:** original L17 Palabos extension remains unrecovered. It would help equation-to-code adjudication, but is not a prerequisite to the first architecture review. See the [implementation map](references/IMPLEMENTATION_REFERENCE_MAP.md).
+**Current handoff:** no owner-supplied experimental dataset is required to start the architecture review. The required scope, weakly compressible baseline, simultaneous two-sided invasion and resource-planning targets are already recorded. The reviewer should proceed, marking evidence-dependent conclusions as conditional.
+
+| Stage | Remaining evidence | How to handle now |
+|---|---|---|
+| Architecture review | exact R2/R5 PDF verification, modern SC candidate extraction, historical SC implementation if it exists | use available source maps and code; identify precise unresolved claims, do not claim complete ranking |
+| Architecture review, optional dissolution | full texts and pressure/inventory/coupling derivation in [11](11_OPTIONAL_DISSOLUTION_ARCHITECTURE.md) | assess interfaces and alternatives; do not assume decoupling or implement now |
+| Implementation verification | measured GPU allocation/runtime, supported parameter envelope, two-sided invasion/trapping checks, geometry/interface convergence | propose bounded tasks and acceptance criteria; supplied memory estimates remain unmeasured |
+| Later application calibration | exact electrode geometry/extent including buffers, electrolyte properties, contact-angle measurement interpretation, experimental observables and error targets | deferred; no need for owner to collect these before review |
+| Optional provenance recovery | original L17 Palabos extension, private `_refs/`, prior SC code/configuration/results | missing from inspected clone, not proven nonexistent; original author code is helpful but not a prerequisite |
+
+Publicly accessible literature should be retrieved by the reviewer when needed. Request owner assistance only for exact private files or inaccessible full text that changes a concrete decision. The fair comparison must identify a modern MCMP variant and match physical/numerical controls; single-component liquid-vapor improvements cannot automatically be transferred to noncondensable-gas MCMP.
 
 ## Recommended reviewer boundary — proposal, not execution authorization
 
-Proceed with the science/harness architecture review now, require conditional recommendations and an explicit missing-evidence table, and defer an irreversible solver switch. Ask the reviewer to separate retain/adapt/replace/defer decisions from experiments needed to decide them. Highest-value next acquisition is targeted full-text extraction and application constraints, not repeated generic code searches. No external code was copied, no simulations were run, and no author was contacted in preparing this supplement.
+Proceed with the science/harness architecture review now, require conditional recommendations and an explicit missing-evidence table, and defer an irreversible solver switch. Ask the reviewer to separate retain/adapt/replace/defer decisions from experiments needed to decide them. Highest-value next acquisition is targeted full-text verification and any available prior implementation provenance. Application calibration is deferred; do not repeat generic code searches without a specific new lead. No external code was copied, no simulations were run, and no author was contacted in preparing this supplement.
 
 
 ## Follow-up received: domain and memory budget

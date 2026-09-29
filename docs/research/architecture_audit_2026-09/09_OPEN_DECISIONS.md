@@ -11,6 +11,7 @@
 | D7: future geometry | resolved synthetic → actual graphite/separator/gap/PCS | mesh/interface convergence, image-resolution limits, material wetting conventions | owner after controlled validation; V3 completion not assumed |
 | D8: modern SC comparison | single-component liquid-vapour vs multicomponent immiscible/noncondensable gas | [literature queue](references/REFERENCE_INDEX.md), exact previous SC code and tests | owner selects comparator after formulation audit |
 | D9: harness evolution | minimal admission ledger vs separate lanes vs full evidence graph | one bounded trial with effort/failure accounting | owner; this pack implements none |
+| D11: optional dissolution architecture | separate modules and sequential feedback vs reduced gas-pocket law vs integrated thermodynamic model | [11](11_OPTIONAL_DISSOLUTION_ARCHITECTURE.md): pressure mapping, conservative transfer, timescale and splitting checks | reviewer assesses; optional extension, not a baseline blocker |
 | D10: science-document repair | reconcile current status and phase semantics across branches | inconsistency register and pinned review/source IDs | later docs-only task; preserve historical evidence |
 
 ## Minimum additional material requested
