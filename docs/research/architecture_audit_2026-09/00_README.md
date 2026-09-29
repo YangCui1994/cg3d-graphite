@@ -31,6 +31,8 @@ The pack is based on the L17 package, on a separate documentation branch. Cross-
 4. [07 — Current harness](07_CURRENT_HARNESS.md), [08 — Harness hypotheses](08_HARNESS_FAILURE_HYPOTHESES.md), [09 — Open decisions](09_OPEN_DECISIONS.md).
 5. [Reference index and acquisition queue](references/REFERENCE_INDEX.md). PDFs are verification sources; existing extractions are the first reading layer.
 
+6. [10 — Review readiness and recovered cloud context](10_REVIEW_READINESS_AND_GAPS.md), including the owner’s 0.25 micrometre/lu constraint, then the [implementation reference map](references/IMPLEMENTATION_REFERENCE_MAP.md). These supplements identify what remains missing before method selection.
+
 ## Evidence vocabulary
 
 - **FACT:** directly inspected code, Git relationship, file content, or stored number. A recorded PASS is a fact about a record, not universal physical validation.
@@ -42,8 +44,8 @@ Prefer source papers for what a paper says, frozen code for what executes, raw a
 
 ## Completion and limits
 
-All 14 requested files are supplied. Inspection covers selected product/control documentation, solver operators, validation code and summaries, representative reviews, and Git ancestry/diffs. No simulation or benchmark rerun, no complete PDF audit, no exhaustive review of every historical branch, and no inspection of live Windows runtime state was performed. Literature discovery was bounded to identifying primary/review sources needed for the comparison, not claiming a systematic survey through 2026. Existing scientific evidence remains intact.
+All 14 requested files are supplied, plus two follow-up supplements. Inspection covers selected product/control documentation, solver operators, validation code and summaries, representative reviews, and Git ancestry/diffs. No simulation or benchmark rerun, no complete PDF audit, no exhaustive review of every historical branch, and no inspection of live Windows runtime state was performed. Literature discovery was bounded to identifying primary/review sources needed for the comparison, not claiming a systematic survey through 2026. Existing scientific evidence remains intact.
 
-Static delivery checks: 14 requested Markdown files; 24 internal links and 60 distinct commit-pinned source-file links resolve; ancestry and empty production/source-harness diffs verified; only this audit directory is added. No benchmark was rerun for these checks.
+Initial delivery verified the 14 requested files, their internal/source links, ancestry and unchanged production/source-harness files. Follow-up adds two supplements and updates navigation/constraints/reference priorities; only this audit directory is changed. No benchmark was rerun for these checks.
 
 Suggested review output: (a) claim/evidence corrections, (b) retain/adapt/replace/defer asset decisions, (c) alternative scientific routes with selection criteria, (d) proposed harness architecture and minimum implementation sequence, (e) unresolved owner decisions. Do not authorize a port or production promotion merely by finishing this review.

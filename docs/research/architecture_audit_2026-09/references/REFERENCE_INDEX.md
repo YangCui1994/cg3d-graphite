@@ -40,3 +40,17 @@ R2 belongs in the P0 comparison reading even though already present in the proje
 First: R5 and R2 exact PDFs from the existing library, SC6/SC7 full text, and previous SC code/configuration/evidence. Next: SC2/SC3 reviews and SC4/SC5 equations for candidate selection. Open preprints are already identified for many entries, so manual acquisition may only be needed where existing files or publisher access are required.
 
 For every received PDF, record hash, version, page offset, equations/tables used, assumptions, and unresolved transcription. Extract only the sections needed for the chosen model comparison, with page references to return to the PDF. No claim about a model's entire capability should rest on a single old benchmark.
+
+
+## Application and comparison sources recovered from cloud context
+
+These entries close a gap in the first pack: generic SC reviews alone do not represent the battery filling and unresolved-binder question. Status is metadata/abstract or author publication record verified, **not full-text equation extraction**. Numerical setup values mentioned by earlier chat assistants have not been promoted to facts.
+
+| Priority / source | Why it matters; extraction needed |
+|---|---|
+| P0 — Lautenschlaeger et al. (2022), *Understanding Electrolyte Filling of Lithium-Ion Battery Electrodes on the Pore Scale Using the Lattice Boltzmann Method*, [DOI](https://doi.org/10.1002/batt.202200090), [institutional record](https://publikationen.bibliothek.kit.edu/1000146654) | directly addresses realistic cathodes, nanoporous binder, pressure/saturation and residual gas; extract actual multicomponent formulation, geometry mapping, validation and scope |
+| P0 — Lautenschlaeger et al., *Homogenized Lattice Boltzmann Model for Simulating Multi-Phase Flows in Heterogeneous Porous Media*, [DOI](https://doi.org/10.1016/j.advwatres.2022.104320), [author preprint](https://arxiv.org/abs/2206.11524) | abstract explicitly combines grayscale and multicomponent Shan–Chen for heterogeneous media/electrode filling; compare assumptions and parameters to a CG grayscale route; record preprint version (v2 includes a supplementary-figure correction) |
+| P1 — Zahid & Cunningham (2025), *Review of the Color Gradient Lattice Boltzmann Method for Simulating Multi-Phase Flow in Porous Media: Viscosity, Gradient Calculation, and Fluid Acceleration*, [DOI](https://doi.org/10.3390/fluids10050128), [author publication record](https://engineers.usf.edu/jcunningham/publications-new) | more recent CG variant map, particularly viscosity/gradient/forcing; publisher full text was not inspected in this audit |
+| P1 — Yang & Boek (2013), *A comparison study of multi-component Lattice Boltzmann models for flow in porous media applications*, [DOI](https://doi.org/10.1016/j.camwa.2012.11.022) | historical SC/free-energy/CG comparison; recover exact variants and matched controls, do not turn its ranking into a modern universal verdict |
+
+**Revised acquisition order:** obtain/reuse R2 and R5, the two application-specific P0 papers, and prior SC project assets first; use SC2/SC3 to select the modern candidate and then extract candidate-specific forcing/wetting primary papers (including SC6/SC7 where relevant). Many items have public access routes, so a “missing extraction” does not necessarily require the owner to locate a PDF. Original L17 author code is separately tracked in the [implementation reference map](IMPLEMENTATION_REFERENCE_MAP.md).

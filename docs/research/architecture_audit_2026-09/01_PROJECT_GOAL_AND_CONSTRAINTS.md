@@ -22,6 +22,8 @@ The review must decide what model can answer the intended battery question; it s
 
 **INFERENCE:** required observables should be chosen before selecting the solver: filling rate, pressure balance, final saturation, connected gas volume, dissolution versus compression, or comparative geometry trends can demand different physics. No unique physical time/density/viscosity mapping for the future battery study is established by this pack.
 
+**FACT / recovered owner constraint:** future application work is memory-limited to approximately **0.25 micrometre/lu**, as stated in the cloud discussion. This differs from the historical 0.128 micrometre image voxel. See [recovered context and readiness](10_REVIEW_READINESS_AND_GAPS.md) for provenance, limits and missing hardware/domain inputs.
+
 ## Owner decisions to expose
 
 Define the physical gas treatment (compressible, effectively incompressible, dissolving, vented or sealed), density/viscosity ratios, wetting/hysteresis requirements, physical geometry and minimum resolved throat/interface ratio. Define acceptable uncertainty and whether comparative trends suffice. These are [open decisions](09_OPEN_DECISIONS.md), not defaults silently inherited from a benchmark.

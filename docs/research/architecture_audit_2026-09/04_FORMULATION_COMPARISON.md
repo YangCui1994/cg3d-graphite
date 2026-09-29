@@ -27,3 +27,7 @@ Choose named formulations and match physical dimensionless conditions (Ca, visco
 Separate (1) formulation correctness, (2) benchmark applicability, (3) discretization/refinement, (4) precision/backend, and (5) cost at comparable error. A bounded initial matrix could use planar interface, Laplace/mechanical stress, non-axis-aligned wetting, two-fluid capillary displacement, closed pocket pressure balance and mass/positivity. This is a **PROPOSAL**, not an authorized run.
 
 No ranking is defensible until the modern SC primary sources, exact implementation and matched tests exist. Older repository claims that CG has a decisive general advantage on under-resolved pores or that pseudopotential surface tension cannot be separately controlled are not sufficient evidence for this decision.
+
+## Application and implementation dimensions still to compare
+
+**INFERENCE:** the 0.25 micrometre/lu working constraint makes resolved throat/interface size and unresolved binder treatment central to selection. Compare physical model, geometry closure and storage architecture separately. Both SC homogenization papers and LBPM grayscale CG now have concrete leads; grayscale is not an SC-exclusive capability. See [readiness/gaps](10_REVIEW_READINESS_AND_GAPS.md) and the [implementation map](references/IMPLEMENTATION_REFERENCE_MAP.md). No speed or memory ranking follows from solver-family names alone.

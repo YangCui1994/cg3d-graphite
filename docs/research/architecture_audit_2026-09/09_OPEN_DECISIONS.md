@@ -23,3 +23,7 @@
 ## Requested output from the next reviewer
 
 Return a staged roadmap with a retain/adapt/replace/defer decision for each major asset, competing model routes with evidence requirements, and a scientific harness design with entry/exit/reframe conditions. For each recommendation identify source facts, inference, and what could falsify it. Resolve the Jurin premise before proposing more solver repair. Preserve uncertainty rather than filling literature gaps from memory.
+
+## Follow-up inputs before a final architecture choice
+
+Use [10 — readiness and gaps](10_REVIEW_READINESS_AND_GAPS.md) to distinguish questions that the existing pack can answer from unresolved application facts, literature extractions and code provenance. Preserve the owner-stated approximate 0.25 micrometre/lu constraint. Evaluate unresolved porosity on both CG and SC routes; require measured resource envelopes before claiming an implementation is feasible. Original L17 author source would help adjudication but is not a prerequisite for conducting the first architecture review.
