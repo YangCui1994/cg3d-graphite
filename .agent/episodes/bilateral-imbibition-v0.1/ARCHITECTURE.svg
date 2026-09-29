@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1000" viewBox="0 0 1500 1000">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#333"/>
+    </marker>
+    <style>
+      .box { fill:#ffffff; stroke:#333333; stroke-width:2; rx:18; ry:18; }
+      .soft { fill:#f4f6f8; stroke:#555; stroke-width:2; rx:18; ry:18; }
+      .gate { fill:#fff7e8; stroke:#8a5b00; stroke-width:2; rx:18; ry:18; }
+      .stop { fill:#fff0f0; stroke:#8a1f1f; stroke-width:2; rx:18; ry:18; }
+      .title { font-family:Arial,sans-serif; font-size:26px; font-weight:700; fill:#222; }
+      .txt { font-family:Arial,sans-serif; font-size:21px; fill:#222; }
+      .small { font-family:Arial,sans-serif; font-size:17px; fill:#444; }
+      .arrow { stroke:#333; stroke-width:2.5; fill:none; marker-end:url(#arrow); }
+      .dash { stroke:#666; stroke-width:2; stroke-dasharray:8 7; fill:none; marker-end:url(#arrow); }
+    </style>
+  </defs>
+
+  <text x="750" y="45" text-anchor="middle" class="title">Scientific Development Episode v0.1 — ZCode Executor / Reviewer Loop</text>
+
+  <rect x="520" y="75" width="460" height="95" class="box"/>
+  <text x="750" y="112" text-anchor="middle" class="txt">You + ChatGPT</text>
+  <text x="750" y="143" text-anchor="middle" class="small">scientific planner · contracts · milestone judgment</text>
+
+  <rect x="505" y="205" width="490" height="90" class="soft"/>
+  <text x="750" y="240" text-anchor="middle" class="txt">GitHub Plan / Evidence Plane</text>
+  <text x="750" y="270" text-anchor="middle" class="small">episode contracts · stage records · candidate provenance</text>
+
+  <rect x="525" y="335" width="450" height="85" class="box"/>
+  <text x="750" y="370" text-anchor="middle" class="txt">Windows Episode Runner</text>
+  <text x="750" y="400" text-anchor="middle" class="small">launch · isolate · bind SHA · promote · stop</text>
+
+  <rect x="120" y="480" width="390" height="125" class="box"/>
+  <text x="315" y="518" text-anchor="middle" class="txt">ZCode Executor</text>
+  <text x="315" y="549" text-anchor="middle" class="small">implement stage · run GPU checks</text>
+  <text x="315" y="576" text-anchor="middle" class="small">write execution report · commit candidate</text>
+
+  <rect x="990" y="480" width="390" height="125" class="box"/>
+  <text x="1185" y="518" text-anchor="middle" class="txt">Fresh ZCode Reviewer</text>
+  <text x="1185" y="549" text-anchor="middle" class="small">no executor transcript · read candidate evidence</text>
+  <text x="1185" y="576" text-anchor="middle" class="small">PASS / CHANGES_REQUESTED / HUMAN_REQUIRED</text>
+
+  <rect x="560" y="490" width="380" height="105" class="soft"/>
+  <text x="750" y="527" text-anchor="middle" class="txt">Frozen Candidate Commit</text>
+  <text x="750" y="559" text-anchor="middle" class="small">review is bound to exact SHA</text>
+
+  <rect x="560" y="650" width="380" height="110" class="gate"/>
+  <text x="750" y="687" text-anchor="middle" class="txt">Decision Gate</text>
+  <text x="750" y="718" text-anchor="middle" class="small">PASS → next stage</text>
+  <text x="750" y="744" text-anchor="middle" class="small">REWORK → executor · HUMAN → stop</text>
+
+  <rect x="110" y="815" width="245" height="90" class="soft"/>
+  <text x="232" y="850" text-anchor="middle" class="txt">V0</text>
+  <text x="232" y="880" text-anchor="middle" class="small">existing baseline</text>
+  <rect x="400" y="815" width="245" height="90" class="soft"/>
+  <text x="522" y="850" text-anchor="middle" class="txt">V1</text>
+  <text x="522" y="880" text-anchor="middle" class="small">dynamic wetting</text>
+  <rect x="690" y="815" width="245" height="90" class="soft"/>
+  <text x="812" y="850" text-anchor="middle" class="txt">V2</text>
+  <text x="812" y="880" text-anchor="middle" class="small">bilateral fronts</text>
+  <rect x="980" y="815" width="245" height="90" class="soft"/>
+  <text x="1102" y="850" text-anchor="middle" class="txt">V3</text>
+  <text x="1102" y="880" text-anchor="middle" class="small">buffer sensitivity</text>
+  <rect x="1270" y="815" width="190" height="90" class="stop"/>
+  <text x="1365" y="850" text-anchor="middle" class="txt">STOP</text>
+  <text x="1365" y="880" text-anchor="middle" class="small">human checkpoint</text>
+
+  <path d="M750 170 L750 205" class="arrow"/>
+  <path d="M750 295 L750 335" class="arrow"/>
+  <path d="M650 420 L410 480" class="arrow"/>
+  <path d="M510 542 L560 542" class="arrow"/>
+  <path d="M940 542 L990 542" class="arrow"/>
+  <path d="M1185 605 C1185 660 950 680 940 700" class="arrow"/>
+  <path d="M560 705 C420 705 320 640 315 605" class="arrow"/>
+  <text x="405" y="690" class="small">CHANGES_REQUESTED</text>
+
+  <path d="M750 760 L232 815" class="arrow"/>
+  <path d="M355 860 L400 860" class="arrow"/>
+  <path d="M645 860 L690 860" class="arrow"/>
+  <path d="M935 860 L980 860" class="arrow"/>
+  <path d="M1225 860 L1270 860" class="arrow"/>
+
+  <path d="M1365 815 C1365 735 1325 690 1260 645" class="dash"/>
+  <text x="1260" y="720" class="small">checkpoint package</text>
+
+  <text x="750" y="955" text-anchor="middle" class="small">High-frequency executor/reviewer loop is local. GitHub receives durable stage/checkpoint evidence. V3 cannot auto-start porous-media work.</text>
+</svg>

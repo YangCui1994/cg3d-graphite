@@ -1,0 +1,14 @@
+# requested: python tests/test_import_no_taichi_init.py
+# executed : "C:\Users\yangc\anaconda3\envs\lbm\python.exe" tests/test_import_no_taichi_init.py
+# cwd      : D:\2026_agent_work\09_cg3d_controller\worktrees\CG3D-V1-INTEGRATION-004
+# env      : {}
+
+--- child 1: plain import, ti.init trapped (exit 0) ---
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+IMPORT_OK: lbm_solver_cg3d imported with ti.init trapped; no Taichi program (prog is None)
+PASS import lbm_solver_cg3d does not call ti.init()  exit=0
+--- child 2: explicit boundary (exit 0) ---
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+BOUNDARY_OK: init_runtime() reaches ti.init (ti.init() was called during import of lbm_solver_cg3d)
+PASS cg3d.runtime.init_runtime() is the path that calls ti.init()  exit=0
+PASS: module import is free of Taichi runtime side effects

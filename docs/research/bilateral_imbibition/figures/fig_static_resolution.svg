@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+<rect width="900" height="520" fill="white"/>
+<g font-family="Arial, Helvetica, sans-serif" fill="#111">
+<text x="450" y="34" text-anchor="middle" font-size="22" font-weight="700">Static slit calibration vs resolution</text>
+<text x="28" y="245" transform="rotate(-90 28 245)" text-anchor="middle" font-size="16">Cstatic = Pc h / (2σ)</text>
+<text x="450" y="492" text-anchor="middle" font-size="16">1 / h (lu⁻¹)</text>
+<line x1="100" y1="430" x2="840" y2="430" stroke="#222"/>
+<line x1="100" y1="70" x2="100" y2="430" stroke="#222"/>
+<g stroke="#ddd">
+<line x1="100" y1="370" x2="840" y2="370"/><line x1="100" y1="310" x2="840" y2="310"/>
+<line x1="100" y1="250" x2="840" y2="250"/><line x1="100" y1="190" x2="840" y2="190"/>
+<line x1="100" y1="130" x2="840" y2="130"/><line x1="100" y1="70" x2="840" y2="70"/>
+</g>
+<g font-size="13" text-anchor="end">
+<text x="90" y="434">0.60</text><text x="90" y="374">0.65</text><text x="90" y="314">0.70</text>
+<text x="90" y="254">0.75</text><text x="90" y="194">0.80</text><text x="90" y="134">0.85</text><text x="90" y="74">0.90</text>
+</g>
+<!-- registry -->
+<line x1="100" y1="110.8" x2="840" y2="110.8" stroke="#666" stroke-dasharray="7 5"/>
+<text x="830" y="100" text-anchor="end" font-size="13">droplet registry cos30° = 0.866</text>
+<!-- diagnostic fit through C26/C40 to 1/h=0 -->
+<line x1="140" y1="64" x2="760" y2="345.4" stroke="#999" stroke-dasharray="5 5"/>
+<!-- points x scale: 0..0.042 -->
+<circle cx="779.5" cy="345.4" r="7" fill="#222"/><text x="770" y="366" text-anchor="end" font-size="14">h=26, 0.6705</text>
+<circle cx="540.5" cy="247.0" r="7" fill="#222"/><text x="530" y="236" text-anchor="end" font-size="14">h=40, 0.7525</text>
+<circle cx="140" cy="64" r="5" fill="#777"/><text x="153" y="82" font-size="13">2-point diagnostic C∞≈0.905</text>
+<text x="100" y="452" font-size="12">0</text><text x="276" y="452" font-size="12">0.01</text><text x="452" y="452" font-size="12">0.02</text>
+<text x="628" y="452" font-size="12">0.03</text><text x="804" y="452" font-size="12">0.04</text>
+<text x="450" y="510" text-anchor="middle" font-size="12">Two points are diagnostic only; V1c adds h=60 and h=80.</text>
+</g></svg>

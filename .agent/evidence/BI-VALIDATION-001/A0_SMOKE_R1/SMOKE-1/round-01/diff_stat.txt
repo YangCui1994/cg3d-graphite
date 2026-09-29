@@ -1,0 +1,3 @@
+6c1d5a8 smoke(SMOKE-1 r1): add smoke/marker.md round candidate
+ smoke/marker.md | 8 ++++++++
+ 1 file changed, 8 insertions(+)

@@ -1,0 +1,303 @@
+{
+  "task": "BI-DEEPSEEK-TRANSITION-001",
+  "attempt": 1,
+  "mode": "FRESH_SESSION (independent reviewer; executor transcript not read or requested)",
+  "base": "6c30260dfe0c8b61ea9609e6bffa5c487312cf06",
+  "branch": "agent-task/BI-DEEPSEEK-TRANSITION-001",
+  "candidate": "c12e2fc",
+  "candidate_full_sha": "c12e2fc4f0c756dec9c93fc71d508e95d283485b",
+  "worktree": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-DEEPSEEK-TRANSITION-001",
+  "review_runtime": "host-side only; no Taichi, no CUDA, no GPU, no simulation; stdlib + numpy on committed CSV/JSON/NPZ; reviewer-owned scratch scripts written outside the candidate repository",
+  "decision": "PASS",
+  "no_self_review": true,
+  "no_gpu_used": true,
+  "reviewer_independence": {
+    "executor_session_recorded_in_review_request": "9631892d-\u2026 (DeepSeek)",
+    "this_reviewer_session_model_id_prefix": "9631892d-",
+    "assessed": "The identifier prefix coincidence is recorded for controller confirmation. Substantively fresh as far as this session can observe: context begins from START_DEEPSEEK_TRANSITION_REVIEW.md, the executor transcript was never read or requested, and no executor work product was reused.",
+    "same_vendor_by_design": true,
+    "same_vendor_note": "The contract requires a fresh DeepSeek session, not a different vendor; same-vendor is by design of BI-DEEPSEEK-TRANSITION-001."
+  },
+  "evidence_basis": "git object/diff topology comparison; committed raw CSV/JSON/NPZ under results/colour_closure/; a from-scratch reviewer re-implementation of all eight required metrics (accelerometer-free OLS on Mc = Mr+Mb normalised by accum_report M0) and of the z-spread / x-mirror / persistence field statistics; independent arithmetic checks of the audit's closed-system balance; provenance greps for every external constant. The executor's recompute_metrics.py and periodic_seam_probe.py were read for scope only and were not used as evidence.",
+  "binding": {
+    "base_is_ancestor": true,
+    "descent_check": "git merge-base --is-ancestor 6c30260dfe0c8b61ea9609e6bffa5c487312cf06 HEAD -> true",
+    "merge_base_equals_base": true,
+    "head": "c12e2fc4f0c756dec9c93fc71d508e95d283485b",
+    "remote_ref_matches_candidate": true,
+    "remote_check": "git ls-remote origin agent-task/BI-DEEPSEEK-TRANSITION-001 -> c12e2fc4f0c756dec9c93fc71d508e95d283485b",
+    "commit_chain": ["6c30260 (base)", "235bb86", "c12e2fc (candidate, HEAD)"],
+    "commit_count_since_base": 2,
+    "worktree_tracked_clean": true,
+    "untracked_entries": ["?? .agent_runtime/"],
+    "untracked_is_contract_mandated_scratch": true,
+    "agent_runtime_not_gitignored_disclosure_confirmed": true,
+    "changed_files_vs_base": [
+      "results/model_transition/EXECUTION_REPORT.md",
+      "results/model_transition/PROVENANCE.md",
+      "results/model_transition/V3_READINESS_AND_PERIODIC_BC_AUDIT.md",
+      "results/model_transition/periodic_seam_probe.json",
+      "results/model_transition/periodic_seam_probe.py",
+      "results/model_transition/recompute_metrics.py",
+      "results/model_transition/recomputed_metrics.json"
+    ],
+    "changed_files_outside_results_model_transition": 0,
+    "solver_diff_vs_base_lines": 0,
+    "tests_diff_vs_base_lines": 0,
+    "no_v3_execution": true,
+    "no_graphite_separator_gap_pcs_work": true,
+    "new_scripts_analysis_only": "recompute_metrics.py and periodic_seam_probe.py import only argparse/csv/json/sys/pathlib/numpy; no taichi import, no solver import, no simulation entry point"
+  },
+  "independent_recomputation": {
+    "method": "reviewer-owned script, from scratch; Mc = Mr + Mb; y = Mc/M0 - 1 with M0 from each run's accum_report.json; plain OLS; windows zero-aligned inclusive on both bounds; declared committed values read only for the cross_check",
+    "A1_periodic_C1_240k": {
+      "M0": 36864.000549316406,
+      "n_samples": 600,
+      "t_first": 400,
+      "t_last": 240000,
+      "recomputed_slope_per_step": 1.804555329211961e-11,
+      "declared_slope_per_step": 1.8046e-11,
+      "committed_drift_fits_Mc_slope": 1.8045553362296766e-11,
+      "slope_rel_diff_vs_committed": 3.888889145841568e-09,
+      "recomputed_r2": 0.27971762117410204,
+      "declared_r2": 0.2797,
+      "committed_r2": 0.27971762215059015,
+      "r2_abs_diff_vs_committed": 9.764881125917668e-10,
+      "recomputed_frac_pos": 0.5492487479131887,
+      "n_pos_of_n_diff": [329, 599],
+      "frac_pos_abs_diff_vs_committed": 0.0,
+      "crosscheck_raw_Mc_slope_over_M0_rel_diff": 1.2304765173322213e-12,
+      "windows_60k": [
+        {"window": [400, 60000], "n": 150, "slope_per_step": 1.9307721482768064e-10, "r2": 0.6615017892716659, "frac_pos": 0.5234899328859061, "disjoint_slope_per_step": 1.9172374301451064e-10},
+        {"window": [60000, 120000], "n": 151, "slope_per_step": -5.0379028323827265e-12, "r2": 0.20963707657782038, "frac_pos": 0.4866666666666667, "disjoint_slope_per_step": -4.938569017854954e-12},
+        {"window": [120000, 180000], "n": 151, "slope_per_step": 1.2448844889087142e-11, "r2": 0.957923289599566, "frac_pos": 0.6866666666666666, "disjoint_slope_per_step": 1.244850228112934e-11},
+        {"window": [180000, 240000], "n": 151, "slope_per_step": -4.658758398072812e-13, "r2": 0.055835592851694926, "frac_pos": 0.5, "disjoint_slope_per_step": -5.143952642448465e-13}
+      ],
+      "verdict": "reproduces"
+    },
+    "A2_C3_120k": {
+      "M0": 28800.000429153442,
+      "n_samples": 300,
+      "t_first": 400,
+      "t_last": 120000,
+      "recomputed_slope_per_step": 2.692882838463628e-12,
+      "declared_slope_per_step": 2.6929e-12,
+      "committed_drift_fits_Mc_slope": 2.692882858031712e-12,
+      "slope_rel_diff_vs_committed": 7.2665930490469704e-09,
+      "recomputed_r2": 0.4146432365106122,
+      "declared_r2": 0.4146,
+      "committed_r2": 0.4146432131592901,
+      "r2_abs_diff_vs_committed": 2.3351322098186245e-08,
+      "recomputed_frac_pos": 0.5585284280936454,
+      "n_pos_of_n_diff": [167, 299],
+      "frac_pos_abs_diff_vs_committed": 0.0,
+      "windows_30k": [
+        {"window": [400, 30000], "n": 75, "slope_per_step": 2.227087e-11, "disjoint_slope_per_step": 2.252781e-11},
+        {"window": [30000, 60000], "n": 76, "slope_per_step": -4.109491e-12, "disjoint_slope_per_step": -4.127748e-12},
+        {"window": [60000, 90000], "n": 76, "slope_per_step": 3.699376e-12, "disjoint_slope_per_step": 3.812268e-12},
+        {"window": [90000, 120000], "n": 76, "slope_per_step": 3.849924e-12, "disjoint_slope_per_step": 3.888515e-12}
+      ],
+      "verdict": "reproduces"
+    },
+    "A3_V2_bilateral": {
+      "max_blue_relative_mass_drift": {
+        "m_b0_source": "report.json:m_b0",
+        "m_b0": 38400.0,
+        "recomputed_max": 5.158358210577418e-07,
+        "argmax_t": 60000,
+        "is_final_sample": true,
+        "committed_column_max": 5.158358211095522e-07,
+        "committed_report_max_eps_b": 5.158358211095522e-07,
+        "declared": 5.1584e-07,
+        "verdict": "reproduces"
+      },
+      "max_mirror_error": {
+        "definition": "|x_left - ((nx-1) - x_right)|, nx from symmetry_check.json",
+        "nx": 326,
+        "recomputed_max_derived": 0.0007449999999948886,
+        "argmax_t": 12000,
+        "recomputed_rms_derived": 0.00039698220992818447,
+        "committed_column_max": 0.00074005127,
+        "committed_report_max_e_x": 0.00074005126953125,
+        "committed_report_rms_e_x": 0.000396872457654293,
+        "declared": ["7.4005e-04 committed column", "7.45e-04 derived"],
+        "text_quantum_explains_gap": true,
+        "verdict": "reproduces"
+      },
+      "trapped_cluster_status": {
+        "n_clusters_unique_values": [1],
+        "n_samples": 60,
+        "largest_min": 38304.0,
+        "largest_final": 38400.0,
+        "max_cluster_count": 1,
+        "t0_n_clusters": 1,
+        "t0_largest": 38400,
+        "fragmentation": "none",
+        "verdict": "reproduces"
+      },
+      "interaction_status": {
+        "G_bulk_values": [146],
+        "G_bulk_constant": true,
+        "G_bulk_min": 146.0,
+        "onset_index_count": 0,
+        "status": "NOT_REACHED",
+        "committed_INTERACTION_ONSET": "NOT_REACHED",
+        "verdict": "reproduces"
+      }
+    },
+    "declared_cross_check_tolerances": {"slope_rel": 1e-07, "r2_abs": 1e-07, "frac_pos_abs": 1e-12},
+    "tolerances_respected": true
+  },
+  "field_probe": {
+    "method": "reviewer-owned from-scratch re-implementation of z-spread (max_k - min_k per (i,j)), x-mirror |psi(i) - psi(nx-1-i)|, and the mid-vs-final persistence correlation; run on results/colour_closure/levelc_v2_fix/v2_primary/fields_{initial,mid,final}.npz",
+    "mask_note": "the probe's mask (x in [0,323), y in [1,ny-2]) was reproduced exactly for comparison; the asymmetry of that mask is finding N4",
+    "z_spread_psi_max": {"initial": 0.0, "mid": 4.978180e-04, "final": 5.066395e-04, "probe_json_match": "exact"},
+    "z_spread_psi_mean_fluid": {"mid": 1.704842e-04, "final": 1.906810e-04, "probe_json_match": "exact"},
+    "z_spread_rho_max": {"initial": 0.0, "mid": 1.239777e-05, "final": 1.323223e-05, "probe_json_match": "exact"},
+    "E_psi_mean_fluid_field": {"mid": 7.996972e-05, "final": 8.565920e-05, "probe_json_match": "exact"},
+    "E_psi_max_fluid_field": {"mid": 4.273713e-03, "final": 1.041710e-03, "probe_json_match": "exact"},
+    "persistence_r_mid_vs_final": {"recomputed": 0.9957490891284624, "probe_json": 0.9957490891284624, "match_to_all_digits": true},
+    "E_psi_field_vs_driver_series_offset_pct": 0.93,
+    "driver_series_checks": {
+      "E_psi_series_max": 9.038323536515235e-05,
+      "E_psi_series_max_t": 46500,
+      "E_psi_final": 8.646225556731224e-05,
+      "missing_front_gap_first_lu": 160.233880,
+      "missing_front_gap_last_lu": 161.695154,
+      "V_bin_first_last": [38304, 38400],
+      "V_cont_first_last": [38287.984375, 38379.28515625],
+      "V_cont_below_nominal_nodes": 20.7148,
+      "V_cont_below_nominal_relative": 5.394e-04,
+      "rho_gas_mean_delta": 1.009e-04,
+      "eps_r_max": 5.870532116508305e-06,
+      "eps_b_max": 5.158358211095522e-07
+    },
+    "verdict": "probe JSON is reproducible to the last digit"
+  },
+  "arithmetic_checks": {
+    "inputs": {"Pc": 2.280325e-03, "G0": 160, "h": 40, "nz": 6, "cs2": 0.3333333333333333, "V_gas": 38400},
+    "predicted_d_rho_gas": {
+      "B40": {"V_liquid_over_V_total": 0.3333333333333333, "recomputed": 2.280325e-03, "audit": 2.280e-03, "ratio_vs_1B": 0.667},
+      "B80": {"V_liquid_over_V_total": 0.5, "recomputed": 3.420488e-03, "audit": 3.421e-03, "ratio_vs_1B": 1.0},
+      "B160": {"V_liquid_over_V_total": 0.6666666666666666, "recomputed": 4.560650e-03, "audit": 4.561e-03, "ratio_vs_1B": 1.333},
+      "B320": {"V_liquid_over_V_total": 0.8, "recomputed": 5.472780e-03, "audit": 5.473e-03, "ratio_vs_1B": 1.6}
+    },
+    "one_B_over_two_B_ratio": 1.3333333333333333,
+    "five_percent_gate_rejection_factor": 6.666666666666667,
+    "meniscus_advance_lu": {"B40": 0.18243, "B80": 0.27364, "B160": 0.36485, "B320": 0.43782, "independent_route_B80": 0.2736},
+    "balance_vs_measurement": {
+      "observed_rho_gas_mean_t1000": 1.0034435987472534,
+      "observed_rise": 3.4436e-03,
+      "audit_observed": 3.444e-03,
+      "predicted_rise": 3.420488e-03,
+      "audit_predicted": 3.4205e-03,
+      "agreement_pct": 0.67,
+      "audit_wording_below_one_percent_literal": true,
+      "nominal_registry_prediction": 3.93195e-03,
+      "nominal_registry_offset_pct": 14.18,
+      "audit_nominal_offset": 14.2
+    },
+    "test_matrix": {
+      "nx_formula_reproduces": true,
+      "nodes": {"v3_B40": 61992, "v3_B80": 82152, "v3_B160": 122472, "v3_B320": 203112},
+      "ratios_vs_V2": [0.7546, 1.0, 1.4907, 2.4724],
+      "cost_from_committed_wall_s_325p617": {"core_60k_s": 1056.7, "core_150k_s": 2641.8, "audit": ["~1060", "~2650"]}
+    },
+    "verdict": "all adversarial arithmetic claims correct"
+  },
+  "comprehension_checklist": {
+    "T3_C1X_A2_frozen": {"present": true, "where": "\u00a71.1"},
+    "V1c_V2_conservation_accepted": {"present": true, "where": "\u00a71.2, \u00a71.3"},
+    "central_gas_trapped_from_t0": {"present": true, "where": "\u00a72.2"},
+    "old_isolation_framing_obsolete": {"present": true, "where": "\u00a72.1-\u00a72.4"},
+    "revised_V3_planning_only": {"present": true, "where": "header, \u00a73.1, \u00a71.4, \u00a79"},
+    "periodic_BC_proposed_not_executed": {"present": true, "where": "\u00a76.3, \u00a77, \u00a79"},
+    "graphite_separator_gap_PCS_unauthorized": {"present": true, "where": "\u00a71.4, \u00a79"},
+    "verdict": "all seven required statements present and correct"
+  },
+  "design_quality_checklist": {
+    "hard_invariants": {"distinguished": true, "where": "\u00a75.1 frozen H1-H7; \u00a75.2 proposed N1-N4 flagged as requiring owner approval and not self-authorizing"},
+    "scientific_diagnostics": {"distinguished": true, "where": "\u00a75.3, explicit no-pass/fail; B-agreement deliberately not gated"},
+    "buffer_size_sensitivity": {"distinguished": true, "where": "\u00a73, \u00a74"},
+    "periodic_BC_sanity_checks": {"distinguished": true, "where": "\u00a76, \u00a77 (P0-P3)"},
+    "stop_conditions": {"distinguished": true, "where": "\u00a79 explicit stop boundary"},
+    "section_6_3_scoping": {
+      "not_gating_V3_on_periodic_suite": true,
+      "P1_shape_and_P3_deferred_to_first_geometry_wrapping_solid_or_interface_across_z_seam": true,
+      "explicit_trigger_naming_graphite_PCS_not_V3": true,
+      "supported_by_verified_facts": "z-spread saturates at 5.07e-04 with r = 0.996; neither solid nor interface crosses the z seam; z-geometry common-mode across the B sweep",
+      "verdict": "correctly scoped"
+    }
+  },
+  "provenance_of_cited_constants": {
+    "Pc_static_h40_2.280325e-3": "results/levelc_v1c/logs/static_h40.log (\u00a7 'Pc_static=2.280325e-03 C=0.7511 theta=41.31')",
+    "C_static_plateau_0.7819_pm_0.0308": "results/levelc_v1c/EXECUTION_REPORT.md (constant fit, resid_max 0.031)",
+    "second_V1c_generation_also_committed": "results/colour_closure/levelc_v1c_fix/ gives Pc_static(h40) = 2.2818148e-3, C = 0.75159, plateau 0.78007 +/- 0.02848; see finding N2",
+    "a26_a40": "results/colour_closure/levelc_v1c_fix/summary.json (1.0618397537282553 / 1.0741278323367573)",
+    "hydraulics_4.4_and_7.0_pct": "results/levelc_v1c/EXECUTION_REPORT.md",
+    "C3_60k_total_minus_2.48e-11": "results/colour_closure/ac_C3_T3C1X_A2_60k/accum_report.json:drift_fits.Mff = -2.476346807214741e-11",
+    "V0_eff_0.9933_laplace_0.29_contact_30.3": ".agent/evidence/BI-VALIDATION-001/V0/V0/round-01/",
+    "drift_envelope_rM_2e-8_dM_1e-3": "results/conservation_audit/EXECUTION_REPORT.md",
+    "nominal_registry_2.6213e-3": "no literal in tree; consistent with 2*sigma*cos(30 deg)/h and the registry theta = 30.0 deg recorded in the V1c reports",
+    "all_traced": true
+  },
+  "disclosures": {
+    "pass_authorizes_or_starts_V3": false,
+    "pass_returns_package_to_external_reviewer": true,
+    "candidate_modified_by_review": false,
+    "window_convention_sensitivity_reproduced": true,
+    "mirror_error_text_quantum_reproduced": true,
+    "E_psi_mask_offset_reproduced_pct": 0.93,
+    "extra_artifacts_beyond_required_output_list_accepted": "periodic_seam_probe.{py,json} — read-only analysis, keeps numbers script-generated",
+    "extra_artifacts_are_read_only_and_committed": true,
+    "v3_execution_not_authorized": true,
+    "periodic_BC_suite_not_authorized": true,
+    "graphite_separator_gap_pcs_not_authorized": true
+  },
+  "non_blocking_observations": [
+    {
+      "id": "N1",
+      "type": "numeric transcription",
+      "where": "\u00a73.5 Keep table, E_psi row",
+      "state": "audit states 'series max 9.02e-05'; committed series max is 9.038323536515235e-05 (t = 46500), correctly recorded in periodic_seam_probe.json:cross_check.committed_E_psi_max",
+      "correct_3sf_rendering": "9.04e-05",
+      "effect": "none - diagnostic row, gated by nothing, propagated nowhere, authoritative value in committed JSON",
+      "note": "the only hand-transcribed number found, against the document's own \u00a78.1 rule; correct in the next revision, do not modify the frozen candidate"
+    },
+    {
+      "id": "N2",
+      "type": "citation specificity",
+      "where": "\u00a71.2",
+      "state": "Pc_static = 2.280325e-3 and plateau C_static = 0.7819 +/- 0.0308 come from the earlier V1c generation (results/levelc_v1c/); a second committed generation (results/colour_closure/levelc_v1c_fix/) reports 2.2818148e-3 and 0.78007 +/- 0.02848",
+      "delta_pct": 0.065,
+      "effect": "none on any conclusion; a reader cross-checking against levelc_v1c_fix/summary.json sees an unexplained mismatch",
+      "fix": "name the source artifact"
+    },
+    {
+      "id": "N3",
+      "type": "methodological",
+      "where": "\u00a73.2",
+      "state": "the balance-vs-measurement comparison is made at t = 1000, which the V2 producer's own report.json classifies as inside the IC-relaxation transient (equil.equil_steps = 5000; rho_worst_in_transient at t = 2000; umax_worst_in_transient at t = 5000)",
+      "alternative_value": "at t = 60000 the same comparison is 2.3% rather than 0.7%",
+      "effect": "none - framing is defensible and the quantity predicted depends only on geometry and Pc; the transient membership should nonetheless be stated so 'below one percent' is not read as equilibrium agreement"
+    },
+    {
+      "id": "N4",
+      "type": "probe implementation (cosmetic)",
+      "where": "periodic_seam_probe.py fluid mask",
+      "state": "mask is x in [0,323) so it excludes the right x-wall but includes the left x-wall (x in [0,3)), contradicting the script's own docstring 'fluid mask: outside the x walls'",
+      "effect_pct_on_mean_fluid_values": 0.9,
+      "maxima_affected": false,
+      "disclosed_in_review_request": "yes, as a generic 'its own fluid mask' offset, not as an asymmetric inclusion",
+      "effect": "none on \u00a76.3; maxima are mask-independent"
+    }
+  ],
+  "missing_evidence": [
+    "the audit does not name which V1c generation supplies Pc_static (N2); value is traceable in the tree",
+    "shell exit codes for the two Part A commands are recorded in prose, not machine-captured (pre-existing weakness, carried in EXTERNAL_SCIENTIFIC_REVIEW_PASS.md \u00a77.4, not introduced here); both scripts confirmed analysis-only and both outputs reproduce exactly"
+  ],
+  "files_written": [
+    ".agent_runtime/BI-DEEPSEEK-TRANSITION-001/REVIEW.md",
+    ".agent_runtime/BI-DEEPSEEK-TRANSITION-001/REVIEW_SESSION.json"
+  ]
+}

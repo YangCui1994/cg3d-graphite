@@ -1,0 +1,27 @@
+# requested: python tests/test_postprocessing.py
+# executed : "C:\Users\yangc\anaconda3\envs\lbm\python.exe" tests/test_postprocessing.py
+# cwd      : D:\2026_agent_work\09_cg3d_controller\worktrees\CG3D-V1-INTEGRATION-004
+# env      : {}
+
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+PASS conn6 splits edge-diagonal (2 singletons)
+PASS conn18 merges edge-diagonal (1 cluster, size 2)
+PASS periodic y merges the seam pair
+PASS non-periodic baseline splits it
+PASS periodic y+z ring is one cluster
+PASS size counts interior cells once
+PASS y+z wrapped edge split for conn=6
+PASS y+z wrapped edge merges for conn=18
+PASS x+y+z wrapped corner split for conn=18
+PASS x+y+z wrapped corner merges for conn=26
+PASS x+y wrapped edge merges for conn=18
+PASS wrapped edge pair stays split with x non-periodic
+PASS wrapped edge pair stays split with y non-periodic
+PASS sizes exact after wrapped merge
+PASS flat window passes all four
+PASS drifting saturation fails saturation only
+PASS pc drift fails pressure only
+PASS u_rms swing fails kinetic only
+PASS thresholds recorded
+PASS short window tolerated
+ALL PASS

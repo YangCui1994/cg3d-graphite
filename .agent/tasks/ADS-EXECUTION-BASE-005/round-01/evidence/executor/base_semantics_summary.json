@@ -1,0 +1,16 @@
+{
+  "all_relevant_assertions_passed": true,
+  "control_only_marker_absent_from_round1_candidate": true,
+  "control_ready_sha": "5873d47d4135bfb024e18580c4c8d6bfd9ca373b",
+  "control_ready_sha_differs_from_execution_base": true,
+  "execution_base_commit": "6525c5845650407ed002eb00ba58ea8cb4934108",
+  "execution_base_commit_unchanged_across_rounds": true,
+  "round1_before_head": "6525c5845650407ed002eb00ba58ea8cb4934108",
+  "round1_before_head_equals_execution_base": true,
+  "round1_candidate_commit": "c46ef433188c542ecb94267acb8aed8c3fb42825",
+  "round1_candidate_parent_is_execution_base": true,
+  "round2_before_head": "c46ef433188c542ecb94267acb8aed8c3fb42825",
+  "round2_before_head_equals_round1_candidate": true,
+  "round2_candidate_commit": "376ca8156c6dc268c1fb5507d89f16358dde36ee",
+  "test_case": "TwoRoundIntegrationTest.test_two_rounds_claim_execute_resume_and_publish"
+}

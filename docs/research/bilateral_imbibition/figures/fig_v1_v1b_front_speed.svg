@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+<rect width="900" height="520" fill="white"/>
+<g font-family="Arial, Helvetica, sans-serif" fill="#111">
+<text x="450" y="34" text-anchor="middle" font-size="22" font-weight="700">V1 → V1b: measured front speed</text>
+<text x="28" y="245" transform="rotate(-90 28 245)" text-anchor="middle" font-size="16">V (10⁻³ lu / step)</text>
+<line x1="90" y1="430" x2="840" y2="430" stroke="#222"/>
+<line x1="90" y1="70" x2="90" y2="430" stroke="#222"/>
+<g stroke="#ddd">
+<line x1="90" y1="370" x2="840" y2="370"/><line x1="90" y1="310" x2="840" y2="310"/>
+<line x1="90" y1="250" x2="840" y2="250"/><line x1="90" y1="190" x2="840" y2="190"/>
+<line x1="90" y1="130" x2="840" y2="130"/><line x1="90" y1="70" x2="840" y2="70"/>
+</g>
+<g font-size="13" text-anchor="end">
+<text x="80" y="434">0</text><text x="80" y="374">1</text><text x="80" y="314">2</text>
+<text x="80" y="254">3</text><text x="80" y="194">4</text><text x="80" y="134">5</text><text x="80" y="74">6</text>
+</g>
+<!-- h26 -->
+<rect x="210" y="198.6" width="85" height="231.4" fill="#777"/>
+<rect x="305" y="131.5" width="85" height="298.5" fill="#222"/>
+<text x="252" y="188" text-anchor="middle" font-size="14">3.857</text>
+<text x="347" y="121" text-anchor="middle" font-size="14">4.974</text>
+<text x="300" y="462" text-anchor="middle" font-size="16">h = 26</text>
+<!-- h40 -->
+<rect x="540" y="205.2" width="85" height="224.8" fill="#777"/>
+<rect x="635" y="94.7" width="85" height="335.3" fill="#222"/>
+<text x="582" y="195" text-anchor="middle" font-size="14">3.746</text>
+<text x="677" y="84" text-anchor="middle" font-size="14">5.588</text>
+<text x="630" y="462" text-anchor="middle" font-size="16">h = 40</text>
+<rect x="610" y="485" width="18" height="12" fill="#777"/><text x="635" y="496" font-size="13">V1</text>
+<rect x="690" y="485" width="18" height="12" fill="#222"/><text x="715" y="496" font-size="13">V1b</text>
+<text x="450" y="500" text-anchor="middle" font-size="13">Boundary separation increased h=26 front speed by ~29%.</text>
+</g></svg>

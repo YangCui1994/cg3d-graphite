@@ -1,0 +1,7 @@
+diff --git a/ads_dummy.txt b/ads_dummy.txt
+index 2f6897b..32bca5b 100644
+--- a/ads_dummy.txt
++++ b/ads_dummy.txt
+@@ -1 +1,2 @@
+ round 1 complete
++round 2 complete

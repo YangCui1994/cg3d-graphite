@@ -1,0 +1,8 @@
+05de998 agent(CG3D-TAICHI-INIT-001): explicit Taichi runtime init, no import-time side effect
+ cg3d/__init__.py                    |   7 ++-
+ cg3d/runtime.py                     |  46 +++++++++++++++
+ lbm_solver_cg3d.py                  |  52 ++++++++++++----
+ tests/README.md                     |   1 +
+ tests/run_level_a.py                |   5 +-
+ tests/test_import_no_taichi_init.py | 115 ++++++++++++++++++++++++++++++++++++
+ 6 files changed, 212 insertions(+), 14 deletions(-)

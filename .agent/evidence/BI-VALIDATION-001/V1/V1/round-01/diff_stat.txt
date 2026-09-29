@@ -1,0 +1,19 @@
+e9540bc v1: Level C single-front spontaneous capillary filling (Lucas-Washburn) validation
+ results/levelc_v1/PROVENANCE.md               |  86 +++++
+ results/levelc_v1/diag/Lscan_series.csv       |  33 ++
+ results/levelc_v1/diag/axial_profiles_h26.csv | 263 +++++++++++++++
+ results/levelc_v1/diag/front_profiles_h26.csv | 263 +++++++++++++++
+ results/levelc_v1/fig_v1_h26.png              | Bin 0 -> 122092 bytes
+ results/levelc_v1/fig_v1_h40.png              | Bin 0 -> 132976 bytes
+ results/levelc_v1/v1_h26_front.csv            | 161 ++++++++++
+ results/levelc_v1/v1_h26_probe.csv            |  42 +++
+ results/levelc_v1/v1_h26_report.json          | 155 +++++++++
+ results/levelc_v1/v1_h40_front.csv            | 161 ++++++++++
+ results/levelc_v1/v1_h40_probe.csv            |  42 +++
+ results/levelc_v1/v1_h40_report.json          | 219 +++++++++++++
+ results/levelc_v1/v1_h40_run.log              | 139 ++++++++
+ tests/levelc_diag_axial.py                    |  77 +++++
+ tests/levelc_diag_front.py                    |  61 ++++
+ tests/levelc_diag_lscan.py                    |  63 ++++
+ tests/levelc_imbibition.py                    | 445 ++++++++++++++++++++++++++
+ 17 files changed, 2210 insertions(+)

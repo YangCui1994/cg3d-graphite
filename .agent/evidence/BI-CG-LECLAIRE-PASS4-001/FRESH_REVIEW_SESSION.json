@@ -1,0 +1,121 @@
+{
+  "task": "BI-CG-LECLAIRE-PASS4-001",
+  "attempt": 1,
+  "mode": "FRESH_SESSION (independent reviewer; executor transcript not read and not requested)",
+  "product_branch": "agent-task/BI-CG-LECLAIRE-IMPLEMENTATION-001",
+  "base": "6c30260dfe0c8b61ea9609e6bffa5c487312cf06",
+  "frozen_source_candidate": "0b3da4e954878dc22618330caed9f0da0782d449",
+  "evidence_tip": "ca10d6503857f2d6349ce313dd97561d9406fd9e",
+  "control_branch": "agent-dev/bilateral-episode-v0.1",
+  "control_tip_read": "c6dfab31b975823df09839cd9ed68422e111f64a",
+  "control_tip_before_review_publication": "c6dfab31b975823df09839cd9ed68422e111f64a",
+  "review_worktree": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\REVIEW-BI-CG-LECLAIRE-PASS4-001 (detached at ca10d65, read-only)",
+  "review_runtime": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\.review_runtime\\BI-CG-LECLAIRE-PASS4-001\\ (outside every git worktree)",
+  "decision": "CHANGES_REQUESTED",
+  "no_self_review": true,
+  "no_gpu_used": true,
+  "no_taichi_used": true,
+  "candidate_modified": false,
+  "evidence_basis": "host-side only: git object/diff/branch comparison; byte-exact git-archive copies of 0b3da4e and ca10d65 staged outside the repo; full independent rerun of the unit checks and of all eleven pass-04 cases into staging results trees; independent raw-field geometry analysis (contact-angle contour and circle fit, slit meniscus shape, angle(F,n_w) at contact lines, Jurin levels, Laplace radii/regressions); an exact synthetic spherical-cap test of the contact-angle instrument; pixel-level regeneration of committed figures from the retained raw arrays; and a review of the R1 source PDF text layer for the wall-normal definition",
+  "binding": {
+    "descends_from_base": true,
+    "descent_check": "git merge-base --is-ancestor 6c30260dfe0c8b61ea9609e6bffa5c487312cf06 0b3da4e -> true; git merge-base --is-ancestor 0b3da4e ca10d65 -> true",
+    "source_candidate_exact_match": true,
+    "evidence_tip_exact_match": true,
+    "lbm_solver_cg3d_py_unchanged": true,
+    "lbm_solver_cg3d_blob_base": "1b7db4ac27448b5b982cead1ea86e719c59e6684",
+    "lbm_solver_cg3d_blob_candidate": "1b7db4ac27448b5b982cead1ea86e719c59e6684",
+    "lbm_solver_cg3d_blob_tip": "1b7db4ac27448b5b982cead1ea86e719c59e6684",
+    "production_files_touched": [],
+    "only_modification_vs_base": ".gitignore (+3 lines: ignore docs/research/leclaire_cg/_refs/)",
+    "no_production_defaults_changed": true,
+    "no_taichi_no_f32": true,
+    "no_v3_graphite_separator_pcs_work": true,
+    "earlier_passes_not_overwritten_by_pass4": true,
+    "earlier_passes_note": "passes 1-3 wrote into the top-level results/leclaire_cg/*.json before the immutable pass-NN layout existed; pass-04 added a new results/leclaire_cg/pass-04/ tree and, of the top-level files, touched only EXECUTION_REPORT.md",
+    "candidate_can_execute_its_own_harness": false,
+    "candidate_cannot_execute_detail": "tests/leclaire_cg/pass04.py at 0b3da4e raises KeyError('max_fit_rms_geom') in case_04, ValueError (broadcast (1,28,1) vs (28,14,10)) in case_07, and NameError('write_validation_report') when main() returns; cases 04 and 07 in the evidence tree therefore come from the ca10d65 harness, with GATES['04_contact_angle'] renamed max_fit_rms=0.5 -> max_fit_rms_geom=0.30",
+    "solver_source_identical_candidate_to_tip": true,
+    "solver_source_identical_evidence": "experimental/leclaire_cg/{__init__,geometry,lattice,operators,solver}.py and tests/leclaire_cg/artifact.py are byte-identical at 0b3da4e and ca10d65; only tests/leclaire_cg/pass04.py differs"
+  },
+  "independent_rerun": {
+    "unit_checks": {"result": "73/73 passed", "log_byte_identical_to_committed": true},
+    "matrix_cases_run_from_frozen_candidate": [1, 2, 3, 5, 6, 8, 9, 10, 11],
+    "matrix_cases_run_from_tip_harness": [4, 7],
+    "metric_fields_compared": 262,
+    "metric_fields_bit_exact": 262,
+    "verdicts_reproduced": 11,
+    "verdict_reproduction": "all eleven committed verdicts reproduced, and every float in every metrics.json reproduces with exact equality",
+    "figures_regenerated": [
+      {"figure": "case-07/figures/fig1_field.png", "max_abs_pixel_diff": 0},
+      {"figure": "case-04/figures/fig1_field.png", "max_abs_pixel_diff": 0},
+      {"figure": "case-08/figures/fig1_field.png", "max_abs_pixel_diff": 72, "differing_pixel_fraction": 0.00183}
+    ]
+  },
+  "central_finding": {
+    "id": "P4-1",
+    "title": "the frozen wetting convention is the negation of the cited source's, so the closure realises the complementary contact angle",
+    "source_definition": "R1 (Phys. Rev. E 95, 033306, p.9): nw = grad(g) with g the fluid-solid binary matrix, i.e. fluid -> solid",
+    "project_freeze": "WETTING_PHASE_CONVENTION.md section 3 and solver.py nw_sign = -1.0: n_w = -grad(g)/|grad(g)|, solid -> fluid",
+    "implemented_invariant": "angle(F, n_w) = theta_c is imposed; measured on the final fields as 64.9/94.2/122.0 deg for prescribed 60/90/120 (case-04) and 62.7/118.6 deg (case-07)",
+    "consequence": "theta_liquid = 180 - theta_c",
+    "confirmations": [
+      {"method": "exact synthetic spherical cap fed to contact_angle_circle_fit", "result": "a true 60 deg cap returns 120.0; the instrument returns 180 - theta at every tested angle (30/60/90/120/150)"},
+      {"method": "raw droplet field, case-04 theta=60", "result": "fitted circle R=6.68 zc=4.95 with wall at z=1; psi = +0.997 at (cx,cy,z=zc) so the centre of curvature is inside the red phase; cos(theta_liquid) = -(zc-z_wall)/R gives 125.96 deg"},
+      {"method": "raw droplet field, all three arms", "result": "theta through psi>0 = 125.96 / 95.95 / 67.18 for prescribed 60 / 90 / 120"},
+      {"method": "raw slit field, case-07", "result": "interface x(y) is 0.669 lu smaller at the wall than at the centre for prescribed 60 and 0.708 lu larger for prescribed 120; Pc = -1.023x and -1.081x of 2 sigma cos(theta)/h, i.e. sign inverted with the correct magnitude"},
+      {"method": "raw Jurin field, case-08", "result": "the prescribed-60 wetting capillary expels the liquid (psi in the capillary goes +1 -> -1), reservoir rises 13 -> 14, red mass exactly conserved at 4480.0"}
+    ],
+    "instrument_defect": "contact_angle_circle_fit computes cos(theta) = (zc - z_wall)/R; for a drop on the +z side of the wall the correct relation is cos(theta_liquid) = -(zc - z_wall)/R. The docstring, the case-04 README, metrics.json.phase_convention and the pass-04 header all label the returned value as 'theta measured through psi>0 liquid/red'.",
+    "unit_check_circularity": "instrument.circle_fit_recovers_{30,60,90,120,150}deg builds its reference cap with zc = +R cos(angle), the same sign as the instrument, so it passes by construction"
+  },
+  "blocking_findings": [
+    "P4-1 wetting convention sign: closure realises 180 - theta_c; case-04 PASS invalid, case-07 misclassified, case-08 cause misattributed",
+    "P4-2 contact_angle_circle_fit returns the gas-side angle while documenting and labelling it as the liquid-side angle; its unit checks are circular",
+    "P4-3 the 39 raw .npz snapshots (3.9 MB) were never committed; .gitignore line 9 (*.npz, repo-wide) silently excluded them, and all 33 render_manifest.source_raw references are unresolvable from the repository",
+    "P4-4 the named frozen candidate 0b3da4e cannot execute the harness that produced its own evidence tree for cases 04 and 07",
+    "P4-5 two provenance corrections required by external review R2 section 8 were not applied: REFERENCE_MANIFEST.md closing paragraph and PROVENANCE.md 'Known weaknesses' item 4 both still say R5 came from 'local search rather than download'"
+  ],
+  "non_blocking_findings": [
+    "P4-6 case-07 verdict logic maps sign-test failure onto INVALID_TEST, and its README rows print 'ok' for values whose stated criterion includes the Pc sign; |ratio| breaks the markdown table",
+    "P4-7 case-11's periodic box holds two interfaces (total variation 4.0) and its slice(2,8) bulk window sits on the interface shoulder; the momentum-flux tensor is not retained so the observable cannot be recomputed; the PASS should be EXPLORATORY_UNGATED",
+    "P4-8 sigma_extrapolated_large_R is the slope of sigma_local vs R_measured, not a 1/R -> 0 limit; no stable infinite-radius extrapolation exists",
+    "P4-9 case-06 remains an x/y transpose regression, correctly labelled as an axis-symmetry regression",
+    "P4-10 case-09 lacks the promised contact-line / interface-position observable, though it no longer claims one",
+    "P4-11 durable-record leftovers: top-level PROVENANCE.md / summary.json / UNIT_CHECKS.log still carry pass-3 numbers with no in-file superseded banner; case-04 README omits the fit-quality gate and its values and prints prose before relation; no per-case logs/ retained"
+  ],
+  "preserved_results": [
+    "isolation (production solver unchanged, no Taichi/f32, no V3/graphite/separator/PCS work)",
+    "R1 equation-level transcription and D3Q19 tables including the corrected Eq.(4) term and the X_W 1-D gradient path",
+    "A = (9/4) omega_eff sigma, not retuned",
+    "honest Laplace FAIL with measured radius, free/zero-intercept fits, residuals and R^2",
+    "beta positivity window with beta = 1.5/2.0 excluded",
+    "equal-wavelength Fourier axis-symmetry regression with its stated scope",
+    "f64 conservation closure with its scope limitation",
+    "complex-wall global closure (excursions 2.7e-13) and the refusal to attribute the wall-band change",
+    "artifact machinery and valid figure-to-raw bindings, once the raw files are committed",
+    "the case-07 geometry redesign, which is a genuine fix"
+  ],
+  "answers": {
+    "q1_l17core_faithful": "yes in every element except the wall-normal sign, which is the negation of the source's nw = grad(g)",
+    "q2_convention_consistent": "unambiguous but internally inconsistent: source, normative document, code default, instrument labelling and the convention unit checks disagree",
+    "q3_contact_angle_validates_closure": "no; measured through the liquid the arms give 126.0/96.0/67.2 deg for prescribed 60/90/120 (errors 66.0/5.9/52.8 against a 15 deg gate)",
+    "q4_slit_valid_and_passes": "geometry now valid (verified from the mask and the field); does not pass; the correct label is FAIL_SOLVER, not INVALID_TEST",
+    "q5_jurin_valid_and_passes": "configuration now valid and reachable (precheck recomputed by hand); does not pass, and the cause is the convention emptying the tube",
+    "q6_laplace_vs_mechanical": "a uniform prefactor is ruled out (mechanical has no free parameter); the Laplace offset stays unexplained and the mechanical diagnostic is not yet measurable on its own premises",
+    "q7_complex_wall": "globally conservative (2.7e-13 excursions); wall-band behaviour not attributable, and the artifacts say so",
+    "q8_artifacts_sufficient": "no; figure-to-raw binding is real, the raw data is not in the repository",
+    "q9_stale_claims": "yes - the two 科研通 provenance statements, plus pass-3 numbers in top-level PROVENANCE.md/summary.json/UNIT_CHECKS.log and the undisclosed case-04 gate change",
+    "q10_stage_ready_to_close": "no"
+  },
+  "human_decision_requested": {
+    "needed": false,
+    "note": "no new modelling decision is required: with g = 1 in solid and the already-frozen 'theta through liquid/red', the fix direction is determined. A one-line owner confirmation of whether WETTING_PHASE_CONVENTION.md should be rewritten to n_w = +grad(g)/|grad(g)| (matching R1) or keep the solid->fluid wording and flip the implemented sign would remove the last ambiguity in the wording; either yields the same realised theta_liquid."
+  },
+  "files_written": [
+    ".agent/evidence/BI-CG-LECLAIRE-PASS4-001/FRESH_REVIEW.md",
+    ".agent/evidence/BI-CG-LECLAIRE-PASS4-001/FRESH_REVIEW_SESSION.json"
+  ],
+  "product_branch_modified": false,
+  "next_action": "ChatGPT external scientific review"
+}

@@ -1,0 +1,43 @@
+{
+ "stage": "SMOKE-2",
+ "attempt": 1,
+ "contract_sha256": "81c50c7b39a10ff769c8b7fd24134c45807a4a57e6a86572eb8b4808ca5942b1",
+ "branch": "agent-episode/BI-VALIDATION-001-smoke-r1",
+ "candidates": [
+  {
+   "attempt": 1,
+   "sha": "2db5d1a1cb2fc60fe9862aa1af8018ac71fce4df",
+   "base": "2db5d1a1cb2fc60fe9862aa1af8018ac71fce4df",
+   "validation_only": true
+  }
+ ],
+ "decisions": [
+  {
+   "attempt": 1,
+   "decision": "PASS",
+   "sha": "2db5d1a1cb2fc60fe9862aa1af8018ac71fce4df",
+   "validation_only": true
+  }
+ ],
+ "executor_sessions": [
+  {
+   "attempt": 1,
+   "session_id": "sess_ece47a11-97d9-45d8-8e26-d773221683eb",
+   "exit_code": 0,
+   "timed_out": false,
+   "resumed_from": null
+  }
+ ],
+ "reviewer_sessions": [
+  {
+   "attempt": 1,
+   "session_id": "sess_7dfcb8e7-5868-4e47-8c06-3e0a61e6a9ec",
+   "exit_code": 0,
+   "timed_out": false,
+   "resumed_from": null
+  }
+ ],
+ "runner_commit": "08117fd92db86212d8a7185141fae71b0a353006",
+ "episode_status": "CHECKPOINT_READY",
+ "published_at": "2026-09-23T09:00:10Z"
+}

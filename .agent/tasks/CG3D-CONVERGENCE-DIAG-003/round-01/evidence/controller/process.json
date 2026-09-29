@@ -1,0 +1,23 @@
+{
+  "command": [
+    "node",
+    "C:/Program Files/ZCode/resources/glm/zcode.cjs",
+    "--cwd",
+    "D:\\2026_agent_work\\09_cg3d_controller\\worktrees\\CG3D-CONVERGENCE-DIAG-003",
+    "--mode",
+    "yolo",
+    "--json",
+    "-p",
+    "Read AGENTS.md, .agent/prompts/ZCODE_EXECUTOR.md, and .agent_runtime/TASK.md. Execute only that task and write .agent_runtime/execution_report.md. Do not merge any branch."
+  ],
+  "cwd": "D:\\2026_agent_work\\09_cg3d_controller\\worktrees\\CG3D-CONVERGENCE-DIAG-003",
+  "started_at": "2026-09-22T23:58:10Z",
+  "finished_at": "2026-09-23T00:03:50Z",
+  "elapsed_seconds": 340.524,
+  "exit_code": 0,
+  "timed_out": false,
+  "terminated_after_timeout": false,
+  "envelope_parsed": true,
+  "session_id": "sess_f4a954a0-0375-4bf1-b95d-674e0fb4a75e",
+  "before_head": "0ca191c7cd6f8970fc8af7e20261f4d7f246fda0"
+}

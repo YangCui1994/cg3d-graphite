@@ -1,0 +1,283 @@
+{
+  "task": "BI-CG-LECLAIRE-IMPLEMENTATION-001",
+  "attempt": 1,
+  "mode": "FRESH_SESSION (independent reviewer; executor transcript not read)",
+  "product_branch": "agent-task/BI-CG-LECLAIRE-IMPLEMENTATION-001",
+  "base": "6c30260dfe0c8b61ea9609e6bffa5c487312cf06",
+  "candidate": "5a3929fa1cefb7359893d6c19ed0ec8a7c80a91d",
+  "evidence_tip": "a12c14f553c5a03a815dbfc96d5aa09a6f33083e",
+  "reviewed_predecessor": "738e76f5d6bd3375c9c7ec7c2403c2a8e4e8eed9",
+  "control_branch": "agent-dev/bilateral-episode-v0.1",
+  "control_tip_read": "1c4f1a42e9cdb770940e240a1bb2129a8b08e14b",
+  "worktree": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-CG-LECLAIRE-IMPLEMENTATION-001",
+  "review_runtime": ".agent_runtime/BI-CG-LECLAIRE-IMPLEMENTATION-001/REVIEW.md",
+  "decision": "CHANGES_REQUESTED",
+  "no_self_review": true,
+  "no_gpu_used": true,
+  "no_taichi_used": true,
+  "candidate_modified": false,
+  "evidence_basis": "host-side only: git object/diff comparison, byte-identical staged copy of the frozen candidate source, full independent rerun of the unit checks and of the ten-test canonical matrix into a staging results directory, direct re-derivation of the R1/R3 transcriptions from the staged PDFs, independent geometry/arithmetic analyses, and one new reviewer-run experiment (wetting_sign sweep) on the candidate's own code",
+
+  "binding": {
+    "descends_from_base": true,
+    "descent_check": "git merge-base --is-ancestor 6c30260dfe0c8b61ea9609e6bffa5c487312cf06 a12c14f -> true",
+    "commits_base_to_tip": 17,
+    "worktree_clean_of_tracked_changes": true,
+    "lbm_solver_cg3d_py_unchanged": true,
+    "lbm_solver_cg3d_blob_base": "1b7db4ac27448b5b982cead1ea86e719c59e6684",
+    "lbm_solver_cg3d_blob_candidate": "1b7db4ac27448b5b982cead1ea86e719c59e6684",
+    "lbm_solver_cg3d_blob_tip": "1b7db4ac27448b5b982cead1ea86e719c59e6684",
+    "lbm_solver_cg3d_worktree_sha256": "98c5331d1a958919eff98ff7b770cfc4e7f65c01f5cb31483aadd367cfd7dd8b",
+    "changed_files_vs_base": 30,
+    "insertions": 7011,
+    "deletions": 0,
+    "only_modification": ".gitignore (+3 lines: ignore docs/research/leclaire_cg/_refs/)",
+    "changed_path_allowlist_respected": true,
+    "allowed_paths": ["docs/research/leclaire_cg/**", "experimental/leclaire_cg/**", "results/leclaire_cg/**", "results/leclaire_cg_run.log", "results/unit_checks.log", "tests/leclaire_cg/**", ".gitignore"],
+    "production_files_touched": [],
+    "production_defaults_or_gates_changed": false,
+    "v3_graphite_separator_pcs_porous_work": "none",
+    "control_branch_merged_into_product": false,
+    "source_identical_candidate_vs_tip": true,
+    "source_identity_check": "git rev-parse 5a3929f:<f> == git rev-parse a12c14f:<f> for operators.py, geometry.py, solver.py, lattice.py, run_canonical.py, test_lattice_tables.py; worktree copies md5-identical to the staged copies and EOL-equivalent to the git blobs (git archive applied CRLF on this host)"
+  },
+
+  "reproduction": {
+    "unit_checks": {
+      "command": "python tests/leclaire_cg/test_lattice_tables.py",
+      "result": "59/59 checks passed",
+      "exit_code": 0,
+      "log_matches_committed": "line-for-line identical modulo residual digits",
+      "notable_new_checks": [
+        "A1_mass / A2_momentum / A3_second_moment / A4_third_moment at NON-ZERO u and grad rho (the B1 gate)",
+        "A1_would_fail_with_c_i_dot_grad_rho_form (explicit regression assertion for the B1 defect)",
+        "grad_l17.wall_centred_available_axis / wall_backward_when_plus_missing / wall_zero_when_both_missing (B2 branches)",
+        "grad_variant.experimental_reachable / rejects_unknown",
+        "instrument.circle_fit_recovers_{30,60,90,120,150}deg",
+        "perturbation.A_equals_9over4_omega_sigma (asserts against both 2.25 and 1.5)"
+      ]
+    },
+    "canonical_matrix": {
+      "driver_md5": "e52c13daba74e4990def7fc2605eff2d",
+      "command": "python tests/leclaire_cg/run_canonical.py (unmodified driver, staged copy, results redirected away from the candidate tree)",
+      "verdict_sequence_committed": ["PASS", "PASS", "FAIL", "INCONCLUSIVE", "PASS", "PASS", "FAIL", "INCONCLUSIVE", "FAIL", "PASS"],
+      "verdict_sequence_rerun": ["PASS", "PASS", "FAIL", "INCONCLUSIVE", "PASS", "PASS", "FAIL", "INCONCLUSIVE", "FAIL", "PASS"],
+      "verdict_sequence_identical": true,
+      "per_test_json_verdicts_identical": "10/10",
+      "metric_agreement_bit_identical": {
+        "03_sigma_ratio": 1.1353336064475887,
+        "03_regression_r2": 0.9999699653835257,
+        "04_theta_measured_deg": [114.75317076373635, 82.84306797540289, 47.430224573401034],
+        "06_amplitude_asymmetry": 1.5892071295026446e-13,
+        "09_max_red_excursion": 2.7491544394499874e-13,
+        "09_max_blue_excursion": 2.7414768867726837e-13,
+        "09_late_red_rate_per_step": -2.419255906715989e-13,
+        "09_wall_band_red_relative": -0.06830797819444548
+      },
+      "execution_report_trust": "reproduced; EXECUTION_REPORT.md and summary.json are verified for the pass-3 numbers (the pass-2 headline block is a separate, stale claim set - see finding R-3)"
+    },
+    "source_transcription_checks": {
+      "method": "PyMuPDF text extraction of the staged R1 and R3 PDFs; every element compared against the candidate's tables/operators",
+      "R1_eq4_verified": "N^e = nu[psi_i(u . grad rho) + xi_i(G : c_i (x) c_i)] + rho(phi_i + phii_i alpha + W_i(...)) - B1 fix confirmed paper-faithful",
+      "R1_eq5_verified": "G = (u (x) grad rho) + (u (x) grad rho)^T",
+      "R1_eq13_14_verified": "harmonic density-weighted viscosity; omega_eff = 2/(6 nu + 1)",
+      "R1_eq16_17_verified": "A|F|[W_i(F.c_i)^2/|F|^2 - B_i]; F = grad[(rho_r - rho_b)/(rho_r + rho_b)]",
+      "R1_eq18_verified": "A = 9/4 omega_eff sigma",
+      "R1_eq19_20_verified": "(rho_k/rho) N_i +/- beta (rho_r rho_b/rho^2) cos(theta_i) N^e(rho,0)",
+      "R1_eq30_33_verified": "secant with lambda = 1/2 and 'always stop at n = 2' stated verbatim",
+      "R1_eq34_38_verified": "D3Q27 3x3x3 smoothing, w = 8/27, 2/27, 1/54, 1/216, three iterations",
+      "R1_XW_gradient_verified": "three separate statements found ('isotropic ... except for the lattice sites in XW where a standard 1D forward, backward, and/or centered discrete gradient is used', plus the first-order/second-order wording for the random-network case)",
+      "R1_table_IV_verified": "W, phi, phii, psi, xi, B and the non-shell-major c_1..c_18 ordering all match lattice.py cell by cell",
+      "R1_table_VI_VII_VIII_verified": "zeta(D3Q19) = 1/2; p = {3,5,7}; upsilon = {9,11,13,14,15}",
+      "R1_appendix_A4_verified": "third moment = (rho/3)(u_m delta_no + u_n delta_mo + u_o delta_mn)",
+      "R1_seven_step_ordering_verified": "steps (1)-(7) with the X_E/X_F/X_W/X_S/X_L site domains",
+      "R3_eq2_3_4_verified": "C_FB/C_Fl/C_SB/C_Sl classes; lattice-weighted extrapolation of rho_N onto C_SB; n* = -grad(rho_N*)/|grad(rho_N*)|; n+- = [(cos theta -+ sin theta cos theta')/sin theta'] n_s + [sin theta/sin theta'] n* with the shorter-Euclidean-distance choice"
+    },
+    "reference_files": {
+      "staged_dir": "docs/research/leclaire_cg/_refs/ (gitignored)",
+      "sha256_all_match_manifest": true,
+      "R1": "435b4fa1df08d6366d34ef6397e4b8c67bf8e771c0ef5e9830461fd750ae32c3",
+      "R2": "91fc30f1d597adfafd95080cafe8599d67acfff3bc0917ad49b19a9f4e3d811c",
+      "R3": "073a343175a68e28a0e8a00f9b7c811f9236acb37bf6b15588a6d3a7dd30efdd",
+      "R4": "17aca930e58c1efb477ba84149eec4676a9dd07f24263fb9a30038eb3b0a2962",
+      "R5": "f18e3bfd81e65cc74d8a5c24c76f1ec3d5be6316a67bbb118b904e1db8ec7968",
+      "R5_bytes": 1078397,
+      "R5_pages": 29,
+      "ablesci_corroboration": "skill log at ~/.zcode/skills/ablesci-paper-download/SKILL.md (mtime 2026-09-27 09:58:20 +0800) records the same DOI 10.1007/s10915-013-9772-2, the 09:54:56 post, the AI6.2 upload at 1,078,397 B and the 10-point deduction (600 -> 590) - matches REFERENCE_MANIFEST.md"
+    }
+  },
+
+  "blocker_verification": {
+    "B1_eq4_u_dot_grad_rho": {
+      "status": "FIXED",
+      "code": "operators.equilibrium computes ud = einsum('...a,...a->...', u, grad_rho) once and uses PSI_I * ud[..., None] for every population",
+      "source_confirmed": "R1 PDF p.6 Eq. (4) reads psi_i(u . grad rho)",
+      "test_coverage": "A1-A4 invariants asserted at non-zero u and grad rho, plus an explicit assertion that the c_i . grad rho form would break A1",
+      "note": "the previous 42/42 checks were zero-state checks and could not see the defect; the new checks are discriminating"
+    },
+    "B2_XW_wall_gradient": {
+      "status": "FIXED",
+      "code": "gradient(..., variant='l17') = isotropic in the bulk, gradient_1d_cartesian at X_W with centred / first-order forward / first-order backward branches; used for BOTH F and grad rho",
+      "source_confirmed": "R1 p.24, p.26 and section II.E state the X_W exception three times",
+      "demotion": "the old scalar-renormalised truncated stencil is retained only as variant='isotropic_renormalised', explicitly labelled not paper-faithful"
+    },
+    "B3_akai_2018": {
+      "status": "FIXED (implemented), coverage gap",
+      "code": "wetting_akai runs R3 Eqs. (2)-(4) in order via _site_classes, extrapolate_to_solid_boundary, gradient_isotropic on the extrapolated field, and the closed-form rotation; wetting_akai_rotation_only is the separately labelled partial form",
+      "independent_check": "extrapolate_to_solid_boundary reproduces a hand-coded R3 Eq. (2) at a C_SB node of a flat wall to 1e-14 with the D3Q19 weights",
+      "gap": "no committed test or unit check executes wetting='akai'; no A/B claim is made (correct)"
+    },
+    "B4_test08_imbibition": {
+      "status": "NOT FIXED",
+      "finding": "the test cannot measure Jurin's law: the initial reservoir surface (z ~ 7) is far below the slit mouth (z = 16) and the maximum available capillary pressure cannot lift the meniscus there",
+      "independent_arithmetic": {
+        "slit_width_h": 8,
+        "julin_expected_rise_lu": 5.9524,
+        "lift_needed_lu": 8,
+        "max_capillary_pressure": 2.5e-3,
+        "hydrostatic_cost": 3.36e-3,
+        "capillary_sufficient": false,
+        "equilibrium_meniscus_z": 13.952,
+        "slit_mouth_z": 16,
+        "window_reachable": false
+      },
+      "committed_trace_confirms": "slit_level = nan at all 11 checkpoints; reservoir_level = 7.0 constant; rise_ratio = null; verdict INCONCLUSIVE"
+    },
+    "B5_test07_capillary_pressure": {
+      "status": "NOT FIXED",
+      "finding": "the interface is laid parallel to both slit plates, so it has no wall contact line and no curvature; the measured dp = 0 is geometrically forced and independent of the prescribed angle",
+      "independent_two_arm_experiment": {
+        "geometry": "n=(12,12,32), gap=10, plates at z<2 and z>=12, initial psi[:, :, :7] = +1",
+        "theta_60": {"meniscus_z": 6, "dp": -9.252e-16, "pc_expected": 2.0e-3},
+        "theta_120": {"meniscus_z": 6, "dp": -9.252e-16, "pc_expected": -2.0e-3},
+        "centre_column_profiles_identical": true,
+        "in_plane_psi_spread_at_interface": 0.0,
+        "conclusion": "the prescribed contact angle has no effect on the meniscus; the declared comparison against 2 sigma cos(theta)/h is never exercised"
+      }
+    },
+    "B6_test09_killer": {
+      "status": "FIXED",
+      "geometry_closed": "no fluid on any of the four lateral faces, so the periodic wrap cannot carry fluid across; asymmetric in x, symmetric in y (not cancelling)",
+      "gating": "global total and component masses gated on the maximum time-history excursion AND the late-window rate, with wall-band and component-count metrics retained",
+      "mass_creation_eliminated": "max red/blue excursion 2.749e-13 / 2.741e-13 (was ~7%); late rates -2.4e-13 / -2.6e-13 per step",
+      "verdict": "FAIL honestly, on the wall-band gate (-6.83%), not on mass creation"
+    },
+    "B7_test06_isotropy": {
+      "status": "FIXED",
+      "design": "equal lattice wavelength 16 = 16 (arms (32,16,16) mode 2 along x and (16,32,16) mode 2 along y); observable is the interface-height Fourier mode, not max|psi|",
+      "result": "amplitude_asymmetry 1.589e-13",
+      "caveat": "the two arms are exact x<->y lattice transposes, so the agreement is largely a symmetry property; a diagonal-direction arm would give the check evidential content (finding R-6)"
+    },
+    "B8_laplace": {
+      "status": "FIXED",
+      "radius": "equivalent-sphere radius of the psi > 0 region measured at the end of the run",
+      "regression": "dp against 2/R_measured with an intercept; slope 0.0227067 with R^2 0.999970 and intercept -5.308e-4",
+      "reviewer_recomputation": "least-squares slope and intercept recomputed by hand from the three (2/R, dp) pairs; agreement to my arithmetic precision",
+      "verdict": "FAIL at sigma_ratio 1.135 (gate is 0.9-1.1); the sigma offset is unresolved and honestly reported"
+    },
+    "B9_beta_positivity": {
+      "status": "FIXED",
+      "result": "positivity separated from monotonicity; beta = 1.5 and 2.0 excluded with component minima -7.67e-3 / -8.42e-3 and -5.71e-2 / -5.46e-2; monotone width over the three positive betas (1.839 -> 1.469 -> 1.123); beta = 0.0 excluded by dissolution"
+    },
+    "B10_conservation_scope": {
+      "status": "FIXED",
+      "evidence": "scope_limitation present in 10_conservation_audit.json and in PROVENANCE.md; the NumPy/f64 reference limit and the no-generalisation-to-Taichi/f32 clause are both stated"
+    },
+    "B11_literature_provenance": {
+      "status": "FIXED with documentation defect",
+      "route": "R5 obtained via the ablesci (科研通) skill by DOI; independently corroborated by the skill's own log and by the staged file's byte count and SHA256; R1-R4 by OA routes, which is the skill's own precondition, escalated rather than silently substituted",
+      "defect": "three stale sentences assert the retracted 'no tooling / local search' position (finding R-3, items 2 and 3)"
+    },
+    "B12_R5_mapping": {
+      "status": "FIXED with self-contradiction",
+      "marked_unresolved": "PAPER_FORMULATION.md section 4.2 records the attempted row/column mapping, the three reasons it cannot be settled, and the UNRESOLVED label; the three reasons are (1) duplicated/offset label columns, (2) the D = R^2 + 1 count (D = 2) not matching ~15 non-zero entries, (3) no text layer and lower rows running past the page",
+      "partial_reading": "3D (2,4) column begins 1/6, 1/12, 1/3360; 1/6 and 1/12 are the only two values D3Q19 can host and equal 3W_i",
+      "independent_isotropy_derivation": "verified sum_i 3W_i c_a c_b = delta_ab and the 4th-rank sum gives T_xxxx = 1, T_xxyy = 1/3 => K = 1/3, so the operator is fourth-order isotropic on D3Q19 independently of R5",
+      "contradiction": "section 11 item 1 of the same file declares the item CLOSED and 'exactly 3W_i' (finding R-3, item 1)"
+    }
+  },
+
+  "new_reviewer_experiment": {
+    "name": "wetting_sign sweep of the test-04 configuration",
+    "why": "the external review's C2.6 required the phase/sign convention to be verified; wetting_sign exists for exactly that and no committed test varies it",
+    "setup": "test-04 geometry/IC/grid/steps reproduced (wall_slab thickness 2, hemi_droplet_on_wall radius 8, n=(30,30,30), 1800 steps, beta 0.7, sigma 0.02); only wetting_sign changed",
+    "results": {
+      "sign_plus1": {
+        "60": {"measured_deg": 114.75317076373635, "err_deg": 54.75, "err_of_180_minus_measured_deg": 5.25},
+        "90": {"measured_deg": 82.84306797540289, "err_deg": 7.16},
+        "120": {"measured_deg": 47.430224573401034, "err_deg": 72.57, "err_of_180_minus_measured_deg": 12.57}
+      },
+      "sign_minus1": {
+        "60": {"measured_deg": 51.12474079821246, "err_deg": 8.88, "n_pts": 9, "fit_rms": 0.4463, "fit_ok": true},
+        "90": {"measured_deg": 82.843002757123, "err_deg": 7.16, "n_pts": 7, "fit_rms": 0.6886, "fit_ok": false},
+        "120": {"measured_deg": 112.77856940312805, "err_deg": 7.22, "n_pts": 5, "fit_rms": 0.4680, "fit_ok": false}
+      }
+    },
+    "conclusion": "with wetting_sign = -1 the measured angle (through the psi > 0 phase reported by the instrument) matches the prescribed angle to 7-9 deg at all three angles, versus 55-73 deg error at the default +1. The wetting closure is therefore probably working and the default convention realises theta_c through the opposite phase from the one printed. The accuracy gate of test 04 (<15 deg) would be met under the corrected convention, although its fit-quality gate would still fail on two arms, so the instrument also needs work."
+  },
+
+  "findings": {
+    "blocking": [
+      {
+        "id": "R-1",
+        "title": "B4 and B5 are not resolved: tests 07 and 08 are structurally incapable of measuring their named quantity",
+        "detail": "see blocker_verification.B4_test08_imbibition and B5_test07_capillary_pressure; both were independently reproduced, and test 07 was decided by a two-arm experiment the candidate never ran",
+        "why_blocking": "these are exactly the two VALIDATION BLOCKERs the review ordered corrected (C3 items 7 and 8), and both are still counted in the matrix summary as ordinary results"
+      },
+      {
+        "id": "R-2",
+        "title": "the contact-angle phase/sign convention (C2.6) is unresolved and decisive",
+        "detail": "wetting_sign is never varied by any test or unit check; the default convention makes the measured angle equal 180 - theta_c, and the corrected sign makes it equal theta_c to 7-9 deg",
+        "why_blocking": "C2.6 explicitly required verifying the phase/sign convention; its absence converts a working wetting closure into an INCONCLUSIVE verdict"
+      },
+      {
+        "id": "R-3",
+        "title": "the evidence package contradicts itself in five places",
+        "detail": "PAPER_FORMULATION section 11 item 1 (CLOSED) vs section 4.2 (UNRESOLVED); REFERENCE_MANIFEST closing paragraph (local search) vs its own corrected acquisition note and R5 entry (科研通); PROVENANCE known weaknesses #4 (local search) vs its own R5 provenance correction; CURRENT_VS_LECLAIRE_MAP row 2 (shell-major) vs the section 0.1 correction, and A.7 (R5 could not be obtained); EXECUTION_REPORT sections 1/3/6/8/12 un-annotated pass-2 claims (42/42, 7 PASS 3 FAIL, 'Laplace calibration RESOLVED') that pass 3 contradicts (59/59, 5 PASS 3 FAIL 2 INCONCLUSIVE, sigma_ratio 1.135 FAIL)",
+        "why_blocking": "for this task type the provenance record is the deliverable, and a reader cannot tell which of two contradictory sentences was written last; section 6's 'RESOLVED' is the exact publication-quality language B8 required to be withheld"
+      }
+    ],
+    "non_blocking": [
+      {"id": "R-4", "title": "two gates are looser than their published acceptance text", "detail": "test 04 admits n_pts >= 6 where the acceptance says >= 8; test 06 gates on the final amplitude only where the acceptance says 'at every sampled time' (the data satisfy the stricter claim here, but the gate would not detect a mid-run divergence)"},
+      {"id": "R-5", "title": "the newly written Akai path is never executed", "detail": "no test or unit check runs wetting='akai'; I verified it executes cleanly, changes the field materially (max|dpsi| = 1.016 vs the no-wetting arm at t = 200) and that its extrapolation matches a hand-coded R3 Eq. (2) to 1e-14, but the B3 correction ships as unexercised code"},
+      {"id": "R-6", "title": "the test-06 evidence is close to tautological", "detail": "the two arms are exact x<->y lattice transposes, so identical results follow from symmetry; the design satisfies the review's specification but cannot detect diagonal anisotropy"},
+      {"id": "R-7", "title": "test 09 docstring claims metrics it does not emit", "detail": "the docstring says contact-line metrics are kept; no contact-line metric is present in the JSON"},
+      {"id": "R-8", "title": "labelled dead code", "detail": "geometry.contact_angle_from_profile returns nan; lattice.equilibrium raises NotImplementedError"}
+    ]
+  },
+
+  "contract_F_answers": {
+    "1_faithful_to_cited_formulation": "yes at the level verifiable: tables, MRT basis, Eq. (4) including the B1 term, Eq. (18)'s 9/4, recoloring pair structure, secant wetting (lambda = 1/2, stop at n = 2), three-pass D3Q27 smoothing, the X_W 1D-Cartesian gradient and the seven-step ordering with site domains all match the sources read directly. Two items cannot be certified: the R5 coefficient mapping (correctly UNRESOLVED in section 4.2, wrongly CLOSED in section 11) and the phase convention (R-2)",
+    "2_current_vs_leclaire_differences": "the MATHEMATICALLY_EQUIVALENT rows are the colour bookkeeping (A.1) and the polynomial equilibrium at alpha = W0 (A.5); the gradient stencil (A.7) is the same operator once the R5 caveat is attached. All other rows are real differences. The A.8 derivation (distribution-space perturbation vs moment-space injection) is the strongest analysis in the package: the deviatoric parts match under CapA <-> sigma, the isotropic parts differ in sign and magnitude by 3x, which no Laplace test can detect",
+    "3_followups_that_change_behaviour": "explicit beta amplitude law (test 05: width 1.84 -> 1.12 monotone over beta 0.5 -> 1.0) and the unrelaxed post-collision perturbation (structural, A.8). The Akai closure is implemented but unmeasured, so it has no demonstrated effect",
+    "4_complex_wall_wetting": "improves: under wetting_sign = -1 the same code reproduces 60 -> 51, 90 -> 83, 120 -> 113 deg (errors 7-9 deg), versus 55-73 deg errors at the default sign. The closure is likely correct and the convention is what is unresolved",
+    "5_conservation_corrections_to_retain": "none as code (test 10 needs no overlay: 2.8e-13 per step total drift without one). Retain as practice the L17_CORE vs L17_PLUS_OVERLAY two-arm reporting and the solid-node-reservoir transient separation; keep every claim scoped to the f64 reference until a Taichi/f32 port repeats the audit",
+    "6_ready_for_external_review": "no - two canonical tests do not test their named phenomenon, the wetting convention is unresolved, and the provenance record contradicts itself"
+  },
+
+  "escalation": {
+    "human_required_considered": true,
+    "human_required_triggered": false,
+    "reason": "the implementation plan's risk register says to flag HUMAN_REQUIRED if the ambiguous contact-angle convention flips a test verdict. It does not flip any verdict on the current matrix: test 04 is INCONCLUSIVE on fit quality under either sign, and test 07 fails under either sign. The owner should nevertheless confirm the intended contact-angle phase convention before the re-run, because it determines the wording of every wetting result"
+  },
+
+  "scope_exclusions_verified": {
+    "lbm_solver_cg3d_unmodified": true,
+    "no_v3_execution": true,
+    "no_graphite_separator_pcs_gap_work": true,
+    "no_porous_media_production_run": true,
+    "d3q19_only": true,
+    "no_palabos_source_copied": true,
+    "r1_regularized_open_boundaries_not_implemented": "explicit scope exclusion; the constructor raises rather than falling back",
+    "l17_core_vs_followups_vs_overlay_separately_identifiable": true
+  },
+
+  "files_written": [
+    ".agent_runtime/BI-CG-LECLAIRE-IMPLEMENTATION-001/REVIEW.md",
+    ".agent_runtime/BI-CG-LECLAIRE-IMPLEMENTATION-001/REVIEW_SESSION.json"
+  ],
+  "staging_artifacts_left_for_reproduction": {
+    "dir": ".agent_runtime/BI-CG-LECLAIRE-IMPLEMENTATION-001/",
+    "contents": ["rerun/ (staged candidate source + driver + staged results + RERUN_STDOUT.log)", "rerun_unit_checks.log", "probe_contact_angle_sign.py", "probe_sign.log", "r1_text_dump.txt", "r3_text_dump.txt"]
+  }
+}

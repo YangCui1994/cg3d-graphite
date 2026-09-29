@@ -1,0 +1,30 @@
+{
+ "task": "BI-SOLVER-CONSERVATION-FIX-001",
+ "attempts": [
+  {"attempt": 1, "session_id": "sess_04cb4e16-2b01-446c-b6cf-5169b72df398",
+   "mode": "FRESH_SESSION (headless, no resume)",
+   "candidate": "2d45b9e5468dd28e953115824bfc836f43317247",
+   "decision": "CHANGES_REQUESTED", "review": "REVIEW_ATTEMPT_1.md"},
+  {"attempt": 2, "session_id": "sess_ae1ef048-2465-4649-b524-d579b9462dcd",
+   "mode": "FRESH_SESSION (headless, no resume)",
+   "candidate": "8554ee78b6d3d6d28bdb4943dbe1768f27adaaf4",
+   "decision": "CHANGES_REQUESTED", "review": "REVIEW_ATTEMPT_2.md"},
+  {"attempt": 3, "session_id": "sess_64ad4bb6-b262-46a5-b345-d40f14a9a90b",
+   "mode": "FRESH_SESSION (headless, no resume)",
+   "candidate": "b75253e01efa8ee5a2ebd1ed61501274ebe902da",
+   "decision": "CHANGES_REQUESTED", "review": "REVIEW_ATTEMPT_3.md"},
+  {"attempt": 4, "session_id": "sess_58c21de6-dea3-44f1-b898-cc1932d8ef5f",
+   "mode": "FRESH_SESSION (headless, no resume)",
+   "candidate": "e256b4857a6e51510b75358994d7c5bcc742781e",
+   "decision": "PASS", "review": "REVIEW.md"}
+ ],
+ "binding": {
+  "base": "1f5ee76fa183b42dd0ffcb291f389c3f1974a147",
+  "branch": "agent-task/BI-SOLVER-CONSERVATION-FIX-001",
+  "final_candidate": "e256b4857a6e51510b75358994d7c5bcc742781e",
+  "solver_blob_stable_across_attempts": "38bf419e (per attempt-4 review)"
+ },
+ "selected_fix": "T3 (f64 moment roundtrip) + C1 scoped to cc>0",
+ "no_self_review": true,
+ "v3": "HOLD — external scientific review is the only route to lift it"
+}

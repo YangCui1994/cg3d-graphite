@@ -1,0 +1,51 @@
+{
+  "schema_version": "v1",
+  "task_id": "CG3D-V1-INTEGRATION-004",
+  "round": 1,
+  "candidate_commit": "645479e00217b1b50f6cd4ae5d833eda1661e84c",
+  "zcode_session_id": "sess_59a7ace2-ae90-421b-846f-f073ef6a7db6",
+  "captured_at": "2026-09-23T00:58:46Z",
+  "worker": "windows-zcode-01",
+  "files": [
+    {
+      "path": "v1_integration.log",
+      "size_bytes": 3533,
+      "sha256": "5f13f0f8e64a4b3c206a88d91d789831861015a8a5f071b33fed7ebe7cb65479"
+    },
+    {
+      "path": "import_lifecycle.log",
+      "size_bytes": 900,
+      "sha256": "94e1f0c7f575e42318c352e348b2bde8d593c6564be6adf630d10b36d79da254"
+    },
+    {
+      "path": "level_a.log",
+      "size_bytes": 696,
+      "sha256": "4b8eeeb4f1a626407e36b684b046a12663160b10cb9b2926b5b6bef9943e69c6"
+    },
+    {
+      "path": "postprocessing.log",
+      "size_bytes": 1159,
+      "sha256": "904a7edd8171ab980bf966db474a86fc92e138cfa56da6f03486e0f98f3620d0"
+    },
+    {
+      "path": "periodic_connectivity.log",
+      "size_bytes": 2516,
+      "sha256": "9c1e54b2984c8fc9a286a7197bde6c8e45db2a4a7429e57b4447f2e693125ee7"
+    },
+    {
+      "path": "termination_diagnostics.log",
+      "size_bytes": 4674,
+      "sha256": "7c05fdfb523a63a7d519216660586ccbd4cf0123f3f138084999db3b7f2726ea"
+    },
+    {
+      "path": "checkpoint_resume.log",
+      "size_bytes": 1781,
+      "sha256": "c1baa82f4c79638357248dc427862c44c997a094a246cd144b3f0427cd206066"
+    },
+    {
+      "path": "integration_summary.json",
+      "size_bytes": 2528,
+      "sha256": "acdf2b546d607a041b2125ade08e789873eeb23cc2172d592a93222598f0cf56"
+    }
+  ]
+}

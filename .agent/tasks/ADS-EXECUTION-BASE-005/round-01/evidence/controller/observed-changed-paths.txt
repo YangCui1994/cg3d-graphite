@@ -1,0 +1,4 @@
+.agent/README.md
+.agent/controller/controller.py
+.agent/controller/tests/test_controller.py
+.agent/templates/TASK.md

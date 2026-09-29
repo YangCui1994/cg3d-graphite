@@ -1,0 +1,118 @@
+{
+ "task": "BI-COLOUR-CLOSURE-001",
+ "attempt": 1,
+ "mode": "FRESH_SESSION (independent reviewer; executor transcript not read)",
+ "base": "e256b4857a6e51510b75358994d7c5bcc742781e",
+ "branch": "agent-task/BI-COLOUR-CLOSURE-001",
+ "candidate": "6c30260",
+ "candidate_full_sha": "6c30260dfe0c8b61ea9609e6bffa5c487312cf06",
+ "worktree": "D:\\2026_agent_work\\01_GLM_LBM3D_porous_media\\cg3d-episode-worktrees\\BI-COLOUR-CLOSURE-001",
+ "review_runtime": ".agent_runtime/BI-COLOUR-CLOSURE-001/REVIEW.md",
+ "decision": "PASS",
+ "no_self_review": true,
+ "no_gpu_used": true,
+ "evidence_basis": "host-side only: git object/diff comparison, committed CSV/JSON/npz artifacts, log tails; numpy re-fits, an independent re-implementation of the node-class masks and of the colour scatter gather, and an independent SHA256 re-hash of the manifest; no Taichi run, no GPU use",
+ "binding": {
+  "worktree_clean": true,
+  "head": "6c30260dfe0c8b61ea9609e6bffa5c487312cf06",
+  "descends_from_base": true,
+  "descent_check": "git merge-base --is-ancestor e256b4857a6e51510b75358994d7c5bcc742781e HEAD -> true",
+  "commit_chain": ["388892e", "71d2a4b", "1854a58", "246a463", "6c30260"],
+  "changed_files_vs_base": ["lbm_solver_cg3d.py", "tests/colour_closure.py (new)", "tests/conservation_fix.py (4 lines)", ".gitignore (+3)", "results/colour_closure/** (253 files)"],
+  "no_docs_bc_parameter_gate_change": true,
+  "t3_total_path_frozen": "extracted T3/T4 inverse-transform, T2 correction and Latva-Kokko recolour blocks byte-identical base vs candidate; total fields rho/f/F untouched; rhor/rhob dtype switch is colour-only",
+  "frozen_prior_evidence": "git diff e256b485..HEAD -- results/conservation_fix/ empty (byte-identical)",
+  "regression_drivers_unchanged": ["tests/levelc_v1c.py", "tests/levelc_v2_bilateral.py", "tests/run_level_a.py", "tests/levelb_laplace.py", "tests/levelb_contact_angle.py", "tests/test_poiseuille_cg3d.py", "tests/test_postprocessing.py", "tests/test_compute_c_bulk.py"],
+  "final_commit_delta": "6c30260 vs 246a463 changes the solver by comments plus colour_fix default C1->C1X and acc_fix default A0->A2 only; regression batch sets C1X/A2 via explicit env, so regression runs exercise the final arithmetic"
+ },
+ "contract_A_reproduce": {
+  "method": "independent recomputation from frozen results/conservation_fix f0_T3C1s/f0_report.json and f1_T3C1s_60k/long_horizon_mass.csv",
+  "c1_R_r_mean": 3.8836e-09, "c1_R_r_frac_pos": 0.7578,
+  "c1_R_b_mean": 3.0965e-09, "c1_R_b_frac_pos": 0.7609,
+  "c3_R_r_mean": 9.7602e-11, "c3_R_b_mean": 1.9554e-10,
+  "c3_60k_colour_slope": -6.42529e-10, "c3_60k_colour_r2": 0.9827, "c3_60k_increments": "1 pos / 299 neg",
+  "c3_60k_segments": [-9.5625e-10, -5.7711e-10, -5.2211e-10],
+  "c3_60k_total_slope": 1.1944e-11, "c3_60k_total_r2": 0.6246,
+  "prefix_T0C0_60k_colour_slope": 6.7617e-09,
+  "verdict": "PASS (13/13 checks confirmed)"
+ },
+ "residual_localization": {
+  "method": "recomputed R_r/R_b/Req_r/Rc1_r/dacc_r/net_r per class from committed snapshot_last_step.npz with own mask code and own scatter replication; global budget identity closes at 1.7e-15",
+  "base_c1_biased_class": "non-frozen cc==0 nodes (cczero/pure/nonwall), R_r mean +4.6603e-09 at frac_pos 0.785, identical to Req_r because Rc1_r == 0.0 exactly (scope cc>0 never fires)",
+  "base_c1_cc_gt_0": {"R_r_mean": -7.86e-12, "frac_pos": 0.542, "status": "closed and unbiased"},
+  "chi_threshold_sensitivity": "biased set is cc==0/pure at all thresholds 1e-7/1e-6/1e-5 (mixed is a strict subset of cc>0 for C1) -> threshold-scoped fix would miss it; operative discriminator is non-frozenness",
+  "committed_x_profile": "positive-mean cc==0 band x~34-61 + periodic seam with |net_r| up to 9e-7/step; deep bulk x=2-29 at Req_r~1e-19 and net_r~1e-14",
+  "base_c3_biased_class": "cczero/pure/wall R_r +5.0526e-09 / R_b +1.1649e-08 (frac_pos 0.364/0.617)",
+  "candidate_c1_classes": {"ALL": [-5.896e-17, 0.334], "cc==0": [-5.482e-17, 0.356], "cc>0": [-7.837e-17, 0.234], "per_node_max_abs": 1.332e-15},
+  "candidate_c3_biased_class_now": {"R_r": -6.7084e-17, "R_b": -1.4947e-16, "frac_pos": [0.512, 0.384]},
+  "verdict": "PASS — the class responsible for the base one-sided residual is identified exactly (non-frozen cc==0 pure interface-side nodes / C3 cczero/pure/wall) and is closed to f64 epsilon by the candidate"
+ },
+ "periodic_c1_accumulation": {
+  "base_20k": {"slope": 8.84463e-10, "r2": 0.9269, "frac_pos": 0.778},
+  "base_240k": {"slope": 1.04800e-09, "r2": 0.9986, "frac_pos": 0.861, "quarters": [9.64e-10, 1.101e-09, 1.194e-09, 1.102e-09], "verdict": "linear, one-sided, no plateau; |slope|*window grows with horizon"},
+  "candidate_20k": {"slope": -1.07785e-10, "r2": 0.9834, "frac_pos": 0.030},
+  "candidate_60k": {"slope": -6.40049e-11, "r2": 0.9539, "frac_pos": 0.027, "segments": [-1.086e-10, -5.837e-11, -3.652e-11]},
+  "candidate_240k": {"slope": 1.80456e-11, "r2": 0.2797, "frac_pos": 0.549, "quarters": [1.931e-10, -4.939e-12, 1.245e-11, -5.144e-13], "last_quarter_increment_t": -0.03, "last_quarter_frac_pos": 0.500},
+  "improvement": {"vs_base_60k_x": 13.8, "vs_base_240k_x": 58.1, "abs_le_2e-9": true},
+  "scaling_test": "candidate |slope|*window shrinks 1.09e-5 (20k) -> 4.33e-6 (240k) while the base grows 2.09e-5 -> 2.52e-4 -> base is a linear leak, candidate is decaying/wandering",
+  "verdict": "PASS on the frozen C1 requirement (>=10x and <=2e-9); residual NOT called bounded/plateaued"
+ },
+ "candidate_mechanism": {
+  "weights_moment_identities": "with the solver's actual f32 weight table: sum_s w_s e_s = 0.0 exactly in f64 and f32; sum_s w_s e_a e_b = (1/3) delta_ab",
+  "momentum": "weighted closure injects no momentum by construction in both arms; total channel (where momentum lives) byte-frozen",
+  "second_moment": "correction adds (1/3)*dr per diagonal component; dr ~ 1e-17 under A2 (f64 floor), ~1e-8 for the f32 arms",
+  "a2_residual_location": "single f32 rho_r/rho_b store; budget bg_C3_T3C1X_A2 sumR_r -2.27e-12 and sumdacc_r -4.41e-15 vs base +6.99e-6/-1.98e-5 (identity closes at 7.7e-12)",
+  "a2_stationarity": {"max_v": 0.0, "psi_dev": 0.0, "combos": 7, "source": "a2_candidates.json + log + F2 Level A (N=32) A3 colour-mass conservation rel drift 0.00e+00 vs T0 3.58e-7"},
+  "c1r_rejection_verified": "computed correction -3.79e-9 does not survive f32 storage (stored R_r stays +1.58e-9)",
+  "pressure_check": "V2 rho_min 0.885077 vs accepted 0.885064; E_psi max 9.02e-5 vs 8.95e-5; umax 2.5568e-2 vs 2.5543e-2",
+  "caveat": "the max|v| leg of the A2 isolation test is structurally insensitive to colour-channel changes (v derives from the untouched total f field); psi_dev=0 and the closure/budget evidence are load-bearing",
+  "verdict": "PASS"
+ },
+ "long_horizon_fits": {
+  "base_rerun_c3_60k": {"slope": -6.55307e-10, "r2": 0.9872, "frac_pos": 0.000, "segments": [-9.563e-10, -5.594e-10, -6.054e-10]},
+  "candidate_c3_60k": {"slope": 8.08797e-12, "r2": 0.5826, "frac_pos": 0.538, "segments": [3.132e-11, -4.722e-12, 1.320e-12], "r2_segments": [0.908, 0.827, 0.201]},
+  "candidate_c3_120k": {"slope": 2.69288e-12, "r2": 0.4146, "frac_pos": 0.559},
+  "total_channel": {"c3_60k": -2.47635e-11, "c3_120k": 1.01410e-11, "c1_240k": -1.5981e-10, "c1_240k_base": -1.5803e-10, "gate": "<=2e-9 satisfied"},
+  "gates": {"abs_r_colour_le_2e-9": true, "margin_x": 247, "vs_prefix_T0_x": 836, "vs_accepted_base_x": 79, "no_persistent_one_sided_late_trend": true},
+  "disclosure": "full-60k candidate increments retain a small positive mean (t=+4.4 over 299 windows) that decays with horizon; the C1 series is still one-sided at 60k (9 pos/291 neg) and only flattens by 240k; residual is calibrated but NOT proven bounded and NOT called a bounded floor"
+ },
+ "regressions": {
+  "F2": {"levelA": "PASS (A1-A5; A2 max|v|=0.00e+00, psi_dev=0.0e+00)", "laplace": "PASS (0.0610, 0.42%; T0 0.0609, 0.31%)", "contact": "PASS (31.2 deg; T0 32.1; gate 30+-6)", "poiseuille": "PASS (eff 1.0010; T0 0.9933)", "computeC": "PASS", "postproc": "ALL PASS"},
+  "F3": {"a26": 1.0618, "a40": 1.0741, "gate": "|a-1|<=0.10 PASS", "dynamic_all_hard_x4": true, "static_plateau": [0.7904, 0.7516, 0.8068, 0.7715], "accepted_baseline_plateau": [0.7902, 0.7511, 0.8067, 0.7795], "non_gated_L0_over_h_h26": [2.644, 3.022]},
+  "F4": {"gates_true": ["g1_no_nan", "g2_umax", "g3_rho_range", "g5_mirror_error", "g6_mass_drift", "g7_t0_single_trapped_cluster", "g8_no_fragmentation_before_onset", "g9_onset_reproducible"], "null_by_design": ["g4_initial_symmetry", "g10_reviewer_reproducible"], "max_eps_r": 5.8705e-06, "max_eps_b": 5.1584e-07, "accepted_eps_r": 7.4868e-05, "accepted_eps_b": 1.9758e-04, "gate": 5e-4, "mirror_max_e_x": 7.4005e-04, "mirror_gate": "max(2.0, 0.02*d)", "clusters": 1, "interaction": "NOT_REACHED", "symmetry_all_pass": true},
+  "T3_total": "PASS (<=2e-9 in all runs)",
+  "performance": {"c3": [2833, 2853], "c1": [2838, 2809]},
+  "thresholds_changed": false
+ },
+ "manifest": {
+  "generator": "results/colour_closure/make_manifest.py",
+  "entries": 253,
+  "sha256_verified": 253,
+  "mismatches": 0,
+  "missing": 0,
+  "outside_manifest": ["MANIFEST.json", "summary.json"],
+  "superseded_artifacts": "pre-gather-fix dx_C3_T3C1s / bg_C3_T3C1s (identity_err 1.77e+2 / sumdacc +1.4e+2) replaced by the v2 runs; committed artifacts carry the corrected numbers"
+ },
+ "docs": {
+  "algorithm_implementation_evolution": "unmodified in the control worktree — correct per contract G (update after fresh review); deferred obligation",
+  "external_review_section7_citations": "already corrected in the control worktree (commit 1687574); docs tree clean"
+ },
+ "disclosures": {
+  "residual_is_not_a_bounded_floor": true,
+  "frozen_no_sign_bias_clause_literally_satisfied": false,
+  "owner_decision_required": "explicit acceptance of a calibrated systematic colour residual or amendment of the no-sign-bias clause before V3",
+  "pass_authorizes_v3_or_promotion": false
+ },
+ "non_blocking_observations": [
+  "F3/F4 evidence produced at run_head 246a463 with worktree_dirty=true (untracked evidence); final commit changes the solver by comments and the two defaults only and the batch sets C1X/A2 explicitly, so the arithmetic attribution holds",
+  "prov exit_code/finished_at are null (same as the previously accepted package); batch exit=$? lines are not committed, so exit codes are not independently verifiable",
+  "summary.json is excluded from MANIFEST.json by design (no hash coverage for the headline summary)",
+  "LOCAL_RESIDUAL_DIAGNOSIS prose 'x ~ 34-40' is narrower than the committed x_profile.csv, where the positive-mean cc==0 band spans x~34-61 plus the periodic seam",
+  "'far bulk bit-frozen' is qualitative: Req_r ~ 1e-19 but net_r ~ 1e-14 per step",
+  "the max|v| leg of the A2 isolation test cannot detect a colour-channel momentum defect"
+ ],
+ "files_written": [
+  ".agent_runtime/BI-COLOUR-CLOSURE-001/REVIEW.md",
+  ".agent_runtime/BI-COLOUR-CLOSURE-001/REVIEW_SESSION.json"
+ ]
+}

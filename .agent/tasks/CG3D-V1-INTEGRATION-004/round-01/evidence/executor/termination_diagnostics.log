@@ -1,0 +1,80 @@
+# requested: python tests/test_termination_diagnostics.py
+# executed : "C:\Users\yangc\anaconda3\envs\lbm\python.exe" tests/test_termination_diagnostics.py
+# cwd      : D:\2026_agent_work\09_cg3d_controller\worktrees\CG3D-V1-INTEGRATION-004
+# env      : {}
+
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+PASS termination_record: unknown reason reports no flag but the reason
+PASS termination_record: every required key is present
+PASS tracker: no samples reports finite with sample_count 0
+PASS tracker: unavailable values ignored, NaN/Inf caught
+PASS tracker: first bad step stays the first, counts accumulate
+PASS tracker: record is strict JSON
+[quasi_steady] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+PASS [sat] rung exits quasi-steady at step 9
+PASS [sat] termination.converged is True
+PASS [sat] no step limit and no safety limit reported
+PASS [sat] process_completed is True and qs_mode is echoed
+PASS [sat] numerical health is finite over 9 samples
+[quasi_steady] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+PASS [multi] rung exits quasi-steady at step 9
+PASS [multi] termination.converged is True
+PASS [multi] no step limit and no safety limit reported
+PASS [multi] process_completed is True and qs_mode is echoed
+PASS [multi] numerical health is finite over 9 samples
+[max_steps] d=0.0600 -> max-steps steps=25 S_nw=0.45500000000000007 wall=0.0s
+PASS max-steps: rung ran the full budget of 25 steps
+PASS max-steps: converged is False
+PASS max-steps: step_limit_reached is True
+PASS max-steps: no safety limit reported
+PASS max-steps: process_completed is True
+PASS max-steps: finite metrics are not a numerical failure
+[umax_cap] d=0.0600 -> umax-cap steps=3 S_nw=0.42 wall=0.0s
+PASS umax-cap: rung exits at step 3
+PASS umax-cap: converged is False
+PASS umax-cap: safety_limit_triggered is True
+PASS umax-cap: no step limit reported
+PASS umax-cap: finite umax=0.5 keeps numerical health finite
+PASS umax-cap: last sampled umax is the finite excursion
+[nonfinite_observation] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+PASS non-finite: both bad fields reported by name
+PASS non-finite: first bad step and its fields recorded
+PASS non-finite: per-field sample counts recorded
+PASS non-finite: a non-finite sample does not change the exit rule
+[nonfinite_observation] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+PASS converged=True and finite=False coexist in one record
+[max_steps] d=0.0600 -> max-steps steps=25 S_nw=0.45500000000000007 wall=0.0s
+PASS converged=False with finite=True is reported too
+[quasi_steady] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+PASS [quasi_steady] row reason == convergence exit == termination reason
+PASS [quasi_steady] convergence exit mode == termination qs_mode
+PASS [quasi_steady] at most one stopping statement is true
+PASS [quasi_steady] row keys = legacy set + two additive records
+PASS [quasi_steady] convergence record keeps its existing fields
+PASS [quasi_steady] row stays JSON-serializable
+PASS [quasi_steady] both new records are strict JSON
+[max_steps] d=0.0600 -> max-steps steps=25 S_nw=0.45500000000000007 wall=0.0s
+PASS [max_steps] row reason == convergence exit == termination reason
+PASS [max_steps] convergence exit mode == termination qs_mode
+PASS [max_steps] at most one stopping statement is true
+PASS [max_steps] row keys = legacy set + two additive records
+PASS [max_steps] convergence record keeps its existing fields
+PASS [max_steps] row stays JSON-serializable
+PASS [max_steps] both new records are strict JSON
+[umax_cap] d=0.0600 -> umax-cap steps=3 S_nw=0.42 wall=0.0s
+PASS [umax_cap] row reason == convergence exit == termination reason
+PASS [umax_cap] convergence exit mode == termination qs_mode
+PASS [umax_cap] at most one stopping statement is true
+PASS [umax_cap] row keys = legacy set + two additive records
+PASS [umax_cap] convergence record keeps its existing fields
+PASS [umax_cap] row stays JSON-serializable
+PASS [umax_cap] both new records are strict JSON
+[nonfinite_observation] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+PASS [nonfinite_observation] row reason == convergence exit == termination reason
+PASS [nonfinite_observation] convergence exit mode == termination qs_mode
+PASS [nonfinite_observation] at most one stopping statement is true
+PASS [nonfinite_observation] row keys = legacy set + two additive records
+PASS [nonfinite_observation] convergence record keeps its existing fields
+PASS [nonfinite_observation] row stays JSON-serializable
+PASS [nonfinite_observation] both new records are strict JSON
+ALL PASS

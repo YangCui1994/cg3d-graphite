@@ -1,0 +1,34 @@
+{
+  "schema_version": "v1",
+  "files": [
+    {
+      "path": "controller_tests.log",
+      "kind": "validation_log",
+      "description": "Full post-repair Controller test suite run on the frozen candidate: 28 tests, OK, exit code 0, including the BASE_SEMANTICS_SUMMARY line emitted by the two-round end-to-end test",
+      "command": "python .agent/controller/tests/test_controller.py"
+    },
+    {
+      "path": "base_semantics_summary.json",
+      "kind": "validation_summary",
+      "description": "Round-1/Round-2 base semantics observed by the passing end-to-end fixture of the same run: execution base, control READY sha, Round-1 before_head and candidate, Round-2 before_head and candidate, and the related assertion flags",
+      "command": "python .agent/controller/tests/test_controller.py"
+    },
+    {
+      "path": "prerepair_negative_control.log",
+      "kind": "negative_control_log",
+      "description": "The same post-repair test file executed against the pre-repair controller source (git show dbecc71898131cc6545bf314dc2f7ba56d1df337:.agent/controller/controller.py); 13 of 28 tests fail, so the new execution-base assertions are not vacuous",
+      "command": "PYTHONPATH=.agent/controller/tests python -m unittest -v test_controller"
+    },
+    {
+      "path": "base_probe.log",
+      "kind": "evidence_shape_log",
+      "description": "Single-round controller run against a fixture whose control READY sha differs from the execution base, printing the published process.json and provenance.json verbatim so a reviewer can see the new base field in both records",
+      "command": "python .agent_runtime/base_probe.py"
+    },
+    {
+      "path": "base_probe_script.txt",
+      "kind": "probe_script",
+      "description": "Python source of the evidence-shape probe that produced base_probe.log (runs entirely inside a temporary directory; Python is named .txt because the bundle allows only text extensions)"
+    }
+  ]
+}

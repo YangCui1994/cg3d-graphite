@@ -1,0 +1,4 @@
+ cg3d/diagnostics.py                 | 105 +++++++------
+ tests/test_periodic_connectivity.py | 283 ++++++++++++++++++++++++++++++++++++
+ tests/test_postprocessing.py        |  48 ++++++
+ 3 files changed, 393 insertions(+), 43 deletions(-)

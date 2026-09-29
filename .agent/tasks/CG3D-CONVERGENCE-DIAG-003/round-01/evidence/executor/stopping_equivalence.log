@@ -1,0 +1,54 @@
+[Taichi] version 1.7.4, llvm 15.0.1, commit b4b956fd, win, python 3.10.21
+base = cg3d/protocol.py @ 0ca191c7cd6f8970fc8af7e20261f4d7f246fda0
+candidate = working tree (task commit)
+
+[flat/sat] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+[flat/sat] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+flat/sat               quasi-steady steps=9   legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[flat/multi] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+[flat/multi] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+flat/multi             quasi-steady steps=9   legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[flat/sat/max8] d=0.0600 -> max-steps steps=8 S_nw=0.42 wall=0.0s
+[flat/sat/max8] d=0.0600 -> max-steps steps=8 S_nw=0.42 wall=0.0s
+flat/sat/max8          max-steps    steps=8   legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[slow-drift/sat] d=0.0600 -> quasi-steady steps=9 S_nw=0.3005 wall=0.0s
+[slow-drift/sat] d=0.0600 -> quasi-steady steps=9 S_nw=0.3005 wall=0.0s
+slow-drift/sat         quasi-steady steps=9   legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[fast-drift/multi] d=0.0600 -> max-steps steps=40 S_nw=0.6049999999999999 wall=0.0s
+[fast-drift/multi] d=0.0600 -> max-steps steps=40 S_nw=0.6049999999999999 wall=0.0s
+fast-drift/multi       max-steps    steps=40  legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[umax-spike@3] d=0.0600 -> umax-cap steps=3 S_nw=0.42 wall=0.0s
+[umax-spike@3] d=0.0600 -> umax-cap steps=3 S_nw=0.42 wall=0.0s
+umax-spike@3           umax-cap     steps=3   legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[umax-spike@12] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+[umax-spike@12] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+umax-spike@12          quasi-steady steps=9   legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[umax-cap-tight] d=0.0600 -> umax-cap steps=1 S_nw=0.42 wall=0.0s
+[umax-cap-tight] d=0.0600 -> umax-cap steps=1 S_nw=0.42 wall=0.0s
+umax-cap-tight         umax-cap     steps=1   legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[nan-pc/sat] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+[nan-pc/sat] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+nan-pc/sat             quasi-steady steps=9   legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[nan-pc-nan-u/multi] d=0.0600 -> max-steps steps=30 S_nw=0.42000000000000004 wall=0.0s
+[nan-pc-nan-u/multi] d=0.0600 -> max-steps steps=30 S_nw=0.42000000000000004 wall=0.0s
+nan-pc-nan-u/multi     max-steps    steps=30  legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[pc-drift/multi] d=0.0600 -> max-steps steps=30 S_nw=0.42000000000000004 wall=0.0s
+[pc-drift/multi] d=0.0600 -> max-steps steps=30 S_nw=0.42000000000000004 wall=0.0s
+pc-drift/multi         max-steps    steps=30  legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[every2-win20] d=0.0600 -> quasi-steady steps=18 S_nw=0.42 wall=0.0s
+[every2-win20] d=0.0600 -> quasi-steady steps=18 S_nw=0.42 wall=0.0s
+every2-win20           quasi-steady steps=18  legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[every5] d=0.0600 -> max-steps steps=45 S_nw=0.42 wall=0.0s
+[every5] d=0.0600 -> max-steps steps=45 S_nw=0.42 wall=0.0s
+every5                 max-steps    steps=45  legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[resume-it_start4] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+[resume-it_start4] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+resume-it_start4       quasi-steady steps=9   legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[frames+offset] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+[frames+offset] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+frames+offset          quasi-steady steps=9   legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+[live-ckpt] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+[live-ckpt] d=0.0600 -> quasi-steady steps=9 S_nw=0.42 wall=0.0s
+live-ckpt              quasi-steady steps=9   legacy_equal=True  callbacks_equal=True  added_keys=True  flags_match=True  
+
+cases=16 mismatches=0 -> IDENTICAL

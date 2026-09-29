@@ -1,0 +1,54 @@
+[2026-09-23T03:13:42Z] claimed ADS-DUMMY-001 round 1
+[2026-09-23T03:13:44Z] published ADS-DUMMY-001 round 1 as AWAITING_REVIEW
+run_once()               : EXECUTED
+execution_base_commit    : d75fc3007fe24aa375f30720599e71ece432a679
+control ready_sha        : 489b40dc168c8bc8409e8f9c2e2a669d85b7d000
+ready != base            : True
+final state.status       : AWAITING_REVIEW
+final state.candidate    : 45ce9ab586420eacfb99acff5ce394941827883a
+final state.base         : d75fc3007fe24aa375f30720599e71ece432a679
+
+control:.agent/tasks/ADS-DUMMY-001/round-01/evidence/controller/process.json
+{
+  "command": [
+    "C:\\Users\\yangc\\anaconda3\\python.exe",
+    "D:\\2026_agent_work\\09_cg3d_controller\\worktrees\\ADS-EXECUTION-BASE-005\\.agent\\controller\\tests\\fake_zcode.py",
+    "--cwd",
+    "C:\\Users\\yangc\\AppData\\Local\\Temp\\tmp8olg72m8\\worktrees\\ADS-DUMMY-001",
+    "--mode",
+    "yolo",
+    "--json",
+    "-p",
+    "Read AGENTS.md, .agent/prompts/ZCODE_EXECUTOR.md, and .agent_runtime/TASK.md. Execute only that task and write .agent_runtime/execution_report.md. Do not merge any branch."
+  ],
+  "cwd": "C:\\Users\\yangc\\AppData\\Local\\Temp\\tmp8olg72m8\\worktrees\\ADS-DUMMY-001",
+  "started_at": "2026-09-23T03:13:42Z",
+  "finished_at": "2026-09-23T03:13:42Z",
+  "elapsed_seconds": 0.045,
+  "exit_code": 0,
+  "timed_out": false,
+  "terminated_after_timeout": false,
+  "envelope_parsed": true,
+  "session_id": "fake-session-001",
+  "before_head": "d75fc3007fe24aa375f30720599e71ece432a679",
+  "execution_base_commit": "d75fc3007fe24aa375f30720599e71ece432a679"
+}
+
+control:.agent/tasks/ADS-DUMMY-001/round-01/evidence/executor/provenance.json
+{
+  "schema_version": "v1",
+  "task_id": "ADS-DUMMY-001",
+  "round": 1,
+  "candidate_commit": "45ce9ab586420eacfb99acff5ce394941827883a",
+  "execution_base_commit": "d75fc3007fe24aa375f30720599e71ece432a679",
+  "zcode_session_id": "fake-session-001",
+  "captured_at": "2026-09-23T03:13:43Z",
+  "worker": "probe-worker",
+  "files": [
+    {
+      "path": "level_a.log",
+      "size_bytes": 15,
+      "sha256": "b5e85a36c7b4e6050d1725d79dc6efa96714655a81ed84d7f66afdb7ff5ca7ed"
+    }
+  ]
+}

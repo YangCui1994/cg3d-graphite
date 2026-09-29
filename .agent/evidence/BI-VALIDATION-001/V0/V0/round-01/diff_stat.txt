@@ -1,0 +1,3 @@
+280a46f v0: fix levelb_laplace np.save -> np.savez (port transcription error)
+ tests/levelb_laplace.py | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
