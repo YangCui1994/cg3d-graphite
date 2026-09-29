@@ -31,7 +31,7 @@ The bounded cloud records returned for [Review进展](chatgpt-conversation://6ab
 
 ## Prioritized missing inputs
 
-1. **Owner/application facts:** target electrode/domain and geometry preprocessing; usable GPU memory and acceptable elapsed time; intended observables and tolerance; fluid properties; wetting/contact-angle information; inlet/outlet pressure protocol; vented versus sealed gas and whether compression/dissolution matters. The 0.25 micrometre constraint is already recorded and need not be rediscovered.
+1. **Owner/application facts:** geometry preprocessing and whether reservoirs/buffers are included; measured usable GPU memory and acceptable elapsed time (the owner has now supplied a single-5080 target, desired 70 × 100 × 100 micrometre domain and capacity estimates); intended observables and tolerance; fluid properties; wetting/contact-angle information; inlet/outlet pressure protocol; vented versus sealed gas and whether compression/dissolution matters. The 0.25 micrometre constraint is already recorded and need not be rediscovered.
 2. **Existing private assets:** exact R2/R5 PDFs already listed in the repository manifest; prior SC code with branch/commit, configurations and outcomes. Their absence from this clone does not prove they do not exist. Attachments and `_refs/` were not available through this inspection.
 3. **Application-specific full texts:** battery electrolyte filling and homogenized multicomponent SC papers added to the [reference queue](references/REFERENCE_INDEX.md). Extract the actual model, binder representation, mapping, validation and limitations before importing conclusions.
 4. **A fair comparison contract:** one named modern MCMP pseudopotential variant versus specified production/L17 variants, on matched geometry, dimensionless controls, wetting calibration, interface resolution and numerical cost. Single-component liquid-vapor improvements are not automatically noncondensable-air MCMP improvements.
@@ -40,3 +40,8 @@ The bounded cloud records returned for [Review进展](chatgpt-conversation://6ab
 ## Recommended reviewer boundary — proposal, not execution authorization
 
 Proceed with the science/harness architecture review now, require conditional recommendations and an explicit missing-evidence table, and defer an irreversible solver switch. Ask the reviewer to separate retain/adapt/replace/defer decisions from experiments needed to decide them. Highest-value next acquisition is targeted full-text extraction and application constraints, not repeated generic code searches. No external code was copied, no simulations were run, and no author was contacted in preparing this supplement.
+
+
+## Follow-up received: domain and memory budget
+
+The owner supplied the desired domain, fallback domain and diagnostic-storage capacity estimates after this supplement was first published. See the [goal/constraint record](01_PROJECT_GOAL_AND_CONSTRAINTS.md). This closes the missing *planning target*, not the missing measurement/provenance. Do not ask the owner to rediscover these dimensions. Priority owner-held materials are existing R2/R5 PDFs, prior SC code/configurations/results, and the original memory calculation if available. Publicly accessible literature should be acquired directly when the separate extraction task proceeds; only inaccessible full text needs owner assistance. No new solver or allocation changes accompany this update.

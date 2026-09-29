@@ -29,3 +29,20 @@ The review must decide what model can answer the intended battery question; it s
 Define the physical gas treatment (compressible, effectively incompressible, dissolving, vented or sealed), density/viscosity ratios, wetting/hysteresis requirements, physical geometry and minimum resolved throat/interface ratio. Define acceptable uncertainty and whether comparative trends suffice. These are [open decisions](09_OPEN_DECISIONS.md), not defaults silently inherited from a benchmark.
 
 This task only creates an audit input pack. Preserve production and reference lines, prior evidence, controller state, and all existing branch boundaries. The source [promotion rule](https://github.com/YangCui1994/cg3d-graphite/blob/dddac98d16bb4b792a371fe4d74276aba702038b/docs/research/leclaire_cg/BRANCH_BOUNDARY.md) requires explicit owner selection of modules; the audit does not satisfy that selection by itself.
+
+
+## Owner-supplied domain and capacity estimates — 2026-09-29
+
+**FACT / owner-supplied planning input:** target hardware is a single RTX 5080, described as 16 GB; desired physical extent is **70 × 100 × 100 micrometres** at **0.25 micrometre/lu**. A smaller **70 × 70 × 70 micrometre** domain is a fallback candidate, not an accepted scientific or hardware upper limit. Hardware availability and peak usable device memory have not been measured in this audit.
+
+| Scenario | Grid / cell count (arithmetic checked) | State-array estimate supplied by owner | With approximately 25% allowance, supplied by owner |
+|---|---|---|---|
+| Smaller domain, resident diagnostic arrays included | 280³ = 21,952,000 | 13.0 GiB | 16.3 GiB |
+| Smaller domain, resident diagnostic arrays removed | same | 4.3 GiB | 5.4 GiB |
+| Desired domain, resident diagnostic arrays removed | 280 × 400 × 400 = 44,800,000 | not separately supplied | 11.1 GiB |
+
+**SOURCE CLAIM, not measured capacity:** these memory numbers were supplied in the current conversation as prior estimates. They have not been independently reconstructed from an exact code/configuration snapshot or confirmed by peak-memory/runtime measurements. The diagnostic-array optimization is explicitly **not implemented**. “Current code” in that estimate has no attached commit or allocation inventory; do not assume it applies to every production/reference/debug configuration. Decimal GB and binary GiB must be normalized when making an actual capacity decision.
+
+**INFERENCE / planning consequence:** treat optional diagnostic storage as a candidate architecture improvement before reducing the scientific domain solely on memory grounds. This is not authorization to modify it in this documentation task. Reservoirs, gas buffers, boundary padding and other allocations can enlarge the final domain; whether the supplied dimensions include them remains unspecified. Resampling from historical image voxels to 0.25 micrometre/lu also needs a geometry/connectivity validation rule. A capacity estimate does not establish physical resolution adequacy or acceptable execution time.
+
+For reproducible follow-up, retain the original allocation calculation if available: code SHA, field names/shapes/dtypes, diagnostic switches, extra domains, overhead convention and device/runtime environment. It is useful evidence but not a blocker to the architecture review.
