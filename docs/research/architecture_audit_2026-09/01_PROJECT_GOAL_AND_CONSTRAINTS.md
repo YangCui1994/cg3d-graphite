@@ -2,6 +2,12 @@
 
 ## Established scope
 
+**FACT / owner clarification, 2026-09-29:** the intended application is **imbibition in porous media**, specifically the previously discussed battery-electrode problem. This is an established objective, not a new open choice between generic filling, drainage and imbibition. The cloud conversation [整理渐变色及Chen对比](chatgpt-conversation://6ab67912-ffb8-83ed-91ad-7d4d01ec0aa5), owner turn `6c3fe2c7-2f61-455b-8454-e42ac04c5feb`, explicitly asks about SC versus CG at the scale of lithium-battery imbibition.
+
+**FACT / historical plan:** the linked episode contract below specifies closed bilateral **spontaneous** imbibition, no externally imposed pressure difference in V2/V3, finite liquid buffers and closed outer ends. Its post-checkpoint roadmap names real graphite, interface gap, Cu/separator representation, optional PCS, and trapped-gas/topology analysis. These are the documented research direction and staged design, not evidence that the real porous-media stage has run. Synthetic capillaries, bilateral channels and Jurin tests are supporting validation instruments; they are not the final scientific objective. The earlier pressure-driven graphite results are historical assets with different boundary conditions.
+
+**Reviewer obligation:** assess each retained model, benchmark and harness gate by its relevance to porous-media imbibition, including complex-wall wetting, pore connectivity, interface/throat resolution, invasion and gas isolation. Carry the existing bilateral/finite-buffer design into review as context; do not ask the owner to define the application from scratch. The exact real-domain boundary realization, material parameters and required accuracy may still need decisions, and synthetic V2/V3 assumptions must not silently become a validated real-gas model.
+
 **FACT / source statement:** [Repository README](https://github.com/YangCui1994/cg3d-graphite/blob/5dca114bc40c40743029a9439101958b13eaf721/README.md) targets pore-scale drainage, imbibition, electrolyte filling and trapped gas in Li-ion graphite microstructure. The [episode plan](https://github.com/YangCui1994/cg3d-graphite/blob/dddac98d16bb4b792a371fe4d74276aba702038b/.agent/episodes/bilateral-imbibition-v0.1/EPISODE_PLAN.md) deliberately starts with synthetic single-front, bilateral and finite-buffer tests before real graphite / separator / gap / PCS work.
 
 The review must decide what model can answer the intended battery question; it should not merely make the next existing gate pass.

@@ -45,3 +45,8 @@ Proceed with the science/harness architecture review now, require conditional re
 ## Follow-up received: domain and memory budget
 
 The owner supplied the desired domain, fallback domain and diagnostic-storage capacity estimates after this supplement was first published. See the [goal/constraint record](01_PROJECT_GOAL_AND_CONSTRAINTS.md). This closes the missing *planning target*, not the missing measurement/provenance. Do not ask the owner to rediscover these dimensions. Priority owner-held materials are existing R2/R5 PDFs, prior SC code/configurations/results, and the original memory calculation if available. Publicly accessible literature should be acquired directly when the separate extraction task proceeds; only inaccessible full text needs owner assistance. No new solver or allocation changes accompany this update.
+
+
+## Scope clarification: porous-media imbibition is already established
+
+The owner's subsequent clarification and the retrieved cloud user statement explicitly identify porous-media/battery imbibition. The existing episode contract supplies the closed bilateral spontaneous-imbibition validation design and the later graphite/gap/PCS roadmap. See [01 — established scope](01_PROJECT_GOAL_AND_CONSTRAINTS.md). Read the remaining input list as requests for quantitative realization and evidence, not uncertainty about whether imbibition is the research objective. Generic electrolyte-filling papers remain supporting literature whose forcing and boundary assumptions must be compared with this target.
