@@ -2,6 +2,10 @@
 
 Prepared 2026-09-29 using ChatGPT reasoning and read-only repository inspection. This is **review input, not a replacement scientific source-of-truth, acceptance decision, or execution contract**. No solver, validation, controller, or existing evidence changes are part of this pack. No Z Code / DeepSeek invocation or executor-loop continuation was used.
 
+## Current deliverable and scope
+
+**Owner clarification, 2026-09-29:** provide a usable, scientifically bounded **porous-media imbibition simulation code project**, including battery-electrode scenarios requiring simultaneous liquid invasion from two sides. The working physics is **weakly compressible two-phase flow**. The current architecture review is not contingent on experimental battery calibration, measured material properties or a real-air compression/dissolution model. Those are later application inputs. Numerical/model verification still belongs to the code project. Read the scope and capability criteria in [01](01_PROJECT_GOAL_AND_CONSTRAINTS.md) before treating historical application questions as blockers.
+
 ## Questions for the architecture reviewer
 
 1. Reconstruct the research/development architecture for battery-electrode imbibition and trapped gas. Identify assets to retain, claims to narrow, missing physics/measurements, and a staged research roadmap. Compare production CG, L17 CG, and a specifically identified modern pseudopotential candidate without presuming a winner.

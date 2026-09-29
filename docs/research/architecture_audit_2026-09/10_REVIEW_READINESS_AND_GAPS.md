@@ -2,6 +2,10 @@
 
 Updated 2026-09-29. This supplement separates readiness to conduct an architecture review from readiness to select and implement a physical model.
 
+## Scope update: simulation project first
+
+**Owner clarification, 2026-09-29:** the immediate product is runnable porous-media imbibition software using weakly compressible two-phase physics and capturing simultaneous liquid entry from two sides, including battery-electrode use. The material/experiment gaps below concern later application calibration, not admission to architecture review. Do not repeatedly request the owner to supply them now. Retain numerical verification and validity limits as current code-project requirements; see [01](01_PROJECT_GOAL_AND_CONSTRAINTS.md).
+
 ## Readiness judgment
 
 **INFERENCE:** the repository now supports an independent first review of development history, retained assets, scientific claims and harness failure hypotheses. It does **not** yet support a definitive modern SC-versus-CG ranking, a calibrated battery prediction, or a fully specified implementation plan. Finishing a file inventory is not completing the evidence base.
@@ -10,7 +14,7 @@ Updated 2026-09-29. This supplement separates readiness to conduct an architectu
 |---|---|---|
 | Reconstruct development and harness failures | pinned code/history, validation records, later critical reviews | distinguish measured causes from plausible governance explanations; runtime/session evidence only if operational claims require it |
 | Retain/adapt existing assets | production and L17 operators, failure cases, branch boundaries | per-asset disposition and acceptance scope from independent reviewer |
-| Choose battery-scale physical model | application objective, resolution constraint, candidate literature and code map | target observables, gas physics, material parameters, boundaries, acceptable error |
+| Design the current simulation project | porous imbibition, weakly compressible scope, two-sided invasion, hardware/domain target and candidate code/literature | supported parameter/boundary envelope and numerical acceptance criteria; application calibration deferred |
 | Compare modern pseudopotential and CG | CG extracts and historical benchmarks; SC source queue | exact MCMP candidate, verified forcing/wetting/EOS assumptions, matched comparison protocol |
 | Choose feasible implementation | production storage layout, external architecture examples | measured memory budget, domain size, precision policy, runtime target; no family-wide performance ranking yet |
 | Design research harness | contracts, evidence/review workflow, observed scientific premise failures | reviewer proposal with falsification/reframe gates, then an explicitly scoped implementation decision |
@@ -31,7 +35,7 @@ The bounded cloud records returned for [Review进展](chatgpt-conversation://6ab
 
 ## Prioritized missing inputs
 
-1. **Owner/application facts:** geometry preprocessing and whether reservoirs/buffers are included; measured usable GPU memory and acceptable elapsed time (the owner has now supplied a single-5080 target, desired 70 × 100 × 100 micrometre domain and capacity estimates); intended observables and tolerance; fluid properties; wetting/contact-angle information; inlet/outlet pressure protocol; vented versus sealed gas and whether compression/dissolution matters. The 0.25 micrometre constraint is already recorded and need not be rediscovered.
+1. **Deferred application facts, not current review prerequisites:** geometry preprocessing and whether reservoirs/buffers are included; measured usable GPU memory and acceptable elapsed time (the owner has now supplied a single-5080 target, desired 70 × 100 × 100 micrometre domain and capacity estimates); intended observables and tolerance; fluid properties; wetting/contact-angle information; inlet/outlet pressure protocol; vented versus sealed gas and whether compression/dissolution matters. The 0.25 micrometre constraint is already recorded and need not be rediscovered.
 2. **Existing private assets:** exact R2/R5 PDFs already listed in the repository manifest; prior SC code with branch/commit, configurations and outcomes. Their absence from this clone does not prove they do not exist. Attachments and `_refs/` were not available through this inspection.
 3. **Application-specific full texts:** battery electrolyte filling and homogenized multicomponent SC papers added to the [reference queue](references/REFERENCE_INDEX.md). Extract the actual model, binder representation, mapping, validation and limitations before importing conclusions.
 4. **A fair comparison contract:** one named modern MCMP pseudopotential variant versus specified production/L17 variants, on matched geometry, dimensionless controls, wetting calibration, interface resolution and numerical cost. Single-component liquid-vapor improvements are not automatically noncondensable-air MCMP improvements.

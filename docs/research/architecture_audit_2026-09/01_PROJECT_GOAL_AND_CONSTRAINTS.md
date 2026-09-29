@@ -1,5 +1,15 @@
 # 01 — Project goal and constraints
 
+## Current project deliverable — owner clarification takes precedence
+
+**FACT / owner requirement, 2026-09-29:** build a code project that can run **imbibition simulations in porous media**, with battery electrodes as a required supported scenario rather than the sole application definition. It must support **simultaneous invasion from two sides**. The working model is **weakly compressible two-phase flow**, consistent with the existing episode's stated interpretation. This does not newly require a calibrated real-air compression law, dissolution, phase change or a high-density-ratio extension.
+
+Experimental contact angles, exact electrolyte properties and experimental agreement belong to later application setup/calibration. They are not prerequisites to the current architecture review or a generally usable simulation project. The owner supplied an approximate 30-degree angle measured on an electrode surface; retain it only as a provisional application example, not a validated pore-wall constant or mandatory global setting.
+
+**PROPOSED reviewable software capability criteria:** configure geometry/materials, phase initialization, wetting, two-sided liquid supply and boundary conditions; execute reproducibly within a documented resource envelope; expose front evolution, phase amounts and gas connectivity/isolation diagnostics; retain source/configuration/output provenance. Verify numerical conservation, stability, wetting and boundary/topology behavior with appropriate controlled cases. An initially trapped symmetric pocket alone does not demonstrate capture of simultaneous invasion, later front interaction and emergent trapping. These criteria guide review; they do not declare current implementation acceptance or authorize execution in this documentation task.
+
+**Scope distinction:** numerical verification and documented validity limits are current code-project needs; calibration/validation against a particular electrode experiment is a subsequent application need. Model/solver choice remains an architecture-review question within the weakly compressible scope. The reviewer may identify optional future physics, but must not expand the deliverable or demand experimental data as a condition of starting this review.
+
 ## Established scope
 
 **FACT / owner clarification, 2026-09-29:** the intended application is **imbibition in porous media**, specifically the previously discussed battery-electrode problem. This is an established objective, not a new open choice between generic filling, drainage and imbibition. The cloud conversation [整理渐变色及Chen对比](chatgpt-conversation://6ab67912-ffb8-83ed-91ad-7d4d01ec0aa5), owner turn `6c3fe2c7-2f61-455b-8454-e42ac04c5feb`, explicitly asks about SC versus CG at the scale of lithium-battery imbibition.
@@ -32,7 +42,7 @@ The review must decide what model can answer the intended battery question; it s
 
 ## Owner decisions to expose
 
-Define the physical gas treatment (compressible, effectively incompressible, dissolving, vented or sealed), density/viscosity ratios, wetting/hysteresis requirements, physical geometry and minimum resolved throat/interface ratio. Define acceptable uncertainty and whether comparative trends suffice. These are [open decisions](09_OPEN_DECISIONS.md), not defaults silently inherited from a benchmark.
+The weakly compressible working scope and two-sided porous imbibition capability are established. The architecture review should define supported parameter ranges, configurable boundary modes, geometry/interface resolution limits and numerical acceptance criteria. Particular electrode parameters, experimental accuracy targets and optional expanded gas physics are later application/extension decisions, not current material requests. See [open decisions](09_OPEN_DECISIONS.md).
 
 This task only creates an audit input pack. Preserve production and reference lines, prior evidence, controller state, and all existing branch boundaries. The source [promotion rule](https://github.com/YangCui1994/cg3d-graphite/blob/dddac98d16bb4b792a371fe4d74276aba702038b/docs/research/leclaire_cg/BRANCH_BOUNDARY.md) requires explicit owner selection of modules; the audit does not satisfy that selection by itself.
 
